@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Request Tracker Pro</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+
+<style>
+  body {
+    font-family: 'Inter', sans-serif;
+    background: #f3f4f6; /* Light gray background */
+    color: #1f2937; /* Dark gray for readable text */
+    font-size: 1rem;
+    line-height: 1.6;
+  }
+
+  .glass-effect {
+    background: rgba(255, 255, 255, 0.95); /* Almost white */
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    border-radius: 1rem;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05);
+    color: #1f2937; /* Ensure readable dark text inside */
+    padding: 1.5rem;
+  }
+
+  .glass-effect * {
+    color: #1f2937 !important; /* Force dark text inside glass */
+  }
+
+  .card-hover {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border-radius: 1rem;
+  }
+
+  .card-hover:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.08);
+  }
+
+  .shimmer {
+    background: linear-gradient(90deg, #f9fafb 25%, #e5e7eb 50%, #f9fafb 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.6s infinite linear;
+    border-radius: 0.5rem;
+  }
+
+  @keyframes shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+  }
+
+  .pulse-dot {
+    width: 10px;
+    height: 10px;
+    background-color: #10b981;
+    border-radius: 50%;
+    display: inline-block;
+    animation: pulse 1.5s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.2); opacity: 0.5; }
+  }
+
+  .fade-in {
+    animation: fadeIn 0.6s ease-out forwards;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .countdown-urgent,
+  .overdue-text {
+    color: #b91c1c !important;
+    font-weight: 700;
+    animation: urgentPulse 1s infinite alternate;
+  }
+
+  @keyframes urgentPulse {
+    from { color: #dc2626; }
+    to { color: #991b1b; }
+  }
+
+  .btn {
+    padding: 0.6rem 1.2rem;
+    font-weight: 600;
+    border-radius: 0.75rem;
+    transition: all 0.3s ease;
+    color: white;
+    text-align: center;
+    display: inline-block;
+    font-size: 0.95rem;
+  }
+
+  .btn-primary {
+    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  }
+
+  .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(37, 99, 235, 0.25);
+  }
+
+  .btn-secondary {
+    background: linear-gradient(135deg, #0f766e 0%, #0d9488 100%);
+  }
+
+  .btn-secondary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(13, 148, 136, 0.25);
+  }
+
+  .btn-danger {
+    background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
+  }
+
+  .btn-danger:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(220, 38, 38, 0.25);
+  }
+
+  .slide-out {
+    animation: slideOut 0.5s ease-in-out forwards;
+  }
+
+  @keyframes slideOut {
+    0% { transform: translateX(0); opacity: 1; }
+    100% { transform: translateX(100%); opacity: 0; }
+  }
+
+  .notification {
+    position: fixed;
+    top: 1rem;
+    right: 1rem;
+    z-index: 1000;
+    padding: 1rem 1.5rem;
+    border-radius: 1rem;
+    font-weight: 500;
+    font-size: 0.95rem;
+    color: white;
+    animation: slideInRight 0.4s ease-out;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+  }
+
+  @keyframes slideInRight {
+    from { transform: translateX(100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+  }
+
+  .notification.success {
+    background: linear-gradient(135deg, #22c55e 0%, #15803d 100%);
+  }
+
+  .notification.error {
+    background: linear-gradient(135deg, #ef4444 0%, #991b1b 100%);
+  }
+</style>
+
+</head>
+<body class="min-h-screen p-4">
+  <!-- Header -->
+  <div class="max-w-4xl mx-auto mb-6">
+    <div class="glass-effect rounded-3xl p-6 text-center">
+      <h1 class="text-3xl md:text-4xl font-bold text-white mb-2">
+        🚀 Request Tracker Pro
+      </h1>
+      <p class="text-white/80 text-sm md:text-base">
+        Workflow Chain Tracker - Next Person Tasks
+      </p>
+      <div class="flex items-center justify-center mt-4">
+        <div class="pulse-dot w-3 h-3 bg-green-400 rounded-full mr-2"></div>
+        <span class="text-white/90 text-sm">Live Dashboard</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Controls -->
+  <div class="max-w-4xl mx-auto mb-6">
+    <div class="flex flex-col sm:flex-row gap-3 justify-center">
+      <button 
+        onclick="fetchData()" 
+        id="refreshBtn"
+        class="btn-primary text-white font-semibold px-6 py-3 rounded-2xl shadow-lg flex items-center justify-center gap-2"
+      >
+        <span id="refreshIcon">🔄</span>
+        <span>Refresh Data</span>
+      </button>
+      <button 
+        onclick="toggleAutoRefresh()" 
+        id="autoRefreshBtn"
+        class="btn-secondary text-white font-semibold px-6 py-3 rounded-2xl shadow-lg flex items-center justify-center gap-2"
+      >
+        <span>⚡</span>
+        <span id="autoRefreshText">Enable Auto-Refresh</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Statistics -->
+  <div class="max-w-4xl mx-auto mb-6" id="statsContainer">
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div class="glass-effect rounded-2xl p-4 text-center">
+        <div class="text-2xl font-bold text-white" id="totalRequests">0</div>
+        <div class="text-white/80 text-sm">Total Tasks</div>
+      </div>
+      <div class="glass-effect rounded-2xl p-4 text-center">
+        <div class="text-2xl font-bold text-yellow-300" id="urgentRequests">0</div>
+        <div class="text-white/80 text-sm">Urgent (&lt;5min)</div>
+      </div>
+      <div class="glass-effect rounded-2xl p-4 text-center">
+        <div class="text-2xl font-bold text-red-300" id="overdueRequests">0</div>
+        <div class="text-white/80 text-sm">Overdue</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Request Container -->
+  <div class="max-w-4xl mx-auto">
+    <div id="requestContainer" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <!-- Loading will be inserted here -->
+    </div>
+  </div>
+
+  <!-- Empty State -->
+  <div id="emptyState" class="max-w-4xl mx-auto text-center py-12 hidden">
+    <div class="glass-effect rounded-3xl p-8">
+      <div class="text-6xl mb-4">✅</div>
+      <h3 class="text-xl font-semibold text-white mb-2">All Caught Up!</h3>
+      <p class="text-white/80">No pending tasks in the workflow chain at the moment.</p>
+      <p class="text-white/60 text-sm mt-2">Tasks appear here when previous person marks their work as "Done"</p>
+    </div>
+  </div>
+
+  <!-- Debug Info -->
+  <div class="max-w-4xl mx-auto mt-6">
+    <div class="glass-effect rounded-2xl p-4 text-center">
+      <div class="text-white/60 text-xs" id="debugInfo">
+        Last updated: Never
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const API_URL = "https://script.google.com/macros/s/AKfycbzwhv2y4qc_mNMa9TUAezVA1EUvHReTkYTCcDj8zVYT1zyb3MSaouMYhvDV3ZcyVr0T/exec";
+    let autoRefreshInterval = null;
+    let countdownIntervals = {};
+
+    function showNotification(message, type = 'success') {
+      // Remove existing notifications
+      const existing = document.querySelector('.notification');
+      if (existing) existing.remove();
+
+      const notification = document.createElement('div');
+      notification.className = `notification ${type}`;
+      notification.textContent = message;
+      document.body.appendChild(notification);
+
+      setTimeout(() => notification.remove(), 3000);
+    }
+
+async function markDone(googleSheetURL, cardId, timestamp, requesterName) {
+  const card = document.getElementById(cardId);
+  const button = card.querySelector('button[onclick*="markDone"]');
+
+  button.disabled = true;
+  button.innerHTML = '<span style="animation: spin 1s linear infinite;">⏳</span> Marking...';
+
+  try {
+    await fetch(API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        action: 'markDone',
+        googleSheetURL,
+        timestamp,
+        requesterName
+      })
+    });
+
+    card.classList.add('slide-out');
+    setTimeout(() => {
+      card.remove();
+      const remainingCards = document.getElementById('requestContainer').children;
+      if (remainingCards.length === 0) {
+        document.getElementById('emptyState').classList.remove('hidden');
+      }
+      updateStatisticsAfterRemoval();
+    }, 500);
+
+    showNotification('✅ Marked as Done!');
+  } catch (error) {
+    console.error('Error marking done:', error);
+    showNotification('❌ Failed to mark done: ' + error.message, 'error');
+
+    button.disabled = false;
+    button.innerHTML = '<span>✅</span> <span>Done</span>';
+  }
+}
+
+    function updateStatisticsAfterRemoval() {
+      // Get remaining cards and recalculate statistics
+      const remainingCards = document.querySelectorAll('[id^="card-"]');
+      const now = new Date().getTime();
+      let total = remainingCards.length;
+      let urgent = 0;
+      let overdue = 0;
+
+      remainingCards.forEach(card => {
+        const countdownEl = card.querySelector('[id^="countdown-"]');
+        if (countdownEl) {
+          const text = countdownEl.textContent;
+          if (text.includes('Overdue')) {
+            overdue++;
+          } else if (countdownEl.classList.contains('countdown-urgent')) {
+            urgent++;
+          }
+        }
+      });
+
+      document.getElementById('totalRequests').textContent = total;
+      document.getElementById('urgentRequests').textContent = urgent;
+      document.getElementById('overdueRequests').textContent = overdue;
+    }
+
+    async function fetchData() {
+      const container = document.getElementById('requestContainer');
+      const refreshBtn = document.getElementById('refreshBtn');
+      const refreshIcon = document.getElementById('refreshIcon');
+      
+      // Animate refresh button
+      refreshIcon.style.animation = 'spin 1s linear infinite';
+      refreshBtn.disabled = true;
+      
+      // Show loading state
+      showLoadingState();
+
+      try {
+        const response = await fetch(API_URL);
+        const result = await response.json();
+        
+        if (!result.success) {
+          throw new Error(result.error || 'Failed to fetch data');
+        }
+
+        // Clear existing intervals
+        Object.values(countdownIntervals).forEach(interval => clearInterval(interval));
+        countdownIntervals = {};
+
+        // Clear container
+        container.innerHTML = '';
+
+        if (result.data && result.data.length > 0) {
+          document.getElementById('emptyState').classList.add('hidden');
+          
+          result.data.forEach((request, index) => {
+            setTimeout(() => {
+              const card = createCard(request, index);
+              container.appendChild(card);
+            }, index * 100); // Stagger animations
+          });
+          
+          updateStatistics(result.data);
+          showNotification(`Loaded ${result.data.length} pending task(s)`);
+        } else {
+          document.getElementById('emptyState').classList.remove('hidden');
+          updateStatistics([]);
+          showNotification('No pending tasks found', 'success');
+        }
+
+        // Update debug info
+        updateDebugInfo(result);
+
+      } catch (err) {
+        container.innerHTML = `
+          <div class="col-span-full">
+            <div class="glass-effect rounded-2xl p-6 text-center">
+              <div class="text-4xl mb-3">⚠️</div>
+              <h3 class="text-lg font-semibold text-white mb-2">Connection Error</h3>
+              <p class="text-white/80 text-sm">${err.message}</p>
+              <button onclick="fetchData()" class="btn-primary text-white px-4 py-2 rounded-xl mt-4">
+                Try Again
+              </button>
+            </div>
+          </div>
+        `;
+        showNotification('Failed to load data', 'error');
+      } finally {
+        // Reset refresh button
+        refreshIcon.style.animation = '';
+        refreshBtn.disabled = false;
+      }
+    }
+
+    function updateDebugInfo(result) {
+      const debugElement = document.getElementById('debugInfo');
+      const debugInfo = result.debug || {};
+      
+      debugElement.innerHTML = `
+        Last updated: ${new Date().toLocaleTimeString()} | 
+        Total rows: ${debugInfo.totalRows || 0} | 
+        Done status: ${debugInfo.doneStatusCount || 0} | 
+        With completion timestamp: ${debugInfo.withCompletionTimestamp || 0} |
+        Showing: ${result.count || 0} tasks
+      `;
+    }
+
+    function showLoadingState() {
+      const container = document.getElementById('requestContainer');
+      container.innerHTML = '';
+      
+      // Create 3 loading cards
+      for (let i = 0; i < 3; i++) {
+        const loadingCard = document.createElement('div');
+        loadingCard.className = 'glass-effect rounded-2xl p-6 animate-pulse';
+        loadingCard.innerHTML = `
+          <div class="flex justify-between items-center mb-4">
+            <div class="shimmer h-5 w-32 rounded"></div>
+            <div class="shimmer h-4 w-24 rounded"></div>
+          </div>
+          <div class="shimmer h-4 w-full rounded mb-3"></div>
+          <div class="shimmer h-8 w-40 rounded mb-4"></div>
+          <div class="flex gap-3">
+            <div class="shimmer h-10 w-24 rounded-xl"></div>
+            <div class="shimmer h-10 w-20 rounded-xl"></div>
+          </div>
+        `;
+        container.appendChild(loadingCard);
+      }
+    }
+
+    function createCard(request, index) {
+      const deadline = calculateDeadline(request.timestamp);
+      const countdownId = `countdown-${index}`;
+      const cardId = `card-${index}`;
+
+      const card = document.createElement('div');
+      card.id = cardId;
+      card.className = 'glass-effect rounded-2xl p-6 card-hover fade-in';
+      card.style.animationDelay = `${index * 0.1}s`;
+
+      const now = new Date().getTime();
+      const timeLeft = deadline.getTime() - now;
+      const isUrgent = timeLeft < 5 * 60 * 1000 && timeLeft > 0; // 5 minutes
+      const isOverdue = timeLeft <= 0;
+
+      // Format task start time (when previous person completed)
+      const taskStartTime = new Date(request.timestamp);
+      const timeAgo = getTimeAgo(taskStartTime);
+
+      card.innerHTML = `
+        <div class="flex justify-between items-start mb-4">
+          <div class="flex items-center gap-3">
+            <div class="w-4 h-4 rounded-full ${isOverdue ? 'bg-red-400 countdown-urgent' : isUrgent ? 'bg-yellow-400 pulse-dot' : 'bg-green-400'}"></div>
+            <div>
+              <h2 class="text-lg font-semibold text-white">
+                ${request.requesterName || 'Unknown User'}
+              </h2>
+              <p class="text-white/60 text-sm">${request.department || 'No Department'}</p>
+            </div>
+          </div>
+          <span class="text-xs text-white/60 bg-white/10 px-2 py-1 rounded-lg">
+            ${taskStartTime.toLocaleDateString()}
+          </span>
+        </div>
+        
+        <div class="mb-4">
+          <div class="text-sm text-white/80 mb-2">
+            🕐 Task Started: <span class="font-medium text-white">${timeAgo}</span>
+          </div>
+          <div class="text-sm text-white/80 mb-3">
+            📅 Deadline: <span class="font-medium text-white">${deadline.toLocaleString()}</span>
+          </div>
+          <div id="${countdownId}" class="text-xl font-bold ${isOverdue ? 'text-red-300 countdown-urgent' : isUrgent ? 'text-yellow-300' : 'text-green-300'}">
+            Loading...
+          </div>
+        </div>
+        
+        ${request.notes ? `
+        <div class="mb-4 p-3 bg-white/5 rounded-xl">
+          <div class="text-xs text-white/60 mb-1">Notes:</div>
+          <div class="text-sm text-white/90">${request.notes}</div>
+        </div>
+        ` : ''}
+        
+        <div class="flex flex-col sm:flex-row gap-3">
+          <a 
+            href="${request.googleSheetURL}" 
+            target="_blank" 
+            class="btn-secondary text-white px-4 py-2 rounded-xl text-sm font-medium flex items-center justify-center gap-2 flex-1"
+          >
+            <span>📊</span>
+            <span>View Sheet</span>
+          </a>
+          <button 
+            onclick="markDone('${request.googleSheetURL}', '${cardId}', '${request.timestamp}', '${request.requesterName}')" 
+            class="btn-danger text-white px-4 py-2 rounded-xl text-sm font-medium flex items-center justify-center gap-2"
+          >
+            <span>✅</span>
+            <span>Done</span>
+          </button>
+        </div>
+      `;
+
+      startCountdown(deadline, countdownId);
+      return card;
+    }
+
+    function getTimeAgo(date) {
+      const now = new Date();
+      const diffMs = now - date;
+      const diffMins = Math.floor(diffMs / 60000);
+      
+      if (diffMins < 60) {
+        return `${diffMins} minutes ago`;
+      } else if (diffMins < 1440) {
+        return `${Math.floor(diffMins / 60)} hours ago`;
+      } else {
+        return `${Math.floor(diffMins / 1440)} days ago`;
+      }
+    }
+
+    function calculateDeadline(timestamp) {
+      const date = new Date(timestamp);
+      const hour = date.getHours();
+      const day = date.getDay(); // 0 = Sunday, 6 = Saturday
+
+      // Check if timestamp is between 5-7 PM (17:00-19:00)
+      if (hour >= 17 && hour < 19) {
+        let deadline = new Date(date);
+
+        if (day === 6) { // Saturday
+          deadline.setDate(date.getDate() + 2); // Move to Monday
+        } else if (day === 0) { // Sunday
+          deadline.setDate(date.getDate() + 1); // Move to Monday
+        } else {
+          deadline.setDate(date.getDate() + 1); // Next day
+        }
+        deadline.setHours(10, 0, 0, 0); // 10 AM
+        return deadline;
+      } else {
+        // Add 30 minutes to timestamp for all other cases
+        return new Date(date.getTime() + 30 * 60 * 1000);
+      }
+    }
+
+    function startCountdown(deadline, elementId) {
+      const updateCountdown = () => {
+        const now = new Date().getTime();
+        const timeDiff = deadline.getTime() - now;
+        const el = document.getElementById(elementId);
+        
+        if (!el) {
+          if (countdownIntervals[elementId]) {
+            clearInterval(countdownIntervals[elementId]);
+            delete countdownIntervals[elementId];
+          }
+          return;
+        }
+
+        if (timeDiff <= 0) {
+          el.innerHTML = '⏰ <span class="text-red-300">Overdue!</span>';
+          el.classList.add('countdown-urgent');
+          return;
+        }
+
+        const days = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((timeDiff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((timeDiff % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((timeDiff % (1000 * 60)) / 1000);
+
+        let timeString = '';
+        if (days > 0) {
+          timeString = `${days}d ${hours}h ${minutes}m`;
+        } else if (hours > 0) {
+          timeString = `${hours}h ${minutes}m ${seconds}s`;
+        } else {
+          timeString = `${minutes}m ${seconds}s`;
+        }
+
+        el.textContent = `⏱️ ${timeString} left`;
+
+        // Add urgent styling if less than 5 minutes
+        if (timeDiff < 5 * 60 * 1000) {
+          el.classList.add('countdown-urgent');
+        }
+      };
+
+      updateCountdown();
+      countdownIntervals[elementId] = setInterval(updateCountdown, 1000);
+    }
+
+    function updateStatistics(requests) {
+      const now = new Date().getTime();
+      let urgent = 0;
+      let overdue = 0;
+
+      requests.forEach(request => {
+        const deadline = calculateDeadline(request.timestamp);
+        const timeDiff = deadline.getTime() - now;
+        
+        if (timeDiff < 0) {
+          overdue++;
+        } else if (timeDiff < 5 * 60 * 1000) { // 5 minutes
+          urgent++;
+        }
+      });
+
+      document.getElementById('totalRequests').textContent = requests.length;
+      document.getElementById('urgentRequests').textContent = urgent;
+      document.getElementById('overdueRequests').textContent = overdue;
+    }
+
+    function toggleAutoRefresh() {
+      const btn = document.getElementById('autoRefreshBtn');
+      const text = document.getElementById('autoRefreshText');
+      
+      if (autoRefreshInterval) {
+        clearInterval(autoRefreshInterval);
+        autoRefreshInterval = null;
+        text.textContent = 'Enable Auto-Refresh';
+        btn.classList.remove('btn-danger');
+        btn.classList.add('btn-secondary');
+        showNotification('Auto-refresh disabled');
+      } else {
+        autoRefreshInterval = setInterval(fetchData, 30000); // 30 seconds
+        text.textContent = 'Disable Auto-Refresh';
+        btn.classList.remove('btn-secondary');
+        btn.classList.add('btn-danger');
+        showNotification('Auto-refresh enabled (30s)');
+      }
+    }
+
+    // Initialize on load
+    window.addEventListener('load', fetchData);
+    
+    // Cleanup intervals on page unload
+    window.addEventListener('beforeunload', () => {
+      Object.values(countdownIntervals).forEach(interval => clearInterval(interval));
+      if (autoRefreshInterval) clearInterval(autoRefreshInterval);
+    });
+  </script>
+</body>
+</html>

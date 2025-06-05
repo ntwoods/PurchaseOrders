@@ -673,7 +673,6 @@
             try {
                 const response = await fetch(API_URL, {
                     method: 'POST',
-                    mode: 'no-cors',
                     headers: {
                         'Content-Type': 'application/json',
                     },
@@ -726,7 +725,6 @@
             try {
                 const response = await fetch(API_URL, {
                     method: 'POST',
-                    mode: 'no-cors',
                     headers: {
                         'Content-Type': 'application/json',
                     },
@@ -771,6 +769,9 @@
                 feedback.style.display = 'none';
             }, 5000);
         }
+    </script>
+</body>
+</html>
     </script>
 </body>
 </html>

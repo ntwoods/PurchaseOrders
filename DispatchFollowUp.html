@@ -173,6 +173,131 @@
             transform: scale(1.05);
         }
 
+        .actions-section {
+            margin-top: 15px;
+            padding: 15px;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            border-radius: 10px;
+        }
+
+        .actions-title {
+            font-size: 0.9rem;
+            font-weight: bold;
+            color: white;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .action-btn {
+            flex: 1;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 20px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+
+        .on-time-btn {
+            background: #4caf50;
+            color: white;
+        }
+
+        .on-time-btn:hover {
+            background: #45a049;
+            transform: translateY(-2px);
+        }
+
+        .delayed-btn {
+            background: #ff9800;
+            color: white;
+        }
+
+        .delayed-btn:hover {
+            background: #f57c00;
+            transform: translateY(-2px);
+        }
+
+        .action-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .delayed-input-section {
+            display: none;
+            margin-top: 10px;
+            padding: 10px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 8px;
+        }
+
+        .delayed-input-section.show {
+            display: block;
+        }
+
+        .input-group {
+            margin-bottom: 10px;
+        }
+
+        .input-label {
+            display: block;
+            color: white;
+            font-weight: bold;
+            margin-bottom: 5px;
+            font-size: 0.85rem;
+        }
+
+        .date-input {
+            width: 100%;
+            padding: 8px 12px;
+            border: none;
+            border-radius: 5px;
+            font-size: 0.9rem;
+        }
+
+        .submit-delayed-btn {
+            width: 100%;
+            padding: 8px 15px;
+            background: #d32f2f;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        .submit-delayed-btn:hover {
+            background: #c62828;
+        }
+
+        .action-feedback {
+            margin-top: 10px;
+            padding: 8px;
+            border-radius: 5px;
+            text-align: center;
+            font-weight: bold;
+            display: none;
+        }
+
+        .action-feedback.success {
+            background: #4caf50;
+            color: white;
+        }
+
+        .action-feedback.error {
+            background: #f44336;
+            color: white;
+        }
+
         .error-message {
             background: #ffebee;
             color: #d32f2f;
@@ -230,13 +355,32 @@
             // Handle different date formats
             let date;
             
-            // Try DD-MM-YYYY HH:mm:ss format first
-            if (dateStr.includes('-') && dateStr.includes(':')) {
+            // Handle ISO format with Z (2025-06-19T18:30:00.000Z)
+            if (dateStr.includes('T') && dateStr.includes('Z')) {
+                date = new Date(dateStr);
+            }
+            // Handle DD/MM/YYYY HH:mm:ss format (05/06/2025 11:09:44)
+            else if (dateStr.includes('/') && dateStr.includes(':')) {
+                const [datePart, timePart] = dateStr.split(' ');
+                const [day, month, year] = datePart.split('/');
+                date = new Date(`${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')} ${timePart}`);
+            }
+            // Handle DD/MM/YYYY format
+            else if (dateStr.includes('/')) {
+                const [day, month, year] = dateStr.split('/');
+                date = new Date(`${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`);
+            }
+            // Handle YYYY-MM-DD format (2025-06-20)
+            else if (dateStr.includes('-') && dateStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
+                date = new Date(dateStr);
+            }
+            // Handle DD-MM-YYYY HH:mm:ss format
+            else if (dateStr.includes('-') && dateStr.includes(':')) {
                 const [datePart, timePart] = dateStr.split(' ');
                 const [day, month, year] = datePart.split('-');
                 date = new Date(`${year}-${month}-${day} ${timePart}`);
             }
-            // Try DD-MM-YYYY format
+            // Handle DD-MM-YYYY format
             else if (dateStr.includes('-')) {
                 const [day, month, year] = dateStr.split('-');
                 date = new Date(`${year}-${month}-${day}`);
@@ -249,21 +393,60 @@
             return isNaN(date.getTime()) ? null : date;
         }
 
+        // Format date for display (dd-mmm-yyyy format)
+        function formatDateForDisplay(date) {
+            if (!date) return 'N/A';
+            
+            const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
+                           'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            
+            const day = date.getDate().toString().padStart(2, '0');
+            const month = months[date.getMonth()];
+            const year = date.getFullYear();
+            
+            return `${day}-${month}-${year}`;
+        }
+
+        // Format datetime for display (dd-mmm-yyyy hh:mm:ss format)
+        function formatDateTimeForDisplay(date) {
+            if (!date) return 'N/A';
+            
+            const dateStr = formatDateForDisplay(date);
+            const hours = date.getHours().toString().padStart(2, '0');
+            const minutes = date.getMinutes().toString().padStart(2, '0');
+            const seconds = date.getSeconds().toString().padStart(2, '0');
+            
+            return `${dateStr} ${hours}:${minutes}:${seconds}`;
+        }
+
         // Calculate deadline based on your logic
         function calculateDeadline(dispatchDate, dispatchDateTimeStamp) {
             const dispatch = parseDate(dispatchDate);
             const dispatchTimestamp = parseDate(dispatchDateTimeStamp);
             
-            if (!dispatch || !dispatchTimestamp) return null;
+            if (!dispatch || !dispatchTimestamp) {
+                console.log('Invalid dates:', { dispatchDate, dispatchDateTimeStamp, dispatch, dispatchTimestamp });
+                return null;
+            }
             
-            // Calculate difference in days (date level only)
-            const diffTime = dispatch.getTime() - dispatchTimestamp.getTime();
-            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            // Calculate difference in days (date level only - ignore time)
+            const dispatchDateOnly = new Date(dispatch.getFullYear(), dispatch.getMonth(), dispatch.getDate());
+            const timestampDateOnly = new Date(dispatchTimestamp.getFullYear(), dispatchTimestamp.getMonth(), dispatchTimestamp.getDate());
             
-            // Half the difference and round up
+            const diffTime = dispatchDateOnly.getTime() - timestampDateOnly.getTime();
+            const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+            
+            console.log('Date calculation:', {
+                dispatchDateOnly: dispatchDateOnly.toDateString(),
+                timestampDateOnly: timestampDateOnly.toDateString(),
+                diffDays,
+                halfDiff: Math.ceil(diffDays / 2)
+            });
+            
+            // Half the difference and round up (take ceiling)
             const reminderDays = Math.ceil(diffDays / 2);
             
-            // Add reminder days to dispatchDateTimeStamp
+            // Add reminder days to the original dispatchDateTimeStamp (with time)
             const deadline = new Date(dispatchTimestamp);
             deadline.setDate(deadline.getDate() + reminderDays);
             
@@ -329,16 +512,16 @@
                         </div>
                         <div class="detail-row">
                             <span class="detail-label">📅 Dispatch Date:</span>
-                            <span class="detail-value">${order.dispatchDate || 'N/A'}</span>
+                            <span class="detail-value">${formatDateForDisplay(parseDate(order.dispatchDate))}</span>
                         </div>
                         <div class="detail-row">
                             <span class="detail-label">⏰ Timestamp:</span>
-                            <span class="detail-value">${order.dispatchDateTimeStamp || 'N/A'}</span>
+                            <span class="detail-value">${formatDateTimeForDisplay(parseDate(order.dispatchDateTimeStamp))}</span>
                         </div>
                         ${order.deadline ? `
                         <div class="detail-row">
                             <span class="detail-label">🎯 Deadline:</span>
-                            <span class="detail-value">${order.deadline.toLocaleString()}</span>
+                            <span class="detail-value">${formatDateTimeForDisplay(order.deadline)}</span>
                         </div>
                         ` : ''}
                         <div class="detail-row">
@@ -353,6 +536,30 @@
                     
                     <div id="countdown-${order.id}" class="countdown-section">
                         ${order.deadline ? '' : '<div class="countdown-title">⚠️ Cannot calculate deadline</div>'}
+                    </div>
+                    
+                    <div class="actions-section">
+                        <div class="actions-title">📋 Order Actions</div>
+                        <div class="action-buttons">
+                            <button class="action-btn on-time-btn" onclick="handleOnTime('${order.timestamp}', '${order.id}')">
+                                ✅ On Time
+                            </button>
+                            <button class="action-btn delayed-btn" onclick="toggleDelayedInput('${order.id}')">
+                                ⏰ Delayed
+                            </button>
+                        </div>
+                        
+                        <div id="delayed-input-${order.id}" class="delayed-input-section">
+                            <div class="input-group">
+                                <label class="input-label">Next Dispatch Date:</label>
+                                <input type="date" id="next-dispatch-${order.id}" class="date-input" required>
+                            </div>
+                            <button class="submit-delayed-btn" onclick="handleDelayed('${order.timestamp}', '${order.id}')">
+                                Submit Delayed
+                            </button>
+                        </div>
+                        
+                        <div id="feedback-${order.id}" class="action-feedback"></div>
                     </div>
                 </div>
             `;
@@ -454,6 +661,116 @@
             // Auto-refresh every 5 minutes
             setInterval(loadOrders, 5 * 60 * 1000);
         });
+
+        // Handle On Time action
+        async function handleOnTime(timestamp, orderId) {
+            const button = event.target;
+            const feedback = document.getElementById(`feedback-${orderId}`);
+            
+            button.disabled = true;
+            button.textContent = '⏳ Processing...';
+            
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        action: 'onTime',
+                        timestamp: timestamp
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showFeedback(orderId, 'Action completed successfully!', 'success');
+                    // Refresh orders after 2 seconds
+                    setTimeout(loadOrders, 2000);
+                } else {
+                    throw new Error(result.error || 'Failed to update');
+                }
+                
+            } catch (error) {
+                console.error('Error:', error);
+                showFeedback(orderId, `Error: ${error.message}`, 'error');
+            } finally {
+                button.disabled = false;
+                button.textContent = '✅ On Time';
+            }
+        }
+
+        // Toggle delayed input section
+        function toggleDelayedInput(orderId) {
+            const inputSection = document.getElementById(`delayed-input-${orderId}`);
+            inputSection.classList.toggle('show');
+        }
+
+        // Handle Delayed action
+        async function handleDelayed(timestamp, orderId) {
+            const nextDispatchInput = document.getElementById(`next-dispatch-${orderId}`);
+            const nextDispatchDate = nextDispatchInput.value;
+            const button = event.target;
+            const feedback = document.getElementById(`feedback-${orderId}`);
+            
+            if (!nextDispatchDate) {
+                showFeedback(orderId, 'Please select a next dispatch date', 'error');
+                return;
+            }
+            
+            button.disabled = true;
+            button.textContent = '⏳ Processing...';
+            
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        action: 'delayed',
+                        timestamp: timestamp,
+                        nextDispatchDate: nextDispatchDate
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showFeedback(orderId, 'Delayed action completed successfully!', 'success');
+                    // Hide the input section and clear the input
+                    document.getElementById(`delayed-input-${orderId}`).classList.remove('show');
+                    nextDispatchInput.value = '';
+                    // Refresh orders after 2 seconds
+                    setTimeout(loadOrders, 2000);
+                } else {
+                    throw new Error(result.error || 'Failed to update');
+                }
+                
+            } catch (error) {
+                console.error('Error:', error);
+                showFeedback(orderId, `Error: ${error.message}`, 'error');
+            } finally {
+                button.disabled = false;
+                button.textContent = 'Submit Delayed';
+            }
+        }
+
+        // Show feedback message
+        function showFeedback(orderId, message, type) {
+            const feedback = document.getElementById(`feedback-${orderId}`);
+            feedback.textContent = message;
+            feedback.className = `action-feedback ${type}`;
+            feedback.style.display = 'block';
+            
+            // Hide feedback after 5 seconds
+            setTimeout(() => {
+                feedback.style.display = 'none';
+            }, 5000);
+        }
     </script>
 </body>
 </html>

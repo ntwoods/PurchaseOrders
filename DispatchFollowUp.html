@@ -662,6 +662,18 @@
             setInterval(loadOrders, 5 * 60 * 1000);
         });
 
+        function formatTimestampForSheet(dateStr) {
+            const date = new Date(dateStr);
+            const dd = date.getDate().toString().padStart(2, '0');
+            const mm = (date.getMonth() + 1).toString().padStart(2, '0');
+            const yyyy = date.getFullYear();
+            const hh = date.getHours().toString().padStart(2, '0');
+            const min = date.getMinutes().toString().padStart(2, '0');
+            const ss = date.getSeconds().toString().padStart(2, '0');
+            return `${dd}/${mm}/${yyyy} ${hh}:${min}:${ss}`;
+        }
+
+        
         // Handle On Time action
         async function handleOnTime(timestamp, orderId) {
             const button = event.target;
@@ -681,7 +693,7 @@
                     },
                     body: JSON.stringify({
                         action: 'onTime',
-                        timestamp: timestamp
+                        timestamp: formatTimestampForSheet(timestamp)
                     })
                 });
             
@@ -699,7 +711,6 @@
                 button.textContent = '✅ On Time';
             }
         }
-
 
         // Toggle delayed input section
         function toggleDelayedInput(orderId) {
@@ -731,7 +742,7 @@
                     },
                     body: JSON.stringify({
                         action: 'delayed',
-                        timestamp: timestamp,
+                        timestamp: formatTimestampForSheet(timestamp),
                         nextDispatchDate: nextDispatchDate
                     })
                 });

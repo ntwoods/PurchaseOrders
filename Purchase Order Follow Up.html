@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Management System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            font-weight: 300;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 1.1rem;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 60px;
+            color: #666;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .orders-container {
+            padding: 30px;
+        }
+
+        .order-card {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            padding: 25px;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .order-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+        }
+
+        .order-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .order-info h3 {
+            color: #2c3e50;
+            font-size: 1.4rem;
+            margin-bottom: 5px;
+        }
+
+        .order-timestamp {
+            color: #7f8c8d;
+            font-size: 0.9rem;
+        }
+
+        .show-po-btn {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .show-po-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(52, 152, 219, 0.3);
+        }
+
+        .form-section {
+            margin-top: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .required {
+            color: #e74c3c;
+        }
+
+        .file-input-wrapper {
+            position: relative;
+            display: inline-block;
+            width: 100%;
+        }
+
+        .file-input {
+            position: absolute;
+            left: -9999px;
+        }
+
+        .file-label {
+            display: flex;
+            align-items: center;
+            padding: 12px 20px;
+            background: #ecf0f1;
+            border: 2px dashed #bdc3c7;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-height: 50px;
+        }
+
+        .file-label:hover {
+            background: #d5dbdb;
+            border-color: #95a5a6;
+        }
+
+        .file-label.has-file {
+            background: #d5f4e6;
+            border-color: #27ae60;
+        }
+
+        .file-icon {
+            margin-right: 10px;
+            font-size: 1.2rem;
+        }
+
+        .select-wrapper {
+            position: relative;
+        }
+
+        select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            background: white;
+            font-size: 1rem;
+            cursor: pointer;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+            background-position: right 12px center;
+            background-repeat: no-repeat;
+            background-size: 16px;
+        }
+
+        select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .lr-copy-section {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 15px;
+            display: none;
+        }
+
+        .lr-copy-section.show {
+            display: block;
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .submit-btn {
+            background: linear-gradient(135deg, #27ae60, #2ecc71);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1.1rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        .submit-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(39, 174, 96, 0.3);
+        }
+
+        .submit-btn:disabled {
+            background: #95a5a6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .error-message {
+            background: #ffebee;
+            color: #c62828;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        .success-message {
+            background: #e8f5e8;
+            color: #2e7d32;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        .no-orders {
+            text-align: center;
+            padding: 60px;
+            color: #7f8c8d;
+        }
+
+        .no-orders h3 {
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .order-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .container {
+                margin: 10px;
+                border-radius: 15px;
+            }
+            
+            .orders-container {
+                padding: 20px;
+            }
+            
+            .order-card {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📦 Order Management System</h1>
+            <p>Manage dispatch details and shipping options for all orders</p>
+        </div>
+
+        <div id="loading" class="loading">
+            <div class="spinner"></div>
+            <p>Loading orders...</p>
+        </div>
+
+        <div id="error" class="error-message" style="display: none;"></div>
+
+        <div id="ordersContainer" class="orders-container" style="display: none;">
+            <!-- Orders will be populated here -->
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'https://script.google.com/macros/s/AKfycbwKB6wQPmrOXmMQ8bM43AMyWgtDobQJ96dPJXntgZpmyJRYogSz9qQHEqIn-OwBY67Qkw/exec';
+        
+        let orders = [];
+
+        // Load orders on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadOrders();
+        });
+
+        async function loadOrders() {
+            try {
+                showLoading(true);
+                const response = await fetch(API_URL);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                console.log('API Response:', data); // Debug log
+                
+                // Handle different response formats
+                if (Array.isArray(data)) {
+                    orders = data;
+                } else if (data && data.data && Array.isArray(data.data)) {
+                    orders = data.data;
+                } else if (data && typeof data === 'object') {
+                    // If it's an object, try to extract array from common property names
+                    orders = data.orders || data.results || data.items || [];
+                } else {
+                    orders = [];
+                }
+                
+                renderOrders();
+                showLoading(false);
+            } catch (error) {
+                console.error('Error loading orders:', error);
+                showError(`Failed to load orders: ${error.message}. Please check your internet connection and try again.`);
+                showLoading(false);
+            }
+        }
+
+        function showLoading(show) {
+            document.getElementById('loading').style.display = show ? 'block' : 'none';
+            document.getElementById('ordersContainer').style.display = show ? 'none' : 'block';
+        }
+
+        function showError(message) {
+            const errorDiv = document.getElementById('error');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+        }
+
+        function renderOrders() {
+            const container = document.getElementById('ordersContainer');
+            
+            console.log('Orders to render:', orders); // Debug log
+            
+            if (!orders || !Array.isArray(orders) || orders.length === 0) {
+                container.innerHTML = `
+                    <div class="no-orders">
+                        <h3>No Orders Found</h3>
+                        <p>There are currently no orders to display.</p>
+                        <p><small>Debug: ${Array.isArray(orders) ? 'Array with ' + orders.length + ' items' : 'Not an array: ' + typeof orders}</small></p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = orders.map((order, index) => `
+                <div class="order-card">
+                    <div class="order-header">
+                        <div class="order-info">
+                            <h3>🏢 ${order.requesterName || 'Unknown Requester'}</h3>
+                            <div class="order-timestamp">📅 ${formatTimestamp(order.timestamp)}</div>
+                        </div>
+                        <a href="${order.googleSheetURL}" target="_blank" class="show-po-btn">
+                            📄 Show PO
+                        </a>
+                    </div>
+
+                    <form id="orderForm${index}" class="form-section">
+                        <div class="form-group">
+                            <label for="dispatchDetails${index}">
+                                📋 Dispatch Details Attachment <span class="required">*</span>
+                            </label>
+                            <div class="file-input-wrapper">
+                                <input type="file" id="dispatchDetails${index}" class="file-input" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" required>
+                                <label for="dispatchDetails${index}" class="file-label">
+                                    <span class="file-icon">📎</span>
+                                    <span class="file-text">Choose dispatch details file...</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="billToShipTo${index}">
+                                🚚 Bill To Ship To
+                            </label>
+                            <div class="select-wrapper">
+                                <select id="billToShipTo${index}" onchange="toggleLRCopy(${index})">
+                                    <option value="">Select an Option</option>
+                                    <option value="yes">Yes</option>
+                                    <option value="no">No (Delivery to Godown)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div id="lrCopySection${index}" class="lr-copy-section">
+                            <div class="form-group">
+                                <label for="lrCopy${index}">
+                                    🚛 Attach LR Copy <span class="required">*</span>
+                                </label>
+                                <div class="file-input-wrapper">
+                                    <input type="file" id="lrCopy${index}" class="file-input" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx">
+                                    <label for="lrCopy${index}" class="file-label">
+                                        <span class="file-icon">📎</span>
+                                        <span class="file-text">Choose LR copy file...</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="submit-btn">
+                            ✅ Submit Order Details
+                        </button>
+                    </form>
+                </div>
+            `).join('');
+
+            // Add event listeners for file inputs and forms
+            orders.forEach((order, index) => {
+                // Add a small delay to ensure DOM elements are fully rendered
+                setTimeout(() => {
+                    setupFileInput(`dispatchDetails${index}`);
+                    setupFileInput(`lrCopy${index}`);
+                    setupFormSubmission(`orderForm${index}`, index);
+                }, 100);
+            });
+        }
+
+        function formatTimestamp(timestamp) {
+            if (!timestamp) return 'No timestamp';
+            const date = new Date(timestamp);
+            return date.toLocaleString();
+        }
+
+	function setupFileInput(inputId) {
+	   const input = document.getElementById(inputId);
+	    const fileText = document.querySelector(`label[for="${inputId}"] .file-text`);
+	    const label = document.querySelector(`label[for="${inputId}"]`);
+
+	    if (!input || !fileText || !label) {
+	        console.warn(`Element(s) missing for ${inputId}`);
+	        return;
+	   }
+
+	   input.addEventListener('change', function() {
+	       if (this.files.length > 0) {
+ 	          fileText.textContent = `📁 ${this.files[0].name}`;
+	           label.classList.add('has-file');
+	       } else {
+	           fileText.textContent = 'Choose file...';
+	           label.classList.remove('has-file');
+	       }
+	   });
+	}
+
+        function toggleLRCopy(index) {
+            const select = document.getElementById(`billToShipTo${index}`);
+            const lrSection = document.getElementById(`lrCopySection${index}`);
+            
+            if (select.value === 'yes') {
+                lrSection.classList.add('show');
+                document.getElementById(`lrCopy${index}`).required = true;
+            } else {
+                lrSection.classList.remove('show');
+                document.getElementById(`lrCopy${index}`).required = false;
+            }
+        }
+
+        function setupFormSubmission(formId, orderIndex) {
+            const form = document.getElementById(formId);
+            
+            form.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                
+                const submitBtn = form.querySelector('.submit-btn');
+                const originalText = submitBtn.textContent;
+                
+                try {
+                    submitBtn.disabled = true;
+                    submitBtn.textContent = '⏳ Processing...';
+                    
+                    await submitOrderForm(orderIndex);
+                    
+                    // Show success message
+                    const successDiv = document.createElement('div');
+                    successDiv.className = 'success-message';
+                    successDiv.textContent = '✅ Order details submitted successfully!';
+                    form.appendChild(successDiv);
+                    
+                    // Reset form
+                    form.reset();
+                    document.getElementById(`lrCopySection${orderIndex}`).classList.remove('show');
+                    
+                    // Remove success message after 3 seconds
+                    setTimeout(() => {
+                        if (successDiv.parentNode) {
+                            successDiv.parentNode.removeChild(successDiv);
+                        }
+                    }, 3000);
+                    
+                } catch (error) {
+                    console.error('Error submitting form:', error);
+                    alert('❌ Error submitting order details. Please try again.');
+                } finally {
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = originalText;
+                }
+            });
+        }
+
+        async function submitOrderForm(orderIndex) {
+            const order = orders[orderIndex];
+            const dispatchFile = document.getElementById(`dispatchDetails${orderIndex}`).files[0];
+            const billToShipTo = document.getElementById(`billToShipTo${orderIndex}`).value;
+            const lrFile = document.getElementById(`lrCopy${orderIndex}`).files[0];
+
+            // Validate required fields
+            if (!dispatchFile) {
+                throw new Error('Dispatch details file is required');
+            }
+            
+            if (!billToShipTo) {
+                throw new Error('Please select Bill To Ship To option');
+            }
+            
+            if (billToShipTo === 'yes' && !lrFile) {
+                throw new Error('LR Copy is required when Bill To Ship To is Yes');
+            }
+
+            // Convert files to base64
+            const dispatchBase64 = await fileToBase64(dispatchFile);
+            const lrBase64 = billToShipTo === 'yes' ? await fileToBase64(lrFile) : null;
+
+            // Prepare payload
+            const payload = {
+                timestamp: order.timestamp,
+                dispatchDetailsFile: {
+                    data: dispatchBase64,
+                    name: dispatchFile.name,
+                    type: dispatchFile.type
+                },
+                billToShipTo: billToShipTo,
+                lrCopyFile: lrBase64 ? {
+                    data: lrBase64,
+                    name: lrFile.name,
+                    type: lrFile.type
+                } : null
+            };
+
+	// Submit to API
+		try {
+		    await fetch(API_URL, {
+		        method: 'POST',
+		        mode: 'no-cors',
+		        headers: {
+		            'Content-Type': 'application/json',
+		        },
+		        body: JSON.stringify(payload)
+		    });
+		
+		    // Since no-cors doesn't allow us to inspect the response, we assume success
+		    console.log('Submission sent successfully (no-cors mode).');
+		    alert('Submission successful!');
+		} catch (error) {
+		    console.error('Error during submission:', error);
+		    alert('An error occurred while submitting the form.');
+		}
+	}
+        function fileToBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = () => {
+                    // Remove the data URL prefix (e.g., "data:image/jpeg;base64,")
+                    const base64 = reader.result.split(',')[1];
+                    resolve(base64);
+                };
+                reader.onerror = error => reject(error);
+            });
+        }
+    </script>
+</body>
+</html>

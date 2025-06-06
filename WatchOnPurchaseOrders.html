@@ -1,0 +1,765 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Monitor - NT Woods</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+            line-height: 1.5;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 20px auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 24px 32px;
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: white;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .logo {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #e67e22 0%, #f39c12 100%);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 18px;
+            color: white;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .title-group h1 {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .title-group p {
+            font-size: 14px;
+            opacity: 0.8;
+        }
+
+        .refresh-btn {
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            cursor: pointer;
+            padding: 12px;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            color: white;
+        }
+
+        .refresh-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .refresh-icon {
+            width: 24px;
+            height: 24px;
+            stroke: currentColor;
+            transition: transform 0.3s;
+        }
+
+        .refresh-btn.loading .refresh-icon {
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .content {
+            padding: 32px;
+        }
+
+        .section {
+            margin-bottom: 40px;
+        }
+
+        .section:last-child {
+            margin-bottom: 0;
+        }
+
+        .section-title {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            color: #2c3e50;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .section-icon {
+            width: 28px;
+            height: 28px;
+            padding: 6px;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+        }
+
+        .filter-tabs {
+            display: flex;
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 6px;
+            margin-bottom: 24px;
+            gap: 6px;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .filter-tab {
+            flex: 1;
+            padding: 12px 20px;
+            background: none;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            color: #666;
+        }
+
+        .filter-tab.active {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3);
+            transform: translateY(-1px);
+        }
+
+        .orders-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .order-card {
+            background: white;
+            border: 2px solid #e8ecf3;
+            border-radius: 16px;
+            padding: 20px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .order-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            transition: all 0.3s ease;
+        }
+
+        .order-card:hover {
+            border-color: #3498db;
+            box-shadow: 0 8px 25px rgba(52, 152, 219, 0.15);
+            transform: translateY(-4px);
+        }
+
+        .order-card:hover::before {
+            height: 6px;
+        }
+
+        .order-card.delayed {
+            border-color: #e74c3c;
+            background: #fff5f5;
+        }
+
+        .order-card.delayed::before {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+        }
+
+        .order-card.delayed .delay-badge {
+            display: inline-block;
+            background: #e74c3c;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .order-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+        }
+
+        .order-status {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            flex-shrink: 0;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .status-transit {
+            background: linear-gradient(135deg, #f39c12, #e67e22);
+        }
+
+        .status-received {
+            background: linear-gradient(135deg, #27ae60, #2ecc71);
+        }
+
+        .order-id {
+            font-size: 18px;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 8px;
+        }
+
+        .order-location {
+            font-size: 14px;
+            color: #7f8c8d;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .location-icon {
+            width: 14px;
+            height: 14px;
+            opacity: 0.7;
+        }
+
+        .order-time {
+            font-size: 13px;
+            color: #95a5a6;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .time-icon {
+            width: 14px;
+            height: 14px;
+            opacity: 0.7;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #7f8c8d;
+            background: #f8f9fa;
+            border-radius: 16px;
+            border: 2px dashed #bdc3c7;
+        }
+
+        .empty-icon {
+            width: 48px;
+            height: 48px;
+            margin: 0 auto 16px;
+            opacity: 0.5;
+        }
+
+        .loading-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #7f8c8d;
+        }
+
+        .error-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #e74c3c;
+            background: linear-gradient(135deg, #fff5f5, #ffeaea);
+            border: 2px solid #fadbd8;
+            border-radius: 16px;
+            margin-bottom: 16px;
+        }
+
+        .stats-bar {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 24px;
+            padding: 16px;
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            border-radius: 12px;
+        }
+
+        .stat-item {
+            flex: 1;
+            text-align: center;
+            padding: 12px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .stat-number {
+            font-size: 24px;
+            font-weight: 700;
+            color: #2c3e50;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #7f8c8d;
+            margin-top: 4px;
+        }
+
+        .delay-badge {
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                margin: 10px;
+                border-radius: 16px;
+            }
+
+            .header {
+                padding: 20px 24px;
+            }
+
+            .content {
+                padding: 24px;
+            }
+
+            .title-group h1 {
+                font-size: 24px;
+            }
+
+            .orders-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .filter-tab {
+                padding: 10px 16px;
+                font-size: 13px;
+            }
+
+            .stats-bar {
+                flex-direction: column;
+                gap: 12px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .header {
+                flex-direction: column;
+                gap: 16px;
+                text-align: center;
+            }
+
+            .orders-grid {
+                grid-template-columns: 1fr;
+                gap: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="header-left">
+                <div class="logo">NT</div>
+                <div class="title-group">
+                    <h1>Order Monitor</h1>
+                    <p>NT Woods - Real-time Order Tracking</p>
+                </div>
+            </div>
+            <button class="refresh-btn" onclick="refreshData()">
+                <svg class="refresh-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                </svg>
+            </button>
+        </div>
+
+        <div class="content">
+            <div class="section">
+                <h2 class="section-title">
+                    <svg class="section-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    Orders In-Transit
+                </h2>
+                <div class="stats-bar" id="transit-stats"></div>
+                <div class="filter-tabs">
+                    <button class="filter-tab active" onclick="setTransitFilter('Godown')">Godown</button>
+                    <button class="filter-tab" onclick="setTransitFilter('Ship-To Party')">Ship-To Party</button>
+                    <button class="filter-tab" onclick="setTransitFilter('Both')">Both</button>
+                </div>
+                <div class="orders-grid" id="transit-orders"></div>
+            </div>
+
+            <div class="section">
+                <h2 class="section-title">
+                    <svg class="section-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    Orders Received
+                </h2>
+                <div class="stats-bar" id="received-stats"></div>
+                <div class="filter-tabs">
+                    <button class="filter-tab active" onclick="setReceivedFilter('Godown')">Godown</button>
+                    <button class="filter-tab" onclick="setReceivedFilter('Ship-To Party')">Ship-To Party</button>
+                    <button class="filter-tab" onclick="setReceivedFilter('Both')">Both</button>
+                </div>
+                <div class="orders-grid" id="received-orders"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'https://script.google.com/macros/s/AKfycbyaHFUUjCNRfxKEH_-yZViJI4AKeg2U_AAXFFBaQRqJkfUEZ_ua6QQk2moPLxH8zPwP/exec';
+        
+        let allOrders = [];
+        let transitFilter = 'Godown';
+        let receivedFilter = 'Godown';
+
+        // Fetch data from API
+        async function fetchOrders() {
+            try {
+                const refreshBtn = document.querySelector('.refresh-btn');
+                refreshBtn.classList.add('loading');
+                
+                const response = await fetch(API_URL);
+                const result = await response.json();
+                
+                if (result.success && result.data) {
+                    allOrders = result.data;
+                    renderOrders();
+                } else {
+                    showError('Failed to load orders');
+                }
+            } catch (error) {
+                console.error('Error fetching orders:', error);
+                showError('Network error occurred');
+            } finally {
+                const refreshBtn = document.querySelector('.refresh-btn');
+                refreshBtn.classList.remove('loading');
+            }
+        }
+
+        // Show error message
+        function showError(message) {
+            const transitContainer = document.getElementById('transit-orders');
+            const receivedContainer = document.getElementById('received-orders');
+            
+            const errorHtml = `<div class="error-state">${message}</div>`;
+            transitContainer.innerHTML = errorHtml;
+            receivedContainer.innerHTML = errorHtml;
+        }
+
+        // Format date
+        function formatDate(dateString) {
+            if (!dateString) return 'Not available';
+            
+            const date = new Date(dateString);
+            const now = new Date();
+            const diffInHours = Math.abs(now - date) / (1000 * 60 * 60);
+            
+            if (diffInHours < 24) {
+                return date.toLocaleTimeString('en-US', { 
+                    hour: 'numeric', 
+                    minute: '2-digit',
+                    hour12: true 
+                });
+            } else {
+                return date.toLocaleDateString('en-US', { 
+                    month: 'short', 
+                    day: 'numeric',
+                    year: 'numeric'
+                });
+            }
+        }
+
+        // Calculate expected delivery date (expectedDispatchDate + 1 day)
+        function calculateExpectedDelivery(expectedDispatchDate) {
+            if (!expectedDispatchDate) return null;
+            const dispatch = new Date(expectedDispatchDate);
+            const expected = new Date(dispatch);
+            expected.setDate(dispatch.getDate() + 1);
+            return expected;
+        }
+
+        // Check if order is delayed
+        function isOrderDelayed(expectedDispatchDate) {
+            const expectedDelivery = calculateExpectedDelivery(expectedDispatchDate);
+            if (!expectedDelivery) return false;
+            
+            const now = new Date();
+            now.setHours(0, 0, 0, 0); // Set to start of today
+            expectedDelivery.setHours(0, 0, 0, 0);
+            
+            return now > expectedDelivery;
+        }
+
+        // Filter received orders within 24 hours
+        function isWithin24Hours(acknowledgedTimestamp) {
+            if (!acknowledgedTimestamp) return false;
+            
+            const acknowledged = new Date(acknowledgedTimestamp);
+            const now = new Date();
+            const diffInHours = Math.abs(now - acknowledged) / (1000 * 60 * 60);
+            
+            return diffInHours <= 24;
+        }
+
+        // Generate simple order ID
+        function generateOrderId(index) {
+            return `Order-${index + 1}`;
+        }
+
+        // Update statistics
+        function updateStats() {
+            const transitOrders = allOrders.filter(order => !order.acknowledgedTimestamp);
+            const receivedOrders = allOrders.filter(order => order.acknowledgedTimestamp && isWithin24Hours(order.acknowledgedTimestamp));
+            const delayedOrders = transitOrders.filter(order => isOrderDelayed(order.expectedDispatchDate));
+            
+            // Transit stats
+            const transitStatsHtml = `
+                <div class="stat-item">
+                    <div class="stat-number">${transitOrders.length}</div>
+                    <div class="stat-label">Total In-Transit</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number">${delayedOrders.length}</div>
+                    <div class="stat-label">Delayed</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number">${transitOrders.length - delayedOrders.length}</div>
+                    <div class="stat-label">On Time</div>
+                </div>
+            `;
+            document.getElementById('transit-stats').innerHTML = transitStatsHtml;
+            
+            // Received stats
+            const receivedStatsHtml = `
+                <div class="stat-item">
+                    <div class="stat-number">${receivedOrders.length}</div>
+                    <div class="stat-label">Total Received</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number">${receivedOrders.filter(o => o.orderType === 'Godown').length}</div>
+                    <div class="stat-label">Godown</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number">${receivedOrders.filter(o => o.orderType === 'Ship-To Party').length}</div>
+                    <div class="stat-label">Ship-To Party</div>
+                </div>
+            `;
+            document.getElementById('received-stats').innerHTML = receivedStatsHtml;
+        }
+
+        // Render orders
+        function renderOrders() {
+            updateStats();
+            renderTransitOrders();
+            renderReceivedOrders();
+        }
+
+        // Render transit orders (orders without acknowledgedTimestamp)
+        function renderTransitOrders() {
+            const container = document.getElementById('transit-orders');
+            const transitOrders = allOrders.filter(order => !order.acknowledgedTimestamp);
+            
+            let filteredOrders = transitOrders;
+            if (transitFilter !== 'Both') {
+                filteredOrders = transitOrders.filter(order => 
+                    order.orderType === transitFilter || 
+                    (transitFilter === 'Ship-To Party' && order.orderType === 'Ship-To Party')
+                );
+            }
+
+            if (filteredOrders.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <svg class="empty-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path>
+                        </svg>
+                        <p>No orders in transit</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const ordersHtml = filteredOrders.map((order, index) => {
+                const orderId = generateOrderId(index);
+                const location = order.orderType === 'Godown' ? 'Godown' : 'Ship-To Party A';
+                const expectedDelivery = calculateExpectedDelivery(order.expectedDispatchDate);
+                const expectedDate = expectedDelivery ? formatDate(expectedDelivery) : 'Not available';
+                const isDelayed = isOrderDelayed(order.expectedDispatchDate);
+                
+                return `
+                    <div class="order-card ${isDelayed ? 'delayed' : ''}" onclick="openDispatchDetail('${order.dispatchDetailURL}')">
+                        ${isDelayed ? '<div class="delay-badge">DELAYED</div>' : ''}
+                        <div class="order-header">
+                            <div class="order-status status-transit"></div>
+                        </div>
+                        <div class="order-id">${orderId}</div>
+                        <div class="order-location">
+                            <svg class="location-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                            </svg>
+                            ${location}
+                        </div>
+                        <div class="order-time">
+                            <svg class="time-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            Expected: ${expectedDate}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            container.innerHTML = ordersHtml;
+        }
+
+        // Render received orders (orders with acknowledgedTimestamp within 24 hours)
+        function renderReceivedOrders() {
+            const container = document.getElementById('received-orders');
+            const receivedOrders = allOrders.filter(order => 
+                order.acknowledgedTimestamp && isWithin24Hours(order.acknowledgedTimestamp)
+            );
+            
+            let filteredOrders = receivedOrders;
+            if (receivedFilter !== 'Both') {
+                filteredOrders = receivedOrders.filter(order => 
+                    order.orderType === receivedFilter ||
+                    (receivedFilter === 'Ship-To Party' && order.orderType === 'Ship-To Party')
+                );
+            }
+
+            if (filteredOrders.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <svg class="empty-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        <p>No orders received in the last 24 hours</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const ordersHtml = filteredOrders.map((order, index) => {
+                const orderId = generateOrderId(index);
+                const location = order.orderType === 'Godown' ? 'Received at Godown' : 'Received at Ship-To Party';
+                const receivedTime = formatDate(order.acknowledgedTimestamp);
+                
+                return `
+                    <div class="order-card" onclick="openDispatchDetail('${order.dispatchDetailURL}')">
+                        <div class="order-header">
+                            <div class="order-status status-received"></div>
+                        </div>
+                        <div class="order-id">${orderId}</div>
+                        <div class="order-location">
+                            <svg class="location-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            ${location}
+                        </div>
+                        <div class="order-time">
+                            <svg class="time-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            ${receivedTime}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            container.innerHTML = ordersHtml;
+        }
+
+        // Set transit filter
+        function setTransitFilter(filter) {
+            transitFilter = filter;
+            
+            // Update active tab
+            const transitTabs = document.querySelectorAll('.section:first-child .filter-tab');
+            transitTabs.forEach(tab => tab.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            renderTransitOrders();
+        }
+
+        // Set received filter
+        function setReceivedFilter(filter) {
+            receivedFilter = filter;
+            
+            // Update active tab
+            const receivedTabs = document.querySelectorAll('.section:last-child .filter-tab');
+            receivedTabs.forEach(tab => tab.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            renderReceivedOrders();
+        }
+
+        // Refresh data
+        function refreshData() {
+            fetchOrders();
+        }
+
+        // Open dispatch detail URL
+        function openDispatchDetail(url) {
+            if (url && url.startsWith('http')) {
+                window.open(url, '_blank');
+            }
+        }
+
+        // Initialize app
+        document.addEventListener('DOMContentLoaded', function() {
+            // Show loading state initially
+            const transitContainer = document.getElementById('transit-orders');
+            const receivedContainer = document.getElementById('received-orders');
+            
+            transitContainer.innerHTML = '<div class="loading-state">Loading orders...</div>';
+            receivedContainer.innerHTML = '<div class="loading-state">Loading orders...</div>';
+            
+            // Fetch initial data
+            fetchOrders();
+            
+            // Auto-refresh every 30 seconds
+            setInterval(fetchOrders, 30000);
+        });
+    </script>
+</body>
+</html>

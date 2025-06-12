@@ -12,51 +12,70 @@
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #e6f7ff;
+            color: #2d3748;
+            line-height: 1.4;
             padding: 20px;
+            min-height: 100vh;
         }
 
         .container {
-            max-width: 1200px;
+            max-width: 1400px;
             margin: 0 auto;
-            background: white;
-            border-radius: 20px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            background-color: #ebccff;
+            border-radius: 16px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
             overflow: hidden;
+            backdrop-filter: blur(10px);
         }
 
         .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 30px;
-            text-align: center;
+            background: linear-gradient(135deg, #1a202c 0%, #2d3748 100%);
+            color: orange;
+            padding: 32px 40px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E") repeat;
+            opacity: 0.1;
         }
 
         .header h1 {
-            font-size: 2.5rem;
-            margin-bottom: 10px;
-            font-weight: 300;
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+            position: relative;
+            z-index: 1;
         }
 
         .header p {
-            opacity: 0.9;
-            font-size: 1.1rem;
+            color: white;
+            font-size: 1rem;
+            position: relative;
+            z-index: 1;
         }
 
         .loading {
             text-align: center;
             padding: 60px;
-            color: #666;
+            color: #718096;
         }
 
         .spinner {
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid #667eea;
+            border: 3px solid #e2e8f0;
+            border-top: 3px solid #4299e1;
             border-radius: 50%;
-            width: 40px;
-            height: 40px;
+            width: 32px;
+            height: 32px;
             animation: spin 1s linear infinite;
             margin: 0 auto 20px;
         }
@@ -67,84 +86,138 @@
         }
 
         .orders-container {
-            padding: 30px;
+            padding: 32px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+            gap: 24px;
+            justify-content: start;
+            align-items: start;
         }
 
         .order-card {
-            background: #f8f9fa;
-            border: 1px solid #e9ecef;
-            border-radius: 15px;
-            margin-bottom: 20px;
-            padding: 25px;
-            transition: all 0.3s ease;
+            background-color: #e6ffcc;
+            border: 1px solid rgba(226, 232, 240, 0.6);
+            border-radius: 12px;
+            padding: 20px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            width: 100%;
+            max-width: 420px;
+            height: auto;
+            min-height: 460px;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
             position: relative;
+            overflow: hidden;
+            justify-self: start;
+        }
+
+        .order-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #4299e1, #38a169);
+            border-radius: 12px 12px 0 0;
         }
 
         .order-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+            border-color: rgba(66, 153, 225, 0.3);
+            transform: translateY(-4px);
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
         }
 
         .order-header {
             display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-            gap: 15px;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 16px;
+            flex-shrink: 0;
+            padding-top: 8px;
         }
 
         .order-info h3 {
-            color: #2c3e50;
-            font-size: 1.4rem;
-            margin-bottom: 5px;
+            color: #1a202c;
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 4px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .order-timestamp {
-            color: #7f8c8d;
-            font-size: 0.9rem;
+            color: #718096;
+            font-size: 0.8rem;
+            background: #f7fafc;
+            padding: 4px 8px;
+            border-radius: 6px;
+            display: inline-block;
+            width: fit-content;
         }
 
         .show-po-btn {
-            background: linear-gradient(135deg, #3498db, #2980b9);
+            background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
             color: white;
             border: none;
-            padding: 12px 24px;
-            border-radius: 25px;
+            padding: 8px 16px;
+            border-radius: 8px;
             cursor: pointer;
-            font-size: 1rem;
-            transition: all 0.3s ease;
+            font-size: 0.8rem;
+            font-weight: 600;
             text-decoration: none;
             display: inline-block;
+            transition: all 0.2s ease;
+            width: fit-content;
+            align-self: flex-start;
+            box-shadow: 0 2px 4px rgba(66, 153, 225, 0.3);
         }
 
         .show-po-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(52, 152, 219, 0.3);
+            background: linear-gradient(135deg, #3182ce 0%, #2c5282 100%);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(66, 153, 225, 0.4);
         }
 
         .form-section {
-            margin-top: 20px;
+            border-top: 2px solid #f1f5f9;
+            padding-top: 16px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
         }
 
-        .form-group {
-            margin-bottom: 20px;
+        .form-item {
+            display: flex;
+            flex-direction: column;
+            gap: 1px;
+            margin-bottom: 12px;
         }
 
-        .form-group label {
-            display: block;
-            margin-bottom: 8px;
+        .form-item label {
             font-weight: 600;
-            color: #2c3e50;
+            color: #2d3748;
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 1px;
         }
 
         .required {
-            color: #e74c3c;
+            color: #e53e3e;
+            font-size: 0.9rem;
+        }
+
+        .input-wrapper {
+            width: 100%;
         }
 
         .file-input-wrapper {
             position: relative;
-            display: inline-block;
+            display: block;
             width: 100%;
         }
 
@@ -156,157 +229,227 @@
         .file-label {
             display: flex;
             align-items: center;
-            padding: 12px 20px;
-            background: #ecf0f1;
-            border: 2px dashed #bdc3c7;
-            border-radius: 10px;
+            padding: 10px 12px;
+            background: linear-gradient(145deg, #f8fafc 0%, #edf2f7 100%);
+            border: 2px dashed #cbd5e0;
+            border-radius: 8px;
             cursor: pointer;
             transition: all 0.3s ease;
-            min-height: 50px;
+            font-size: 0.8rem;
+            color: #4a5568;
+            min-height: 44px;
         }
 
         .file-label:hover {
-            background: #d5dbdb;
-            border-color: #95a5a6;
+            background: linear-gradient(145deg, #edf2f7 0%, #e2e8f0 100%);
+            border-color: #a0aec0;
+            transform: translateY(-1px);
         }
 
         .file-label.has-file {
-            background: #d5f4e6;
-            border-color: #27ae60;
+            background: linear-gradient(145deg, #f0fff4 0%, #c6f6d5 100%);
+            border-color: #68d391;
+            border-style: solid;
+            color: #276749;
         }
 
         .file-icon {
-            margin-right: 10px;
-            font-size: 1.2rem;
+            margin-right: 8px;
+            font-size: 1rem;
+        }
+
+        .file-text {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            flex: 1;
+            font-weight: 500;
         }
 
         .select-wrapper {
             position: relative;
+            width: 100%;
+        }
+
+        .date-field {
+            width: 100%;
+            padding: 10px 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            background: white;
+            font-size: 0.8rem;
+            color: #2d3748;
+            transition: all 0.2s ease;
+            min-height: 44px;
+        }
+
+        .date-field:focus {
+            outline: none;
+            border-color: #4299e1;
+            box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.1);
         }
 
         select {
             width: 100%;
-            padding: 12px 15px;
-            border: 2px solid #ddd;
-            border-radius: 10px;
+            padding: 10px 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
             background: white;
-            font-size: 1rem;
+            font-size: 0.8rem;
+            color: #2d3748;
             cursor: pointer;
             appearance: none;
-            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%23718096' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
             background-position: right 12px center;
             background-repeat: no-repeat;
             background-size: 16px;
+            padding-right: 40px;
+            min-height: 44px;
+            transition: all 0.2s ease;
         }
 
         select:focus {
             outline: none;
-            border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-        }
-
-        .lr-copy-section {
-            background: #fff3cd;
-            border: 1px solid #ffeaa7;
-            border-radius: 10px;
-            padding: 20px;
-            margin-top: 15px;
-            display: block;
-        }
-
-        .lr-copy-section.show {
-            display: block;
-            animation: fadeIn 0.3s ease-in;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(-10px); }
-            to { opacity: 1; transform: translateY(0); }
+            border-color: #4299e1;
+            box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.1);
         }
 
         .submit-btn {
-            background: linear-gradient(135deg, #27ae60, #2ecc71);
+            background: linear-gradient(135deg, #38a169 0%, #2f855a 100%);
             color: white;
             border: none;
-            padding: 15px 30px;
-            border-radius: 25px;
+            padding: 12px 20px;
+            border-radius: 8px;
             cursor: pointer;
-            font-size: 1.1rem;
+            font-size: 0.85rem;
             font-weight: 600;
             transition: all 0.3s ease;
             width: 100%;
-            margin-top: 20px;
+            margin-top: auto;
+            min-height: 48px;
+            box-shadow: 0 4px 6px rgba(56, 161, 105, 0.3);
         }
 
         .submit-btn:hover:not(:disabled) {
+            background: linear-gradient(135deg, #2f855a 0%, #276749 100%);
             transform: translateY(-2px);
-            box-shadow: 0 10px 25px rgba(39, 174, 96, 0.3);
+            box-shadow: 0 6px 12px rgba(56, 161, 105, 0.4);
         }
 
         .submit-btn:disabled {
-            background: #95a5a6;
+            background: #a0aec0;
             cursor: not-allowed;
             transform: none;
+            box-shadow: none;
         }
 
         .error-message {
-            background: #ffebee;
-            color: #c62828;
-            padding: 15px;
-            border-radius: 10px;
+            background: linear-gradient(145deg, #fed7d7 0%, #feb2b2 100%);
+            color: #c53030;
+            padding: 16px 20px;
+            border-radius: 8px;
             margin: 20px 0;
-            text-align: center;
+            font-size: 0.9rem;
+            border: 1px solid #feb2b2;
+            box-shadow: 0 2px 4px rgba(197, 48, 48, 0.1);
         }
 
         .success-message {
-            background: #e8f5e8;
-            color: #2e7d32;
-            padding: 15px;
-            border-radius: 10px;
-            margin: 20px 0;
-            text-align: center;
+            background: linear-gradient(145deg, #c6f6d5 0%, #9ae6b4 100%);
+            color: #2f855a;
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin: 12px 0;
+            font-size: 0.8rem;
+            border: 1px solid #9ae6b4;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         .no-orders {
             text-align: center;
             padding: 60px;
-            color: #7f8c8d;
+            color: #718096;
+            grid-column: 1 / -1;
         }
 
         .no-orders h3 {
             font-size: 1.5rem;
-            margin-bottom: 10px;
+            margin-bottom: 12px;
+            color: #4a5568;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1200px) {
+            .orders-container {
+                grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+                gap: 20px;
+            }
         }
 
         @media (max-width: 768px) {
+            body {
+                padding: 12px;
+            }
+            
+            .header {
+                padding: 24px 28px;
+            }
+            
             .header h1 {
-                font-size: 2rem;
-            }
-            
-            .order-header {
-                flex-direction: column;
-                align-items: flex-start;
-            }
-            
-            .container {
-                margin: 10px;
-                border-radius: 15px;
+                font-size: 1.6rem;
             }
             
             .orders-container {
-                padding: 20px;
+                padding: 24px;
+                grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+                gap: 16px;
             }
             
             .order-card {
-                padding: 20px;
+                max-width: none;
+                padding: 16px;
+                min-height: 440px;
             }
+        }
+
+        @media (max-width: 480px) {
+            .orders-container {
+                grid-template-columns: 1fr;
+                padding: 16px;
+            }
+            
+            .order-card {
+                width: 100%;
+                max-width: none;
+                margin: 0;
+            }
+        }
+
+        /* Single card centering prevention */
+        .orders-container.single-item {
+            justify-content: start;
+        }
+
+        .orders-container.single-item .order-card {
+            justify-self: start;
         }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1>📦 Purchase Orders Management</h1>
+            <h1>Purchase Orders Management</h1>
             <p>Manage dispatch details and shipping options for all orders</p>
         </div>
 
@@ -318,8 +461,7 @@
         <div id="error" class="error-message" style="display: none;"></div>
 
         <div id="ordersContainer" class="orders-container" style="display: none;">
-            <!-- Orders will be populated here -->
-        </div>
+            </div>
     </div>
 
     <script>
@@ -392,58 +534,86 @@
                 return;
             }
 
+            // Add class for single item layout control
+            if (orders.length === 1) {
+                container.classList.add('single-item');
+            } else {
+                container.classList.remove('single-item');
+            }
+
             container.innerHTML = orders.map((order, index) => `
                 <div class="order-card">
                     <div class="order-header">
                         <div class="order-info">
-                            <h3>🏢 ${order.requesterName || 'Unknown Requester'}</h3>
-                            <div class="order-timestamp">📅 ${formatTimestamp(order.timestamp)}</div>
+                            <h3>${order.requesterName || 'Unknown Requester'}</h3>
+                            <div class="order-timestamp">${formatTimestamp(order.timestamp)}</div>
                         </div>
                         <a href="${order.googleSheetURL}" target="_blank" class="show-po-btn">
-                            📄 Show PO
+                            📋 View PO
                         </a>
                     </div>
 
                     <form id="orderForm${index}" class="form-section">
-                        <div class="form-group">
-                            <label for="dispatchDetails${index}">
-                                📋 Dispatch Details Attachment <span class="required">*</span>
-                            </label>
-                            <div class="file-input-wrapper">
-                                <input type="file" id="dispatchDetails${index}" class="file-input" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" required>
-                                <label for="dispatchDetails${index}" class="file-label">
-                                    <span class="file-icon">📎</span>
-                                    <span class="file-text">Choose dispatch details file...</span>
-                                </label>
+                        <div class="form-item">
+                            <label for="expectedDeliveryDate${index}">
+                                📅 Expected Delivery Date <span class="required">*</span>
+                            </label> 
+                            <div class="input-wrapper">
+                                <input type="date" id="expectedDeliveryDate${index}" class="date-field" required>
                             </div>
                         </div>
-                        <div class="form-group">
+
+                        <div class="form-item">
                             <label for="billToShipTo${index}">
                                 🚚 Bill To Ship To
                             </label>
-                            <div class="select-wrapper">
-                                <select id="billToShipTo${index}" onchange="toggleLRCopy(${index})">
+                            <div class="select-wrapper input-wrapper">
+                                <select id="billToShipTo${index}">
                                     <option value="yes">Yes</option>
                                     <option value="no">No (Delivery to Godown)</option>
                                 </select>
                             </div>
                         </div>
 
-                        <div id="lrCopySection${index}" class="lr-copy-section">
-                            <div class="form-group">
-                                <label for="lrCopy${index}">
-                                    🚛 Attach LR Copy <span class="required">*</span>
+                        <div class="form-item">
+                            <label for="dispatchDetails${index}">
+                                📦 Dispatch Details <span class="required">*</span>
+                            </label>
+                            <div class="file-input-wrapper input-wrapper">
+                                <input type="file" id="dispatchDetails${index}" class="file-input" multiple accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.xlsx,.xls" required>
+                                <label for="dispatchDetails${index}" class="file-label">
+                                    <span class="file-icon">📎</span>
+                                    <span class="file-text">Choose dispatch file...</span>
                                 </label>
-                                <div class="file-input-wrapper">
-                                    <input type="file" id="lrCopy${index}" class="file-input" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx">
-                                    <label for="lrCopy${index}" class="file-label">
-                                        <span class="file-icon">📎</span>
-                                        <span class="file-text">Choose LR copy file...</span>
-                                    </label>
-                                </div>
                             </div>
                         </div>
 
+                        <div class="form-item">
+                            <label for="lrDetails${index}">
+                                🚛 LR Details <span class="required">*</span>
+                            </label>
+                            <div class="file-input-wrapper input-wrapper">
+                                <input type="file" id="lrDetails${index}" class="file-input" multiple accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.xlsx,.xls" required>
+                                <label for="lrDetails${index}" class="file-label">
+                                    <span class="file-icon">📎</span>
+                                    <span class="file-text">Choose LR file...</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="form-item">
+                            <label for="invoice${index}">
+                                📄 Invoice <span class="required">*</span>
+                            </label>
+                            <div class="file-input-wrapper input-wrapper">
+                                <input type="file" id="invoice${index}" class="file-input" multiple accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.xlsx,.xls" required>
+                                <label for="invoice${index}" class="file-label">
+                                    <span class="file-icon">📎</span>
+                                    <span class="file-text">Choose invoice file...</span>
+                                </label>
+                            </div>
+                        </div>
+                        
                         <button type="submit" class="submit-btn">
                             ✅ Submit Order Details
                         </button>
@@ -456,7 +626,8 @@
                 // Add a small delay to ensure DOM elements are fully rendered
                 setTimeout(() => {
                     setupFileInput(`dispatchDetails${index}`);
-                    setupFileInput(`lrCopy${index}`);
+                    setupFileInput(`lrDetails${index}`); 
+                    setupFileInput(`invoice${index}`); 
                     setupFormSubmission(`orderForm${index}`, index);
                 }, 100);
             });
@@ -468,26 +639,28 @@
             return date.toLocaleString();
         }
 
-	function setupFileInput(inputId) {
-	   const input = document.getElementById(inputId);
-	    const fileText = document.querySelector(`label[for="${inputId}"] .file-text`);
-	    const label = document.querySelector(`label[for="${inputId}"]`);
+        function setupFileInput(inputId) {
+           const input = document.getElementById(inputId);
+            const fileText = document.querySelector(`label[for="${inputId}"] .file-text`);
+            const label = document.querySelector(`label[for="${inputId}"]`);
 
-	    if (!input || !fileText || !label) {
-	        console.warn(`Element(s) missing for ${inputId}`);
-	        return;
-	   }
+            if (!input || !fileText || !label) {
+                console.warn(`Element(s) missing for ${inputId}`);
+                return;
+           }
 
-	   input.addEventListener('change', function() {
-	       if (this.files.length > 0) {
- 	          fileText.textContent = `${this.files[0].name}`;
-	           label.classList.add('has-file');
-	       } else {
-	           fileText.textContent = 'Choose file...';
-	           label.classList.remove('has-file');
-	       }
-	   });
-	}
+           input.addEventListener('change', function() {
+               if (this.files.length > 0) {
+                  const fileCount = this.files.length;
+                  fileText.textContent = fileCount > 1 ? `${fileCount} files selected` : this.files[0].name;
+                   label.classList.add('has-file');
+               } else {
+                   fileText.textContent = 'Choose file...';
+                   label.classList.remove('has-file');
+               }
+           });
+        }
+        
         function setupFormSubmission(formId, orderIndex) {
             const form = document.getElementById(formId);
             
@@ -499,18 +672,27 @@
                 
                 try {
                     submitBtn.disabled = true;
-                    submitBtn.textContent = '⏳ Processing...';
+                    submitBtn.textContent = 'Processing...';
                     
                     await submitOrderForm(orderIndex);
                     
                     // Show success message
                     const successDiv = document.createElement('div');
                     successDiv.className = 'success-message';
-                    successDiv.textContent = '✅ Order details submitted successfully!';
+                    successDiv.textContent = 'Order details submitted successfully!';
                     form.appendChild(successDiv);
                     
                     // Reset form
-                    form.reset();                  
+                    form.reset();
+                    
+                    // Reset file input labels
+                    const fileLabels = form.querySelectorAll('.file-label');
+                    fileLabels.forEach(label => {
+                        label.classList.remove('has-file');
+                        const fileText = label.querySelector('.file-text');
+                        if (fileText) fileText.textContent = 'Choose file...';
+                    });
+                    
                     // Remove success message after 3 seconds
                     setTimeout(() => {
                         if (successDiv.parentNode) {
@@ -520,7 +702,7 @@
                     
                 } catch (error) {
                     console.error('Error submitting form:', error);
-                    alert('❌ Error submitting order details. Please try again.');
+                    alert('Error submitting order details. Please try again.');
                 } finally {
                     submitBtn.disabled = false;
                     submitBtn.textContent = originalText;
@@ -530,62 +712,84 @@
 
         async function submitOrderForm(orderIndex) {
             const order = orders[orderIndex];
-            const dispatchFile = document.getElementById(`dispatchDetails${orderIndex}`).files[0];
+
+            const expectedDeliveryDate = document.getElementById(`expectedDeliveryDate${orderIndex}`).value;
             const billToShipTo = document.getElementById(`billToShipTo${orderIndex}`).value;
-            const lrFile = document.getElementById(`lrCopy${orderIndex}`).files[0];
+            const dispatchFiles = document.getElementById(`dispatchDetails${orderIndex}`).files;
+            const lrFiles = document.getElementById(`lrDetails${orderIndex}`).files;
+            const invoiceFiles = document.getElementById(`invoice${orderIndex}`).files;
 
-            // Validate required fields
-            if (!dispatchFile) {
-                throw new Error('Dispatch details file is required');
-            }
-            
-            if (!billToShipTo) {
-                throw new Error('Please select Bill To Ship To option');
-            }
-            
-            if (billToShipTo === 'yes' && !lrFile) {
-                throw new Error('LR Copy is required when Bill To Ship To is Yes');
+            if (!expectedDeliveryDate) throw new Error('Expected Delivery Date is required');
+            if (!dispatchFiles || dispatchFiles.length === 0) throw new Error('Dispatch details file is required');
+            if (!lrFiles || lrFiles.length === 0) throw new Error('LR details file is required');
+            if (!invoiceFiles || invoiceFiles.length === 0) throw new Error('Invoice file is required');
+
+            const dispatchFileArray = [];
+            const invoiceFileArray = [];
+            const lrFileArray = [];
+
+            // Process dispatch files
+            for (let file of dispatchFiles) {
+                const base64 = await fileToBase64(file);
+                dispatchFileArray.push({ 
+                    name: file.name, 
+                    type: file.type, 
+                    size: file.size, 
+                    base64: base64 
+                });
             }
 
-            // Convert files to base64
-            const dispatchBase64 = await fileToBase64(dispatchFile);
-            const lrBase64 = billToShipTo === 'yes' ? await fileToBase64(lrFile) : null;
+            // Process invoice files
+            for (let file of invoiceFiles) {
+                const base64 = await fileToBase64(file);
+                invoiceFileArray.push({ 
+                    name: file.name, 
+                    type: file.type, 
+                    size: file.size, 
+                    base64: base64 
+                });
+            }
 
-            // Prepare payload
+            // Process LR files
+            for (let file of lrFiles) {
+                const base64 = await fileToBase64(file);
+                lrFileArray.push({ 
+                    name: file.name, 
+                    type: file.type, 
+                    size: file.size, 
+                    base64: base64 
+                });
+            }
+
             const payload = {
                 timestamp: order.timestamp,
-                dispatchDetailsFile: {
-                    data: dispatchBase64,
-                    name: dispatchFile.name,
-                    type: dispatchFile.type
-                },
-                billToShipTo: billToShipTo,
-                lrCopyFile: lrBase64 ? {
-                    data: lrBase64,
-                    name: lrFile.name,
-                    type: lrFile.type
-                } : null
+                expectedDeliveryDate,
+                billToShipTo,
+                dispatchFileArray,
+                invoiceFileArray,
+                lrFileArray
             };
 
-	// Submit to API
-		try {
-		    await fetch(API_URL, {
-		        method: 'POST',
-		        mode: 'no-cors',
-		        headers: {
-		            'Content-Type': 'application/json',
-		        },
-		        body: JSON.stringify(payload)
-		    });
-		
-		    // Since no-cors doesn't allow us to inspect the response, we assume success
-		    console.log('Submission sent successfully (no-cors mode).');
-		    alert('Submission successful!');
-		} catch (error) {
-		    console.error('Error during submission:', error);
-		    alert('An error occurred while submitting the form.');
-		}
-	}
+            console.log('Submitting payload:', payload);
+
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                console.log('Form submitted successfully');
+
+            } catch (error) {
+                console.error('Fetch failed:', error);
+                throw error;
+            }
+        }
+        
         function fileToBase64(file) {
             return new Promise((resolve, reject) => {
                 const reader = new FileReader();

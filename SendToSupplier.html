@@ -460,7 +460,7 @@ async function markDone(googleSheetURL, cardId, timestamp, requesterName) {
             <div class="w-4 h-4 rounded-full ${isOverdue ? 'bg-red-400 countdown-urgent' : isUrgent ? 'bg-yellow-400 pulse-dot' : 'bg-green-400'}"></div>
             <div>
               <h2 class="text-lg font-semibold text-white">
-                ${request.supplierName || 'Supplier Name Error'}
+                ${request.supplierName}
               </h2>
               <p class="text-white/60 text-sm">${request.requesterName || 'Unkown User'}</p>
             </div>

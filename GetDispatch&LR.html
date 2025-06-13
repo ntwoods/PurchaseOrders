@@ -4,435 +4,459 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Order Management System</title>
-<style>
-    * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-    }
-
-    body {
-        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-        background-color: #e6f7ff;
-        color: #2d3748;
-        line-height: 1.4;
-        padding: 16px; /* Reduced padding */
-        min-height: 100vh;
-    }
-
-    .container {
-        max-width: 1400px; /* Keep max-width for overall container */
-        margin: 0 auto;
-        background-color: #ebccff;
-        border-radius: 16px;
-        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-        overflow: hidden;
-        backdrop-filter: blur(10px);
-    }
-
-    .header {
-        background: linear-gradient(135deg, #1a202c 0%, #2d3748 100%);
-        color: orange;
-        padding: 32px 40px; /* Adjusted padding */
-        position: relative;
-        overflow: hidden;
-    }
-
-    .header::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E") repeat;
-        opacity: 0.1;
-    }
-
-    .header h1 {
-        font-size: 2rem; /* Adjusted font size */
-        font-weight: 700;
-        margin-bottom: 8px; /* Adjusted margin */
-        position: relative;
-        z-index: 1;
-    }
-
-    .header p {
-        color: white;
-        font-size: 1rem; /* Adjusted font size */
-        position: relative;
-        z-index: 1;
-    }
-
-    .loading {
-        text-align: center;
-        padding: 60px;
-        color: #718096;
-    }
-
-    .spinner {
-        border: 3px solid #e2e8f0;
-        border-top: 3px solid #4299e1;
-        border-radius: 50%;
-        width: 32px;
-        height: 32px;
-        animation: spin 1s linear infinite;
-        margin: 0 auto 20px;
-    }
-
-    @keyframes spin {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
-    }
-
-    .orders-container {
-        padding: 24px; /* Reduced padding for compactness */
-        display: grid;
-        /* Choose 4 or 5 columns based on desired compactness and screen width */
-        grid-template-columns: repeat(4, 1fr); /* Fixed 4 columns, adjust to 5 if preferred */
-        gap: 16px; /* Reduced gap between cards */
-        justify-content: center;
-        align-items: stretch; /* Ensures cards in a row have the same height */
-    }
-
-    .order-card {
-        background-color: #e6ffcc;
-        border: 1px solid rgba(226, 232, 240, 0.6);
-        border-radius: 12px;
-        padding: 16px; /* Significantly reduced padding for smaller card size */
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        width: 100%; /* Ensures card fills its grid column */
-        height: auto;
-        min-height: 400px; /* Set a more compact min-height, adjust as needed */
-        display: flex;
-        flex-direction: column;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-        position: relative;
-        overflow: hidden;
-        justify-self: stretch; /* Ensures cards stretch within their grid cell */
-    }
-
-    .order-card::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        height: 4px;
-        background: linear-gradient(90deg, #4299e1, #38a169);
-        border-radius: 12px 12px 0 0;
-    }
-
-    .order-card:hover {
-        border-color: rgba(66, 153, 225, 0.3);
-        transform: translateY(-4px);
-        box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
-    }
-
-    .order-header {
-        display: flex;
-        flex-direction: column;
-        gap: 10px; /* Reduced gap */
-        margin-bottom: 12px; /* Reduced margin */
-        flex-shrink: 0;
-        padding-top: 4px; /* Reduced padding */
-    }
-
-    .order-info h3 {
-        color: #1a202c;
-        font-size: 1rem; /* Reduced font size for compactness */
-        font-weight: 600;
-        margin-bottom: 4px;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
-
-    .order-timestamp {
-        color: #718096;
-        font-size: 0.75rem; /* Reduced font size */
-        background: #f7fafc;
-        padding: 3px 6px; /* Reduced padding */
-        border-radius: 6px;
-        display: inline-block;
-        width: fit-content;
-    }
-
-    .show-po-btn {
-        background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
-        color: white;
-        border: none;
-        padding: 7px 14px; /* Reduced padding */
-        border-radius: 8px;
-        cursor: pointer;
-        font-size: 0.8rem; /* Reduced font size */
-        font-weight: 600;
-        text-decoration: none;
-        display: inline-block;
-        transition: all 0.2s ease;
-        width: fit-content;
-        align-self: flex-start;
-        box-shadow: 0 2px 4px rgba(66, 153, 225, 0.3);
-    }
-
-    .show-po-btn:hover {
-        background: linear-gradient(135deg, #3182ce 0%, #2c5282 100%);
-        transform: translateY(-1px);
-        box-shadow: 0 4px 8px rgba(66, 153, 225, 0.4);
-    }
-
-    .form-section {
-        border-top: 1px solid #e2e8f0; /* Thinner border for minimalistic look */
-        padding-top: 16px; /* Reduced padding */
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        gap: 10px; /* Reduced gap between form items */
-    }
-
-    .form-item {
-        display: flex;
-        flex-direction: column;
-        gap: 2px; /* Reduced gap between label and input */
-        margin-bottom: 8px; /* Reduced margin */
-    }
-
-    .form-item label {
-        font-weight: 600;
-        color: #2d3748;
-        font-size: 0.8rem; /* Reduced font size */
-        display: flex;
-        align-items: center;
-        gap: 2px; /* Reduced gap */
-    }
-
-    .required {
-        color: #e53e3e;
-        font-size: 0.85rem; /* Adjusted font size */
-    }
-
-    .input-wrapper {
-        width: 100%;
-    }
-
-    .file-input-wrapper {
-        position: relative;
-        display: block;
-        width: 100%;
-    }
-
-    .file-input {
-        position: absolute;
-        left: -9999px;
-    }
-
-    .file-label {
-        display: flex;
-        align-items: center;
-        padding: 8px 10px; /* Reduced padding */
-        background: linear-gradient(145deg, #f8fafc 0%, #edf2f7 100%);
-        border: 1px dashed #cbd5e0; /* Thinner dashed border */
-        border-radius: 6px; /* Slightly smaller border-radius */
-        cursor: pointer;
-        transition: all 0.3s ease;
-        font-size: 0.8rem; /* Reduced font size */
-        color: #4a5568;
-        min-height: 38px; /* Reduced min-height */
-    }
-
-    .file-label:hover {
-        background: linear-gradient(145deg, #edf2f7 0%, #e2e8f0 100%);
-        border-color: #a0aec0;
-        transform: translateY(-1px);
-    }
-
-    .file-label.has-file {
-        background: linear-gradient(145deg, #f0fff4 0%, #c6f6d5 100%);
-        border-color: #68d391;
-        border-style: solid;
-        color: #276749;
-    }
-
-    .file-icon {
-        margin-right: 6px; /* Reduced margin */
-        font-size: 0.9rem; /* Reduced font size */
-    }
-
-    .file-text {
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        flex: 1;
-        font-weight: 500;
-    }
-
-    .select-wrapper {
-        position: relative;
-        width: 100%;
-    }
-
-    .date-field {
-        width: 100%;
-        padding: 8px 10px; /* Reduced padding */
-        border: 1px solid #e2e8f0; /* Thinner border */
-        border-radius: 6px; /* Slightly smaller border-radius */
-        background: white;
-        font-size: 0.8rem; /* Reduced font size */
-        color: #2d3748;
-        transition: all 0.2s ease;
-        min-height: 38px; /* Reduced min-height */
-    }
-
-    .date-field:focus {
-        outline: none;
-        border-color: #4299e1;
-        box-shadow: 0 0 0 2px rgba(66, 153, 225, 0.1); /* Reduced shadow */
-    }
-
-    select {
-        width: 100%;
-        padding: 8px 10px; /* Reduced padding */
-        border: 1px solid #e2e8f0; /* Thinner border */
-        border-radius: 6px; /* Slightly smaller border-radius */
-        background: white;
-        font-size: 0.8rem; /* Reduced font size */
-        color: #2d3748;
-        cursor: pointer;
-        appearance: none;
-        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%23718096' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
-        background-position: right 8px center; /* Adjusted position */
-        background-repeat: no-repeat;
-        background-size: 14px; /* Reduced size */
-        padding-right: 30px; /* Adjusted padding-right */
-        min-height: 38px; /* Reduced min-height */
-        transition: all 0.2s ease;
-    }
-
-    select:focus {
-        outline: none;
-        border-color: #4299e1;
-        box-shadow: 0 0 0 2px rgba(66, 153, 225, 0.1); /* Reduced shadow */
-    }
-
-    .submit-btn {
-        background: linear-gradient(135deg, #38a169 0%, #2f855a 100%);
-        color: white;
-        border: none;
-        padding: 10px 16px; /* Reduced padding */
-        border-radius: 6px; /* Slightly smaller border-radius */
-        cursor: pointer;
-        font-size: 0.8rem; /* Reduced font size */
-        font-weight: 600;
-        transition: all 0.3s ease;
-        width: 100%;
-        margin-top: auto;
-        min-height: 42px; /* Reduced min-height */
-        box-shadow: 0 2px 4px rgba(56, 161, 105, 0.3); /* Reduced shadow */
-    }
-
-    .submit-btn:hover:not(:disabled) {
-        background: linear-gradient(135deg, #2f855a 0%, #276749 100%);
-        transform: translateY(-1px); /* Reduced translate */
-        box-shadow: 0 4px 8px rgba(56, 161, 105, 0.4);
-    }
-
-    .submit-btn:disabled {
-        background: #a0aec0;
-        cursor: not-allowed;
-        transform: none;
-        box-shadow: none;
-    }
-
-    .error-message {
-        background: linear-gradient(145deg, #fed7d7 0%, #feb2b2 100%);
-        color: #c53030;
-        padding: 12px 16px; /* Adjusted padding */
-        border-radius: 6px;
-        margin: 16px 0;
-        font-size: 0.85rem; /* Adjusted font size */
-        border: 1px solid #feb2b2;
-        box-shadow: 0 1px 3px rgba(197, 48, 48, 0.1);
-    }
-
-    .success-message {
-        background: linear-gradient(145deg, #c6f6d5 0%, #9ae6b4 100%);
-        color: #2f855a;
-        padding: 10px 14px; /* Adjusted padding */
-        border-radius: 6px;
-        margin: 10px 0;
-        font-size: 0.75rem; /* Adjusted font size */
-        border: 1px solid #9ae6b4;
-        animation: slideIn 0.3s ease;
-    }
-
-    @keyframes slideIn {
-        from {
-            opacity: 0;
-            transform: translateY(-10px);
+    <style>
+        /* General Reset and Body Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
 
-    .no-orders {
-        text-align: center;
-        padding: 40px; /* Reduced padding */
-        color: #718096;
-        grid-column: 1 / -1;
-    }
-
-    .no-orders h3 {
-        font-size: 1.3rem; /* Reduced font size */
-        margin-bottom: 10px;
-        color: #4a5568;
-    }
-
-    /* Responsive Design */
-    @media (max-width: 1200px) {
-        .orders-container {
-            grid-template-columns: repeat(3, 1fr); /* 3 columns on smaller screens */
-            gap: 12px;
-        }
-    }
-
-    @media (max-width: 900px) { /* Added new breakpoint */
-        .orders-container {
-            grid-template-columns: repeat(2, 1fr); /* 2 columns on even smaller screens */
-        }
-    }
-
-    @media (max-width: 600px) { /* Adjusted breakpoint */
         body {
-            padding: 8px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #e6f7ff;
+            color: #2d3748;
+            line-height: 1.4;
+            padding: 10px; /* Further reduced padding for overall compactness */
+            min-height: 100vh;
+            display: flex; /* Use flex to center the container */
+            justify-content: center; /* Center horizontally */
+            align-items: flex-start; /* Align to the top vertically */
         }
+
+        /* Main Container */
+        .container {
+            max-width: 1440px; /* Increased max-width to allow more cards per row */
+            margin: 0 auto;
+            background-color: #ebccff;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1); /* Slightly softer shadow */
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+            flex-grow: 1; /* Allow container to grow */
+        }
+
+        /* Header Styles */
         .header {
-            padding: 20px 24px;
+            background: linear-gradient(135deg, #1a202c 0%, #2d3748 100%);
+            color: orange;
+            padding: 25px 30px; /* Reduced padding for header */
+            position: relative;
+            overflow: hidden;
         }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E") repeat;
+            opacity: 0.1;
+        }
+
         .header h1 {
-            font-size: 1.4rem;
+            font-size: 1.8rem; /* Smaller font for header */
+            font-weight: 700;
+            margin-bottom: 5px;
+            position: relative;
+            z-index: 1;
         }
+
+        .header p {
+            color: white;
+            font-size: 0.9rem; /* Smaller font for header description */
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Loading Spinner */
+        .loading {
+            text-align: center;
+            padding: 40px; /* Reduced padding */
+            color: #718096;
+        }
+
+        .spinner {
+            border: 3px solid #e2e8f0;
+            border-top: 3px solid #4299e1;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Orders Container - Key for the grid layout */
         .orders-container {
-            padding: 16px;
-            grid-template-columns: 1fr; /* Single column on small mobile */
-            gap: 10px;
+            padding: 20px; /* Reduced padding around the grid */
+            display: grid;
+            /* For 4 columns: */
+            grid-template-columns: repeat(4, 1fr);
+            /* For 5 columns (uncomment if preferred and screen allows): */
+            /* grid-template-columns: repeat(5, 1fr); */
+            gap: 15px; /* Reduced gap between cards for compactness */
+            justify-content: center; /* Center the grid within its container */
+            align-items: stretch; /* Ensures all cards in a row have the same height */
         }
+
+        /* Order Card Styles */
         .order-card {
-            padding: 12px;
-            min-height: auto;
+            background-color: #e6ffcc;
+            border: 1px solid rgba(226, 232, 240, 0.6);
+            border-radius: 10px; /* Slightly smaller border-radius */
+            padding: 12px; /* Significantly reduced padding for smaller card size */
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            width: 100%; /* Ensures card takes full width of its grid column */
+            height: auto;
+            min-height: 380px; /* Adjusted min-height for a more compact card */
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05); /* Softer shadow */
+            position: relative;
+            overflow: hidden;
         }
-    }
 
-    /* Single card centering prevention - adjusted */
-    .orders-container.single-item {
-        justify-content: center;
-    }
+        .order-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px; /* Thinner top border */
+            background: linear-gradient(90deg, #4299e1, #38a169);
+            border-radius: 10px 10px 0 0;
+        }
 
-    .orders-container.single-item .order-card {
-        justify-self: stretch;
-    }
-</style>
+        .order-card:hover {
+            border-color: rgba(66, 153, 225, 0.3);
+            transform: translateY(-2px); /* Smaller lift on hover */
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Order Header inside card */
+        .order-header {
+            display: flex;
+            flex-direction: column;
+            gap: 8px; /* Reduced gap */
+            margin-bottom: 10px; /* Reduced margin */
+            flex-shrink: 0;
+            padding-top: 5px;
+        }
+
+        .order-info h3 {
+            color: #1a202c;
+            font-size: 0.95rem; /* Smaller font size for order title */
+            font-weight: 600;
+            margin-bottom: 3px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .order-timestamp {
+            color: #718096;
+            font-size: 0.7rem; /* Smaller font size */
+            background: #f7fafc;
+            padding: 2px 5px; /* Reduced padding */
+            border-radius: 5px;
+            display: inline-block;
+            width: fit-content;
+        }
+
+        .show-po-btn {
+            background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
+            color: white;
+            border: none;
+            padding: 6px 12px; /* Reduced padding */
+            border-radius: 6px; /* Smaller border-radius */
+            cursor: pointer;
+            font-size: 0.75rem; /* Smaller font size */
+            font-weight: 600;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.2s ease;
+            width: fit-content;
+            align-self: flex-start;
+            box-shadow: 0 1px 3px rgba(66, 153, 225, 0.3); /* Softer shadow */
+        }
+
+        .show-po-btn:hover {
+            background: linear-gradient(135deg, #3182ce 0%, #2c5282 100%);
+            transform: translateY(-1px);
+            box-shadow: 0 2px 6px rgba(66, 153, 225, 0.4);
+        }
+
+        /* Form Section */
+        .form-section {
+            border-top: 1px solid #e2e8f0; /* Thinner border */
+            padding-top: 12px; /* Reduced padding */
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 8px; /* Reduced gap between form items */
+        }
+
+        .form-item {
+            display: flex;
+            flex-direction: column;
+            gap: 1px; /* Very small gap between label and input */
+            margin-bottom: 6px; /* Reduced margin */
+        }
+
+        .form-item label {
+            font-weight: 600;
+            color: #2d3748;
+            font-size: 0.75rem; /* Smaller font size for labels */
+            display: flex;
+            align-items: center;
+            gap: 2px;
+        }
+
+        .required {
+            color: #e53e3e;
+            font-size: 0.8rem;
+        }
+
+        .input-wrapper {
+            width: 100%;
+        }
+
+        /* File Input Customization */
+        .file-input-wrapper {
+            position: relative;
+            display: block;
+            width: 100%;
+        }
+
+        .file-input {
+            position: absolute;
+            left: -9999px;
+        }
+
+        .file-label {
+            display: flex;
+            align-items: center;
+            padding: 7px 9px; /* Reduced padding */
+            background: linear-gradient(145deg, #f8fafc 0%, #edf2f7 100%);
+            border: 1px dashed #cbd5e0; /* Thinner dashed border */
+            border-radius: 5px; /* Smaller border-radius */
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.75rem; /* Smaller font size */
+            color: #4a5568;
+            min-height: 34px; /* Reduced min-height */
+        }
+
+        .file-label:hover {
+            background: linear-gradient(145deg, #edf2f7 0%, #e2e8f0 100%);
+            border-color: #a0aec0;
+            transform: translateY(-1px);
+        }
+
+        .file-label.has-file {
+            background: linear-gradient(145deg, #f0fff4 0%, #c6f6d5 100%);
+            border-color: #68d391;
+            border-style: solid;
+            color: #276749;
+        }
+
+        .file-icon {
+            margin-right: 5px; /* Reduced margin */
+            font-size: 0.85rem; /* Smaller icon size */
+        }
+
+        .file-text {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            flex: 1;
+            font-weight: 500;
+        }
+
+        /* Select and Date Field */
+        .select-wrapper {
+            position: relative;
+            width: 100%;
+        }
+
+        .date-field,
+        select {
+            width: 100%;
+            padding: 7px 9px; /* Reduced padding */
+            border: 1px solid #e2e8f0; /* Thinner border */
+            border-radius: 5px; /* Smaller border-radius */
+            background: white;
+            font-size: 0.75rem; /* Smaller font size */
+            color: #2d3748;
+            transition: all 0.2s ease;
+            min-height: 34px; /* Reduced min-height */
+            appearance: none; /* For select dropdown arrow */
+        }
+
+        select {
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%23718096' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+            background-position: right 7px center; /* Adjusted position */
+            background-repeat: no-repeat;
+            background-size: 12px; /* Smaller arrow size */
+            padding-right: 25px; /* Adjusted padding-right */
+        }
+
+        .date-field:focus,
+        select:focus {
+            outline: none;
+            border-color: #4299e1;
+            box-shadow: 0 0 0 1px rgba(66, 153, 225, 0.15); /* Smaller shadow */
+        }
+
+        /* Submit Button */
+        .submit-btn {
+            background: linear-gradient(135deg, #38a169 0%, #2f855a 100%);
+            color: white;
+            border: none;
+            padding: 9px 15px; /* Reduced padding */
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.8rem; /* Smaller font size */
+            font-weight: 600;
+            transition: all 0.3s ease;
+            width: 100%;
+            margin-top: auto; /* Pushes button to the bottom */
+            min-height: 38px; /* Reduced min-height */
+            box-shadow: 0 2px 4px rgba(56, 161, 105, 0.2);
+        }
+
+        .submit-btn:hover:not(:disabled) {
+            background: linear-gradient(135deg, #2f855a 0%, #276749 100%);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(56, 161, 105, 0.3);
+        }
+
+        .submit-btn:disabled {
+            background: #a0aec0;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        /* Messages */
+        .error-message {
+            background: linear-gradient(145deg, #fed7d7 0%, #feb2b2 100%);
+            color: #c53030;
+            padding: 10px 14px;
+            border-radius: 6px;
+            margin: 15px 0;
+            font-size: 0.8rem;
+            border: 1px solid #feb2b2;
+            box-shadow: 0 1px 2px rgba(197, 48, 48, 0.1);
+        }
+
+        .success-message {
+            background: linear-gradient(145deg, #c6f6d5 0%, #9ae6b4 100%);
+            color: #2f855a;
+            padding: 8px 12px;
+            border-radius: 6px;
+            margin: 8px 0;
+            font-size: 0.7rem;
+            border: 1px solid #9ae6b4;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* No Orders Found */
+        .no-orders {
+            text-align: center;
+            padding: 30px;
+            color: #718096;
+            grid-column: 1 / -1; /* Make it span all columns */
+        }
+
+        .no-orders h3 {
+            font-size: 1.2rem;
+            margin-bottom: 8px;
+            color: #4a5568;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1400px) { /* Adjust for larger screens to fit 5 columns */
+             /* grid-template-columns: repeat(5, 1fr); */
+        }
+
+        @media (max-width: 1200px) {
+            .orders-container {
+                grid-template-columns: repeat(3, 1fr); /* 3 columns on medium screens */
+                gap: 12px;
+            }
+            .order-card {
+                min-height: 390px; /* Adjust min-height as needed for content */
+            }
+        }
+
+        @media (max-width: 900px) {
+            .orders-container {
+                grid-template-columns: repeat(2, 1fr); /* 2 columns on smaller tablets */
+                gap: 10px;
+            }
+            .order-card {
+                min-height: 400px; /* Adjust min-height as needed for content */
+            }
+        }
+
+        @media (max-width: 600px) {
+            body {
+                padding: 5px;
+            }
+            .header {
+                padding: 15px 20px;
+            }
+            .header h1 {
+                font-size: 1.2rem;
+            }
+            .header p {
+                font-size: 0.8rem;
+            }
+            .orders-container {
+                padding: 10px;
+                grid-template-columns: 1fr; /* Single column on mobile */
+                gap: 8px;
+            }
+            .order-card {
+                padding: 10px;
+                min-height: auto; /* Let height be natural on mobile */
+            }
+            .submit-btn {
+                padding: 8px 12px;
+                font-size: 0.75rem;
+                min-height: 34px;
+            }
+        }
+
+        /* Single card centering (if only one order exists) */
+        .orders-container.single-item {
+            justify-content: center;
+        }
+
+        .orders-container.single-item .order-card {
+            justify-self: stretch;
+            max-width: 400px; /* Limit width of single card if centered */
+        }
+    </style>
 </head>
 <body>
     <div class="container">
@@ -497,7 +521,7 @@
 
         function showLoading(show) {
             document.getElementById('loading').style.display = show ? 'block' : 'none';
-            document.getElementById('ordersContainer').style.display = show ? 'none' : 'block';
+            document.getElementById('ordersContainer').style.display = show ? 'none' : 'grid'; // Changed to grid
         }
 
         function showError(message) {

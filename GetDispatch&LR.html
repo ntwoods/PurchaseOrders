@@ -16,12 +16,12 @@
         background-color: #e6f7ff;
         color: #2d3748;
         line-height: 1.4;
-        padding: 20px; /* Increased padding */
+        padding: 16px; /* Reduced padding */
         min-height: 100vh;
     }
 
     .container {
-        max-width: 1400px;
+        max-width: 1400px; /* Keep max-width for overall container */
         margin: 0 auto;
         background-color: #ebccff;
         border-radius: 16px;
@@ -33,7 +33,7 @@
     .header {
         background: linear-gradient(135deg, #1a202c 0%, #2d3748 100%);
         color: orange;
-        padding: 40px 50px; /* Increased padding */
+        padding: 32px 40px; /* Adjusted padding */
         position: relative;
         overflow: hidden;
     }
@@ -50,16 +50,16 @@
     }
 
     .header h1 {
-        font-size: 2.2rem; /* Increased font size */
+        font-size: 2rem; /* Adjusted font size */
         font-weight: 700;
-        margin-bottom: 10px; /* Increased margin */
+        margin-bottom: 8px; /* Adjusted margin */
         position: relative;
         z-index: 1;
     }
 
     .header p {
         color: white;
-        font-size: 1.1rem; /* Increased font size */
+        font-size: 1rem; /* Adjusted font size */
         position: relative;
         z-index: 1;
     }
@@ -86,30 +86,30 @@
     }
 
     .orders-container {
-        padding: 32px; /* Adjusted padding */
+        padding: 24px; /* Reduced padding for compactness */
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(380px, 1fr)); /* Key change for grid layout */
-        gap: 24px;
-        justify-content: center; /* Center items in the grid */
-        align-items: stretch; /* Make cards in a row have the same height */
+        /* Choose 4 or 5 columns based on desired compactness and screen width */
+        grid-template-columns: repeat(4, 1fr); /* Fixed 4 columns, adjust to 5 if preferred */
+        gap: 16px; /* Reduced gap between cards */
+        justify-content: center;
+        align-items: stretch; /* Ensures cards in a row have the same height */
     }
 
     .order-card {
         background-color: #e6ffcc;
         border: 1px solid rgba(226, 232, 240, 0.6);
         border-radius: 12px;
-        padding: 24px; /* Increased padding */
+        padding: 16px; /* Significantly reduced padding for smaller card size */
         transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        width: 100%; /* Take full width of grid column */
-        max-width: none; /* Removed max-width restriction */
+        width: 100%; /* Ensures card fills its grid column */
         height: auto;
-        min-height: auto; /* Let content dictate height, or set a fixed min-height if preferred */
+        min-height: 400px; /* Set a more compact min-height, adjust as needed */
         display: flex;
         flex-direction: column;
         box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
         position: relative;
         overflow: hidden;
-        justify-self: stretch; /* Ensure cards stretch within their grid cell */
+        justify-self: stretch; /* Ensures cards stretch within their grid cell */
     }
 
     .order-card::before {
@@ -132,17 +132,17 @@
     .order-header {
         display: flex;
         flex-direction: column;
-        gap: 16px; /* Increased gap */
-        margin-bottom: 20px; /* Increased margin */
+        gap: 10px; /* Reduced gap */
+        margin-bottom: 12px; /* Reduced margin */
         flex-shrink: 0;
-        padding-top: 8px;
+        padding-top: 4px; /* Reduced padding */
     }
 
     .order-info h3 {
         color: #1a202c;
-        font-size: 1.2rem; /* Increased font size */
+        font-size: 1rem; /* Reduced font size for compactness */
         font-weight: 600;
-        margin-bottom: 6px; /* Increased margin */
+        margin-bottom: 4px;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
@@ -150,9 +150,9 @@
 
     .order-timestamp {
         color: #718096;
-        font-size: 0.85rem; /* Increased font size */
+        font-size: 0.75rem; /* Reduced font size */
         background: #f7fafc;
-        padding: 4px 8px;
+        padding: 3px 6px; /* Reduced padding */
         border-radius: 6px;
         display: inline-block;
         width: fit-content;
@@ -162,10 +162,10 @@
         background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
         color: white;
         border: none;
-        padding: 10px 18px; /* Adjusted padding */
+        padding: 7px 14px; /* Reduced padding */
         border-radius: 8px;
         cursor: pointer;
-        font-size: 0.9rem; /* Increased font size */
+        font-size: 0.8rem; /* Reduced font size */
         font-weight: 600;
         text-decoration: none;
         display: inline-block;
@@ -182,33 +182,33 @@
     }
 
     .form-section {
-        border-top: 2px solid #f1f5f9;
-        padding-top: 20px; /* Increased padding */
+        border-top: 1px solid #e2e8f0; /* Thinner border for minimalistic look */
+        padding-top: 16px; /* Reduced padding */
         flex: 1;
         display: flex;
         flex-direction: column;
-        gap: 16px; /* Increased gap between form items */
+        gap: 10px; /* Reduced gap between form items */
     }
 
     .form-item {
         display: flex;
         flex-direction: column;
-        gap: 4px; /* Increased gap between label and input */
-        margin-bottom: 12px; /* Adjusted margin */
+        gap: 2px; /* Reduced gap between label and input */
+        margin-bottom: 8px; /* Reduced margin */
     }
 
     .form-item label {
         font-weight: 600;
         color: #2d3748;
-        font-size: 0.9rem; /* Increased font size */
+        font-size: 0.8rem; /* Reduced font size */
         display: flex;
         align-items: center;
-        gap: 4px; /* Increased gap */
+        gap: 2px; /* Reduced gap */
     }
 
     .required {
         color: #e53e3e;
-        font-size: 0.95rem; /* Adjusted font size */
+        font-size: 0.85rem; /* Adjusted font size */
     }
 
     .input-wrapper {
@@ -229,15 +229,15 @@
     .file-label {
         display: flex;
         align-items: center;
-        padding: 12px 14px; /* Adjusted padding */
+        padding: 8px 10px; /* Reduced padding */
         background: linear-gradient(145deg, #f8fafc 0%, #edf2f7 100%);
-        border: 2px dashed #cbd5e0;
-        border-radius: 8px;
+        border: 1px dashed #cbd5e0; /* Thinner dashed border */
+        border-radius: 6px; /* Slightly smaller border-radius */
         cursor: pointer;
         transition: all 0.3s ease;
-        font-size: 0.9rem; /* Increased font size */
+        font-size: 0.8rem; /* Reduced font size */
         color: #4a5568;
-        min-height: 48px; /* Increased min-height */
+        min-height: 38px; /* Reduced min-height */
     }
 
     .file-label:hover {
@@ -254,8 +254,8 @@
     }
 
     .file-icon {
-        margin-right: 10px; /* Increased margin */
-        font-size: 1.1rem; /* Increased font size */
+        margin-right: 6px; /* Reduced margin */
+        font-size: 0.9rem; /* Reduced font size */
     }
 
     .file-text {
@@ -273,67 +273,67 @@
 
     .date-field {
         width: 100%;
-        padding: 12px 14px; /* Adjusted padding */
-        border: 2px solid #e2e8f0;
-        border-radius: 8px;
+        padding: 8px 10px; /* Reduced padding */
+        border: 1px solid #e2e8f0; /* Thinner border */
+        border-radius: 6px; /* Slightly smaller border-radius */
         background: white;
-        font-size: 0.9rem; /* Increased font size */
+        font-size: 0.8rem; /* Reduced font size */
         color: #2d3748;
         transition: all 0.2s ease;
-        min-height: 48px; /* Increased min-height */
+        min-height: 38px; /* Reduced min-height */
     }
 
     .date-field:focus {
         outline: none;
         border-color: #4299e1;
-        box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.1);
+        box-shadow: 0 0 0 2px rgba(66, 153, 225, 0.1); /* Reduced shadow */
     }
 
     select {
         width: 100%;
-        padding: 12px 14px; /* Adjusted padding */
-        border: 2px solid #e2e8f0;
-        border-radius: 8px;
+        padding: 8px 10px; /* Reduced padding */
+        border: 1px solid #e2e8f0; /* Thinner border */
+        border-radius: 6px; /* Slightly smaller border-radius */
         background: white;
-        font-size: 0.9rem; /* Increased font size */
+        font-size: 0.8rem; /* Reduced font size */
         color: #2d3748;
         cursor: pointer;
         appearance: none;
         background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%23718096' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
-        background-position: right 12px center;
+        background-position: right 8px center; /* Adjusted position */
         background-repeat: no-repeat;
-        background-size: 16px;
-        padding-right: 40px;
-        min-height: 48px; /* Increased min-height */
+        background-size: 14px; /* Reduced size */
+        padding-right: 30px; /* Adjusted padding-right */
+        min-height: 38px; /* Reduced min-height */
         transition: all 0.2s ease;
     }
 
     select:focus {
         outline: none;
         border-color: #4299e1;
-        box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.1);
+        box-shadow: 0 0 0 2px rgba(66, 153, 225, 0.1); /* Reduced shadow */
     }
 
     .submit-btn {
         background: linear-gradient(135deg, #38a169 0%, #2f855a 100%);
         color: white;
         border: none;
-        padding: 14px 24px; /* Adjusted padding */
-        border-radius: 8px;
+        padding: 10px 16px; /* Reduced padding */
+        border-radius: 6px; /* Slightly smaller border-radius */
         cursor: pointer;
-        font-size: 0.9rem; /* Increased font size */
+        font-size: 0.8rem; /* Reduced font size */
         font-weight: 600;
         transition: all 0.3s ease;
         width: 100%;
         margin-top: auto;
-        min-height: 52px; /* Increased min-height */
-        box-shadow: 0 4px 6px rgba(56, 161, 105, 0.3);
+        min-height: 42px; /* Reduced min-height */
+        box-shadow: 0 2px 4px rgba(56, 161, 105, 0.3); /* Reduced shadow */
     }
 
     .submit-btn:hover:not(:disabled) {
         background: linear-gradient(135deg, #2f855a 0%, #276749 100%);
-        transform: translateY(-2px);
-        box-shadow: 0 6px 12px rgba(56, 161, 105, 0.4);
+        transform: translateY(-1px); /* Reduced translate */
+        box-shadow: 0 4px 8px rgba(56, 161, 105, 0.4);
     }
 
     .submit-btn:disabled {
@@ -346,21 +346,21 @@
     .error-message {
         background: linear-gradient(145deg, #fed7d7 0%, #feb2b2 100%);
         color: #c53030;
-        padding: 16px 20px;
-        border-radius: 8px;
-        margin: 20px 0;
-        font-size: 0.9rem;
+        padding: 12px 16px; /* Adjusted padding */
+        border-radius: 6px;
+        margin: 16px 0;
+        font-size: 0.85rem; /* Adjusted font size */
         border: 1px solid #feb2b2;
-        box-shadow: 0 2px 4px rgba(197, 48, 48, 0.1);
+        box-shadow: 0 1px 3px rgba(197, 48, 48, 0.1);
     }
 
     .success-message {
         background: linear-gradient(145deg, #c6f6d5 0%, #9ae6b4 100%);
         color: #2f855a;
-        padding: 12px 16px;
-        border-radius: 8px;
-        margin: 12px 0;
-        font-size: 0.8rem;
+        padding: 10px 14px; /* Adjusted padding */
+        border-radius: 6px;
+        margin: 10px 0;
+        font-size: 0.75rem; /* Adjusted font size */
         border: 1px solid #9ae6b4;
         animation: slideIn 0.3s ease;
     }
@@ -378,71 +378,59 @@
 
     .no-orders {
         text-align: center;
-        padding: 60px;
+        padding: 40px; /* Reduced padding */
         color: #718096;
         grid-column: 1 / -1;
     }
 
     .no-orders h3 {
-        font-size: 1.5rem;
-        margin-bottom: 12px;
+        font-size: 1.3rem; /* Reduced font size */
+        margin-bottom: 10px;
         color: #4a5568;
     }
 
     /* Responsive Design */
     @media (max-width: 1200px) {
         .orders-container {
-            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-            gap: 20px;
+            grid-template-columns: repeat(3, 1fr); /* 3 columns on smaller screens */
+            gap: 12px;
         }
     }
 
-    @media (max-width: 768px) {
+    @media (max-width: 900px) { /* Added new breakpoint */
+        .orders-container {
+            grid-template-columns: repeat(2, 1fr); /* 2 columns on even smaller screens */
+        }
+    }
+
+    @media (max-width: 600px) { /* Adjusted breakpoint */
         body {
-            padding: 12px;
+            padding: 8px;
         }
-        
         .header {
-            padding: 24px 28px;
+            padding: 20px 24px;
         }
-        
         .header h1 {
-            font-size: 1.6rem;
+            font-size: 1.4rem;
         }
-        
         .orders-container {
-            padding: 24px;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 16px;
-        }
-        
-        .order-card {
-            max-width: none;
             padding: 16px;
-            min-height: auto; /* Adjusted */
+            grid-template-columns: 1fr; /* Single column on small mobile */
+            gap: 10px;
+        }
+        .order-card {
+            padding: 12px;
+            min-height: auto;
         }
     }
 
-    @media (max-width: 480px) {
-        .orders-container {
-            grid-template-columns: 1fr;
-            padding: 16px;
-        }
-        
-        .order-card {
-            width: 100%;
-            max-width: none;
-            margin: 0;
-        }
-    }
-
-    /* Single card centering prevention - this can be removed now that justify-content: center is on container */
+    /* Single card centering prevention - adjusted */
     .orders-container.single-item {
-        justify-content: center; /* Changed to center for single item as well */
+        justify-content: center;
     }
 
     .orders-container.single-item .order-card {
-        justify-self: stretch; /* Ensure it stretches */
+        justify-self: stretch;
     }
 </style>
 </head>

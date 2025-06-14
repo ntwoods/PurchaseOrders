@@ -903,9 +903,11 @@ function markAsDone(index) {
                 modalContent.innerHTML = `
                     <h3>⚠️ Missing Supplier Information</h3>
                     <p><strong>${missingOrders.length} order(s)</strong> are missing supplier names:</p>
-                    <ul style="text-align:left; font-size: 0.9rem; margin-top: 10px;">
-                        ${missingOrders.map(o => `<li>• ${o}</li>`).join('')}
+                    <div style="max-height: 250px; overflow-y: auto; text-align: left; font-size: 0.9rem; margin-top: 10px; padding-right: 5px;">
+                    <ul>
+                    ${missingOrders.map(o => `<li>• ${o}</li>`).join('')}
                     </ul>
+                    </div>
                     <p style="margin-top: 15px;">Please update the Google Sheet with supplier names. Or proceed anyway if intentional.</p>
                     <div class="modal-actions">
                         <a href="${request.googleSheetURL}" target="_blank" class="btn btn-primary">📊 Open Sheet</a>

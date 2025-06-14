@@ -813,29 +813,26 @@
 // Function to check Google Sheets for missing supplier names
 async function checkMissingSuppliers(googleSheetURL) {
     try {
-        // Convert Google Sheets URL to CSV export URL
         let csvUrl = googleSheetURL;
         if (googleSheetURL.includes('/edit')) {
-            // Handle different Google Sheets URL formats
             const sheetId = googleSheetURL.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
             if (sheetId) {
                 csvUrl = `https://docs.google.com/spreadsheets/d/${sheetId[1]}/export?format=csv`;
             }
         }
-        
+
         const response = await fetch(csvUrl);
         if (!response.ok) {
             throw new Error('Unable to access the Google Sheet');
         }
-        
+
         const csvText = await response.text();
-        
-        // Parse CSV data - handle both quoted and unquoted values
+
         const rows = csvText.split('\n').map(row => {
             const cells = [];
             let currentCell = '';
             let inQuotes = false;
-            
+
             for (let i = 0; i < row.length; i++) {
                 const char = row[i];
                 if (char === '"' && !inQuotes) {
@@ -850,80 +847,73 @@ async function checkMissingSuppliers(googleSheetURL) {
                 }
             }
             cells.push(currentCell.trim());
-            
             return cells;
         });
-        
-        let missingCount = 0;
-        
-        // Check Column A-C block (Order-1, Order-3, Order-5, etc.)
+
+        let missingOrders = [];
+
+        // Column A-C block (Order-1, Order-3, ...)
         for (let i = 0; i < rows.length; i++) {
-            const cellA = rows[i][0] || '';
-            if (cellA.toLowerCase().includes('order-')) {
+            const orderCell = rows[i][0] || '';
+            if (orderCell.toLowerCase().includes('order-')) {
+                const categoryCell = rows[i][1] || '';
                 const supplierCell = rows[i][2] || '';
-                if (!supplierCell || supplierCell === '' || supplierCell.toLowerCase() === 'supplier name') {
-                    missingCount++;
+                if (!supplierCell || supplierCell.toLowerCase() === 'supplier name') {
+                    missingOrders.push(`${orderCell} (${categoryCell})`);
                 }
             }
         }
-        
-        // Check Column F-H block (Order-2, Order-4, Order-6, etc.)
+
+        // Column F-H block (Order-2, Order-4, ...)
         for (let i = 0; i < rows.length; i++) {
-            const cellF = rows[i][5] || '';
-            if (cellF.toLowerCase().includes('order-')) {
+            const orderCell = rows[i][5] || '';
+            if (orderCell.toLowerCase().includes('order-')) {
+                const categoryCell = rows[i][6] || '';
                 const supplierCell = rows[i][7] || '';
-                if (!supplierCell || supplierCell === '' || supplierCell.toLowerCase() === 'supplier name') {
-                    missingCount++;
+                if (!supplierCell || supplierCell.toLowerCase() === 'supplier name') {
+                    missingOrders.push(`${orderCell} (${categoryCell})`);
                 }
             }
         }
-        
-        return missingCount;
+
+        return missingOrders;
     } catch (error) {
         console.error('Error checking suppliers:', error);
         throw new Error('Unable to check supplier information. Please ensure the Google Sheet is publicly accessible.');
     }
 }
 
-// Modified markAsDone function with supplier validation
-    function markAsDone(index) {
-    currentRequestIndex = index; // This is crucial for confirmMarkDone() to work
-    
-    // Show loading state in modal
+function markAsDone(index) {
+    currentRequestIndex = index;
     const modal = document.getElementById('confirmModal');
     const modalContent = modal.querySelector('.modal-content');
-    
+
     modalContent.innerHTML = `
         <div class="loader" style="width: 40px; height: 40px; margin: 20px auto;"></div>
         <h3>Checking Supplier Information...</h3>
         <p>Please wait while we verify the purchase order details.</p>
     `;
-    
     modal.style.display = 'block';
-    
-    // Get the request data
+
     const request = requestsData[index];
-    
-    // Check for missing suppliers
+
     checkMissingSuppliers(request.googleSheetURL)
-        .then(missingCount => {
-            if (missingCount > 0) {
-                // Show warning about missing suppliers
+        .then(missingOrders => {
+            if (Array.isArray(missingOrders) && missingOrders.length > 0) {
                 modalContent.innerHTML = `
                     <h3>⚠️ Missing Supplier Information</h3>
-                    <p><strong>${missingCount} order(s)</strong> are not marked with supplier name.</p>
-                    <p>Please update the Google Sheet with supplier names before marking this request as complete.</p>
+                    <p><strong>${missingOrders.length} order(s)</strong> are missing supplier names:</p>
+                    <ul style="text-align:left; font-size: 0.9rem; margin-top: 10px;">
+                        ${missingOrders.map(o => `<li>• ${o}</li>`).join('')}
+                    </ul>
+                    <p style="margin-top: 15px;">Please update the Google Sheet with supplier names. Or proceed anyway if intentional.</p>
                     <div class="modal-actions">
-                        <a href="${request.googleSheetURL}" target="_blank" class="btn btn-primary">
-                            📊 Open Sheet
-                        </a>
-                        <button class="btn" onclick="closeModal()" style="background: #95a5a6; color: white;">
-                            Cancel
-                        </button>
+                        <a href="${request.googleSheetURL}" target="_blank" class="btn btn-primary">📊 Open Sheet</a>
+                        <button class="btn btn-success" onclick="confirmMarkDone()">Proceed Anyway</button>
+                        <button class="btn" onclick="closeModal()" style="background: #95a5a6; color: white;">Cancel</button>
                     </div>
                 `;
             } else {
-                // All suppliers are filled, show confirmation
                 modalContent.innerHTML = `
                     <h3>✅ Ready to Complete</h3>
                     <p>All orders have supplier information. Are you sure you want to mark this request as done? This action cannot be undone.</p>
@@ -939,21 +929,14 @@ async function checkMissingSuppliers(googleSheetURL) {
             }
         })
         .catch(error => {
-            // Show error state with retry option
             modalContent.innerHTML = `
                 <h3>❌ Verification Failed</h3>
                 <p>Unable to verify supplier information: ${error.message}</p>
                 <p>You can try again or proceed without verification.</p>
                 <div class="modal-actions">
-                    <button class="btn btn-primary" onclick="markAsDone(${index})">
-                        🔄 Try Again
-                    </button>
-                    <button class="btn btn-success" onclick="confirmMarkDone()">
-                        Proceed Anyway
-                    </button>
-                    <button class="btn" onclick="closeModal()" style="background: #95a5a6; color: white;">
-                        Cancel
-                    </button>
+                    <button class="btn btn-primary" onclick="markAsDone(${index})">🔄 Try Again</button>
+                    <button class="btn btn-success" onclick="confirmMarkDone()">Proceed Anyway</button>
+                    <button class="btn" onclick="closeModal()" style="background: #95a5a6; color: white;">Cancel</button>
                 </div>
             `;
         });

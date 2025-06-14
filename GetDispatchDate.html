@@ -401,9 +401,9 @@
                 container.innerHTML = this.orders.map((order, index) => `
                     <div class="order-card">
                         <div class="order-header">
-                            <div class="requester-name">👤 ${order.requesterName}</div>
+                            <div class="requester-name">👤 ${order.supplierName}</div>
                             <div class="timestamp">
-                                🕒 Sent: ${this.formatDate(order.timestamp)}
+                                🕒 Sent to Supplier: ${this.formatDate(order.timestamp)}
                             </div>
                         </div>
                         

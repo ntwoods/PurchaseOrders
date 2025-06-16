@@ -406,7 +406,7 @@
       
       card.innerHTML = `
         <div class="order-header">
-          <h5><i class="fas fa-user"></i> ${order.supplierName || 'N/A'}</h5>
+          <h5><i class="fas fa-user"></i> ${order.requesterName || 'N/A'}</h5>
           <span class="status-badge"><i class="fas fa-clock"></i> Pending</span>
         </div>
         
@@ -434,49 +434,55 @@
       card.querySelector('.received-btn').addEventListener('click', handleReceivedClick);
     }
 
-async function handleReceivedClick(event) {
-  const button = event.target.closest('button');
-  const originalTimestamp = button.dataset.originalTimestamp;
-  const normalizedTimestamp = button.dataset.normalizedTimestamp;
-  const displayTimestamp = button.dataset.displayTimestamp;
+    async function handleReceivedClick(event) {
+      const button = event.target.closest('button');
+      const originalTimestamp = button.dataset.originalTimestamp;
+      const normalizedTimestamp = button.dataset.normalizedTimestamp;
+      const displayTimestamp = button.dataset.displayTimestamp;
 
-  if (!normalizedTimestamp && !originalTimestamp) {
-    showNotification('Error: Timestamp not found for this order.', 'error');
-    return;
-  }
+      if (!normalizedTimestamp && !originalTimestamp) {
+        showNotification('Error: Timestamp not found for this order.', 'error');
+        return;
+      }
 
-  const timestampToSend = normalizedTimestamp || originalTimestamp;
+      const timestampToSend = normalizedTimestamp || originalTimestamp;
 
-  if (!confirm(`Are you sure you want to mark the order with timestamp "${displayTimestamp}" as Received?`)) {
-    return;
-  }
+      if (!confirm(`Are you sure you want to mark the order with timestamp "${displayTimestamp}" as Received?`)) {
+        return;
+      }
 
-  button.disabled = true;
-  button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+      button.disabled = true;
+      button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
 
-  try {
-    const formData = new URLSearchParams();
-    formData.append('timestamp', timestampToSend);
+      try {
+        const response = await fetch(SCRIPT_URL, {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ 
+            timestamp: timestampToSend,
+            debug: {
+              original: originalTimestamp,
+              normalized: normalizedTimestamp
+            }
+          })
+        });
 
-    await fetch(SCRIPT_URL, {
-      method: 'POST',
-      mode: 'no-cors',
-      body: formData
-    });
+        showNotification('Order marked as Received!', 'success');
+        
+        setTimeout(() => {
+          fetchOrders();
+        }, 1000);
 
-    showNotification('Order marked as Received!', 'success');
-
-    setTimeout(() => {
-      fetchOrders();
-    }, 1000);
-
-  } catch (error) {
-    console.error('Network error:', error);
-    showNotification('Network error while marking order as Received: ' + error.message, 'error');
-    button.disabled = false;
-    button.innerHTML = '<i class="fas fa-check-circle"></i> Mark as Received';
-  }
-}
+      } catch (error) {
+        console.error('Network error:', error);
+        showNotification('Network error while marking order as Received: ' + error.message, 'error');
+        button.disabled = false;
+        button.innerHTML = '<i class="fas fa-check-circle"></i> Mark as Received';
+      }
+    }
 
     function showNotification(message, type) {
       const notification = document.createElement('div');

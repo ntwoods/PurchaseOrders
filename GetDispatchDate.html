@@ -35,6 +35,19 @@
             text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
         }
 
+	.po-number {
+	    position: absolute;
+	    top: 20px;
+	    right: 25px;
+	    font-weight: bold;
+	    color: #555;
+	    font-size: 1rem;
+	    background: #f0f0f0;
+	    padding: 6px 10px;
+	    border-radius: 8px;
+	    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+	}
+	    
         .status-bar {
             background: rgba(255, 255, 255, 0.1);
             backdrop-filter: blur(10px);
@@ -401,7 +414,7 @@
                 container.innerHTML = this.orders.map((order, index) => `
                     <div class="order-card">
                         <div class="order-header">
-                            <div class="requester-name">👤 ${order.supplierName}</div><div class="timestamp">${order.purchaseOrderNumber}</div>
+                            <div class="requester-name">👤 ${order.supplierName}</div><div class="po-number">${order.purchaseOrderNumber}</div>
                             <div class="timestamp">
                                 🕒 Sent to Supplier: ${this.formatDate(order.timestamp)}
                             </div>

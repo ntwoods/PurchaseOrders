@@ -401,7 +401,7 @@
                 container.innerHTML = this.orders.map((order, index) => `
                     <div class="order-card">
                         <div class="order-header">
-                            <div class="requester-name">👤 ${order.supplierName}</div>
+                            <div class="requester-name">👤 ${order.supplierName}</div><div class="timestamp">${order.purchaseOrderNumber}</div>
                             <div class="timestamp">
                                 🕒 Sent to Supplier: ${this.formatDate(order.timestamp)}
                             </div>

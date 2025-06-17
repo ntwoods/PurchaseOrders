@@ -4,6 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Order Management System</title>
+</head>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Elegant Order Management</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         /* General Reset and Body Styles */
         * {
@@ -13,34 +21,52 @@
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background-color: #e6f7ff;
-            color: #2d3748;
-            line-height: 1.4;
-            padding: 10px; /* Further reduced padding for overall compactness */
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 50%, #f1f5f9 100%);
+            color: #1e293b;
+            line-height: 1.6;
+            padding: 10px;
             min-height: 100vh;
-            display: flex; /* Use flex to center the container */
-            justify-content: center; /* Center horizontally */
-            align-items: flex-start; /* Align to the top vertically */
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            position: relative;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.08) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(255, 206, 84, 0.08) 0%, transparent 50%),
+                radial-gradient(circle at 40% 40%, rgba(120, 113, 108, 0.05) 0%, transparent 50%);
+            z-index: -1;
         }
 
         /* Main Container */
         .container {
-            max-width: 1440px; /* Increased max-width to allow more cards per row */
+            max-width: 1440px;
             margin: 0 auto;
-            background-color: #ebccff;
-            border-radius: 16px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1); /* Slightly softer shadow */
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 24px;
+            box-shadow: 
+                0 25px 50px -12px rgba(0, 0, 0, 0.08),
+                0 0 0 1px rgba(255, 255, 255, 0.05);
             overflow: hidden;
-            backdrop-filter: blur(10px);
-            flex-grow: 1; /* Allow container to grow */
+            flex-grow: 1;
         }
 
         /* Header Styles */
         .header {
-            background: linear-gradient(135deg, #1a202c 0%, #2d3748 100%);
-            color: orange;
-            padding: 25px 30px; /* Reduced padding for header */
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%);
+            color: #f8fafc;
+            padding: 32px 40px;
             position: relative;
             overflow: hidden;
         }
@@ -52,52 +78,73 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E") repeat;
+            background: url("data:image/svg+xml,%3Csvg width='80' height='80' viewBox='0 0 80 80' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M40 40c0-4.4-3.6-8-8-8s-8 3.6-8 8 3.6 8 8 8 8-3.6 8-8zm16 16c0-4.4-3.6-8-8-8s-8 3.6-8 8 3.6 8 8 8 8-3.6 8-8zm-32 0c0-4.4-3.6-8-8-8s-8 3.6-8 8 3.6 8 8 8 8-3.6 8-8z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E") repeat;
             opacity: 0.1;
         }
 
+        .header::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, #d4af37, transparent);
+        }
+
         .header h1 {
-            font-size: 1.8rem; /* Smaller font for header */
-            font-weight: 700;
-            margin-bottom: 5px;
+            font-family: 'Playfair Display', serif;
+            font-size: 2.2rem;
+            font-weight: 600;
+            margin-bottom: 8px;
             position: relative;
             z-index: 1;
+            color: #f8fafc;
+            letter-spacing: -0.025em;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
 
         .header p {
-            color: white;
-            font-size: 0.9rem; /* Smaller font for header description */
+            color: #cbd5e1;
+            font-size: 1rem;
             position: relative;
             z-index: 1;
+            font-weight: 400;
+            opacity: 0.9;
         }
+
         .po-number {
             position: absolute;
-            top: 15px;
-            right: 15px;
-            font-weight: bold;
-            color: #555;
-            font-size: 0.5rem;
-            background: #f0f0f0;
-            padding: 6px 10px;
+            top: 12px;
+            right: 12px;
+            font-weight: 600;
+            color: #334155;
+            font-size: 0.7rem;
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            padding: 4px 8px;
             border-radius: 8px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            font-family: 'Inter', sans-serif;
+            letter-spacing: 0.025em;
+            z-index: 2;
         }
 
         /* Loading Spinner */
         .loading {
             text-align: center;
-            padding: 40px; /* Reduced padding */
-            color: #718096;
+            padding: 60px;
+            color: #64748b;
         }
 
         .spinner {
             border: 3px solid #e2e8f0;
-            border-top: 3px solid #4299e1;
+            border-top: 3px solid #d4af37;
             border-radius: 50%;
-            width: 30px;
-            height: 30px;
+            width: 36px;
+            height: 36px;
             animation: spin 1s linear infinite;
-            margin: 0 auto 15px;
+            margin: 0 auto 20px;
         }
 
         @keyframes spin {
@@ -105,34 +152,34 @@
             100% { transform: rotate(360deg); }
         }
 
-        /* Orders Container - Key for the grid layout */
+        /* Orders Container */
         .orders-container {
-            padding: 20px; /* Reduced padding around the grid */
+            padding: 32px;
             display: grid;
-            /* For 4 columns: */
             grid-template-columns: repeat(4, 1fr);
-            /* For 5 columns (uncomment if preferred and screen allows): */
-            /* grid-template-columns: repeat(5, 1fr); */
-            gap: 15px; /* Reduced gap between cards for compactness */
-            justify-content: center; /* Center the grid within its container */
-            align-items: stretch; /* Ensures all cards in a row have the same height */
+            gap: 24px;
+            justify-content: center;
+            align-items: stretch;
         }
 
         /* Order Card Styles */
         .order-card {
-            background-color: #000070;
-            border: 1px solid rgba(226, 232, 240, 0.6);
-            border-radius: 10px; /* Slightly smaller border-radius */
-            padding: 12px; /* Significantly reduced padding for smaller card size */
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            width: 100%; /* Ensures card takes full width of its grid column */
+            background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
+            border: 1px solid rgba(148, 163, 184, 0.15);
+            border-radius: 16px;
+            padding: 20px;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            width: 100%;
             height: auto;
-            min-height: 380px; /* Adjusted min-height for a more compact card */
+            min-height: 400px;
             display: flex;
             flex-direction: column;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05); /* Softer shadow */
+            box-shadow: 
+                0 4px 6px -1px rgba(0, 0, 0, 0.05),
+                0 2px 4px -1px rgba(0, 0, 0, 0.03);
             position: relative;
             overflow: hidden;
+            backdrop-filter: blur(10px);
         }
 
         .order-card::before {
@@ -141,99 +188,110 @@
             top: 0;
             left: 0;
             right: 0;
-            height: 3px; /* Thinner top border */
-            background: linear-gradient(90deg, #4299e1, #38a169);
-            border-radius: 10px 10px 0 0;
+            height: 4px;
+            background: linear-gradient(90deg, #d4af37 0%, #b8860b 50%, #d4af37 100%);
+            border-radius: 16px 16px 0 0;
         }
 
         .order-card:hover {
-            border-color: rgba(66, 153, 225, 0.3);
-            transform: translateY(-2px); /* Smaller lift on hover */
-            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+            border-color: rgba(212, 175, 55, 0.3);
+            transform: translateY(-4px);
+            box-shadow: 
+                0 20px 25px -5px rgba(0, 0, 0, 0.08),
+                0 10px 10px -5px rgba(0, 0, 0, 0.04),
+                0 0 0 1px rgba(212, 175, 55, 0.1);
         }
 
         /* Order Header inside card */
         .order-header {
             display: flex;
             flex-direction: column;
-            gap: 8px; /* Reduced gap */
-            margin-bottom: 10px; /* Reduced margin */
+            gap: 12px;
+            margin-bottom: 16px;
             flex-shrink: 0;
-            padding-top: 5px;
+            padding-top: 8px;
         }
 
         .order-info h3 {
-            color: #1a202c;
-            font-size: 0.95rem; /* Smaller font size for order title */
+            font-family: 'Playfair Display', serif;
+            color: #0f172a;
+            font-size: 1.1rem;
             font-weight: 600;
-            margin-bottom: 3px;
+            margin-bottom: 4px;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
+            letter-spacing: -0.025em;
         }
 
         .order-timestamp {
-            color: #718096;
-            font-size: 0.7rem; /* Smaller font size */
-            background: #f7fafc;
-            padding: 2px 5px; /* Reduced padding */
-            border-radius: 5px;
+            color: #64748b;
+            font-size: 0.8rem;
+            background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+            padding: 4px 10px;
+            border-radius: 8px;
             display: inline-block;
             width: fit-content;
+            font-weight: 500;
+            border: 1px solid rgba(148, 163, 184, 0.1);
         }
 
         .show-po-btn {
-            background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
-            color: white;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: #f8fafc;
             border: none;
-            padding: 6px 12px; /* Reduced padding */
-            border-radius: 6px; /* Smaller border-radius */
+            padding: 10px 16px;
+            border-radius: 10px;
             cursor: pointer;
-            font-size: 0.75rem; /* Smaller font size */
+            font-size: 0.85rem;
             font-weight: 600;
             text-decoration: none;
             display: inline-block;
-            transition: all 0.2s ease;
+            transition: all 0.3s ease;
             width: fit-content;
             align-self: flex-start;
-            box-shadow: 0 1px 3px rgba(66, 153, 225, 0.3); /* Softer shadow */
+            box-shadow: 0 4px 6px -1px rgba(15, 23, 42, 0.2);
+            border: 1px solid rgba(15, 23, 42, 0.1);
+            font-family: 'Inter', sans-serif;
+            letter-spacing: 0.025em;
         }
 
         .show-po-btn:hover {
-            background: linear-gradient(135deg, #3182ce 0%, #2c5282 100%);
-            transform: translateY(-1px);
-            box-shadow: 0 2px 6px rgba(66, 153, 225, 0.4);
+            background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 12px -3px rgba(15, 23, 42, 0.25);
         }
 
         /* Form Section */
         .form-section {
-            border-top: 1px solid #e2e8f0; /* Thinner border */
-            padding-top: 12px; /* Reduced padding */
+            border-top: 1px solid rgba(148, 163, 184, 0.15);
+            padding-top: 16px;
             flex: 1;
             display: flex;
             flex-direction: column;
-            gap: 8px; /* Reduced gap between form items */
+            gap: 12px;
         }
 
         .form-item {
             display: flex;
             flex-direction: column;
-            gap: 1px; /* Very small gap between label and input */
-            margin-bottom: 6px; /* Reduced margin */
+            gap: 4px;
+            margin-bottom: 8px;
         }
 
         .form-item label {
             font-weight: 600;
-            color: #2d3748;
-            font-size: 0.75rem; /* Smaller font size for labels */
+            color: #334155;
+            font-size: 0.85rem;
             display: flex;
             align-items: center;
-            gap: 2px;
+            gap: 4px;
+            letter-spacing: 0.025em;
         }
 
         .required {
-            color: #e53e3e;
-            font-size: 0.8rem;
+            color: #dc2626;
+            font-size: 0.9rem;
         }
 
         .input-wrapper {
@@ -255,33 +313,34 @@
         .file-label {
             display: flex;
             align-items: center;
-            padding: 7px 9px; /* Reduced padding */
-            background: linear-gradient(145deg, #f8fafc 0%, #edf2f7 100%);
-            border: 1px dashed #cbd5e0; /* Thinner dashed border */
-            border-radius: 5px; /* Smaller border-radius */
+            padding: 12px 16px;
+            background: linear-gradient(145deg, #f8fafc 0%, #f1f5f9 100%);
+            border: 2px dashed #cbd5e1;
+            border-radius: 10px;
             cursor: pointer;
             transition: all 0.3s ease;
-            font-size: 0.75rem; /* Smaller font size */
-            color: #4a5568;
-            min-height: 34px; /* Reduced min-height */
+            font-size: 0.85rem;
+            color: #475569;
+            min-height: 48px;
+            font-weight: 500;
         }
 
         .file-label:hover {
-            background: linear-gradient(145deg, #edf2f7 0%, #e2e8f0 100%);
-            border-color: #a0aec0;
+            background: linear-gradient(145deg, #f1f5f9 0%, #e2e8f0 100%);
+            border-color: #94a3b8;
             transform: translateY(-1px);
         }
 
         .file-label.has-file {
-            background: linear-gradient(145deg, #f0fff4 0%, #c6f6d5 100%);
-            border-color: #68d391;
+            background: linear-gradient(145deg, #f0fdf4 0%, #dcfce7 100%);
+            border-color: #22c55e;
             border-style: solid;
-            color: #276749;
+            color: #15803d;
         }
 
         .file-icon {
-            margin-right: 5px; /* Reduced margin */
-            font-size: 0.85rem; /* Smaller icon size */
+            margin-right: 8px;
+            font-size: 1rem;
         }
 
         .file-text {
@@ -301,57 +360,64 @@
         .date-field,
         select {
             width: 100%;
-            padding: 7px 9px; /* Reduced padding */
-            border: 1px solid #e2e8f0; /* Thinner border */
-            border-radius: 5px; /* Smaller border-radius */
-            background: white;
-            font-size: 0.75rem; /* Smaller font size */
-            color: #2d3748;
-            transition: all 0.2s ease;
-            min-height: 34px; /* Reduced min-height */
-            appearance: none; /* For select dropdown arrow */
+            padding: 12px 16px;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
+            font-size: 0.85rem;
+            color: #334155;
+            transition: all 0.3s ease;
+            min-height: 48px;
+            appearance: none;
+            font-weight: 500;
+            font-family: 'Inter', sans-serif;
         }
 
         select {
-            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%23718096' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
-            background-position: right 7px center; /* Adjusted position */
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%23475569' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+            background-position: right 12px center;
             background-repeat: no-repeat;
-            background-size: 12px; /* Smaller arrow size */
-            padding-right: 25px; /* Adjusted padding-right */
+            background-size: 16px;
+            padding-right: 40px;
         }
 
         .date-field:focus,
         select:focus {
             outline: none;
-            border-color: #4299e1;
-            box-shadow: 0 0 0 1px rgba(66, 153, 225, 0.15); /* Smaller shadow */
+            border-color: #d4af37;
+            box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.1);
+            background: #ffffff;
         }
 
         /* Submit Button */
         .submit-btn {
-            background: linear-gradient(135deg, #38a169 0%, #2f855a 100%);
-            color: white;
+            background: linear-gradient(135deg, #d4af37 0%, #b8860b 100%);
+            color: #ffffff;
             border: none;
-            padding: 9px 15px; /* Reduced padding */
-            border-radius: 6px;
+            padding: 14px 20px;
+            border-radius: 10px;
             cursor: pointer;
-            font-size: 0.8rem; /* Smaller font size */
+            font-size: 0.9rem;
             font-weight: 600;
             transition: all 0.3s ease;
             width: 100%;
-            margin-top: auto; /* Pushes button to the bottom */
-            min-height: 38px; /* Reduced min-height */
-            box-shadow: 0 2px 4px rgba(56, 161, 105, 0.2);
+            margin-top: auto;
+            min-height: 48px;
+            box-shadow: 0 4px 6px -1px rgba(212, 175, 55, 0.3);
+            font-family: 'Inter', sans-serif;
+            letter-spacing: 0.025em;
+            text-transform: uppercase;
+            font-size: 0.8rem;
         }
 
         .submit-btn:hover:not(:disabled) {
-            background: linear-gradient(135deg, #2f855a 0%, #276749 100%);
-            transform: translateY(-1px);
-            box-shadow: 0 4px 8px rgba(56, 161, 105, 0.3);
+            background: linear-gradient(135deg, #b8860b 0%, #9a6b0c 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 12px -3px rgba(212, 175, 55, 0.4);
         }
 
         .submit-btn:disabled {
-            background: #a0aec0;
+            background: linear-gradient(135deg, #94a3b8 0%, #64748b 100%);
             cursor: not-allowed;
             transform: none;
             box-shadow: none;
@@ -359,25 +425,27 @@
 
         /* Messages */
         .error-message {
-            background: linear-gradient(145deg, #fed7d7 0%, #feb2b2 100%);
-            color: #c53030;
-            padding: 10px 14px;
-            border-radius: 6px;
-            margin: 15px 0;
-            font-size: 0.8rem;
-            border: 1px solid #feb2b2;
-            box-shadow: 0 1px 2px rgba(197, 48, 48, 0.1);
+            background: linear-gradient(145deg, #fef2f2 0%, #fee2e2 100%);
+            color: #dc2626;
+            padding: 12px 16px;
+            border-radius: 10px;
+            margin: 16px 0;
+            font-size: 0.85rem;
+            border: 1px solid #fecaca;
+            box-shadow: 0 1px 3px rgba(220, 38, 38, 0.1);
+            font-weight: 500;
         }
 
         .success-message {
-            background: linear-gradient(145deg, #c6f6d5 0%, #9ae6b4 100%);
-            color: #2f855a;
-            padding: 8px 12px;
-            border-radius: 6px;
-            margin: 8px 0;
-            font-size: 0.7rem;
-            border: 1px solid #9ae6b4;
-            animation: slideIn 0.3s ease;
+            background: linear-gradient(145deg, #f0fdf4 0%, #dcfce7 100%);
+            color: #16a34a;
+            padding: 12px 16px;
+            border-radius: 10px;
+            margin: 12px 0;
+            font-size: 0.85rem;
+            border: 1px solid #bbf7d0;
+            animation: slideIn 0.4s ease;
+            font-weight: 500;
         }
 
         @keyframes slideIn {
@@ -394,82 +462,79 @@
         /* No Orders Found */
         .no-orders {
             text-align: center;
-            padding: 30px;
-            color: #718096;
-            grid-column: 1 / -1; /* Make it span all columns */
+            padding: 60px 40px;
+            color: #64748b;
+            grid-column: 1 / -1;
         }
 
         .no-orders h3 {
-            font-size: 1.2rem;
-            margin-bottom: 8px;
-            color: #4a5568;
+            font-family: 'Playfair Display', serif;
+            font-size: 1.5rem;
+            margin-bottom: 12px;
+            color: #334155;
+            font-weight: 600;
         }
 
         /* Responsive Design */
-        @media (max-width: 1400px) { /* Adjust for larger screens to fit 5 columns */
-             /* grid-template-columns: repeat(5, 1fr); */
-        }
-
         @media (max-width: 1200px) {
             .orders-container {
-                grid-template-columns: repeat(3, 1fr); /* 3 columns on medium screens */
-                gap: 12px;
+                grid-template-columns: repeat(3, 1fr);
+                gap: 20px;
             }
             .order-card {
-                min-height: 390px; /* Adjust min-height as needed for content */
+                min-height: 410px;
             }
         }
 
         @media (max-width: 900px) {
             .orders-container {
-                grid-template-columns: repeat(2, 1fr); /* 2 columns on smaller tablets */
-                gap: 10px;
+                grid-template-columns: repeat(2, 1fr);
+                gap: 16px;
             }
             .order-card {
-                min-height: 400px; /* Adjust min-height as needed for content */
+                min-height: 420px;
             }
         }
 
         @media (max-width: 600px) {
             body {
-                padding: 5px;
+                padding: 8px;
             }
             .header {
-                padding: 15px 20px;
+                padding: 24px 20px;
             }
             .header h1 {
-                font-size: 1.2rem;
+                font-size: 1.8rem;
             }
             .header p {
-                font-size: 0.8rem;
+                font-size: 0.9rem;
             }
             .orders-container {
-                padding: 10px;
-                grid-template-columns: 1fr; /* Single column on mobile */
-                gap: 8px;
+                padding: 20px;
+                grid-template-columns: 1fr;
+                gap: 16px;
             }
             .order-card {
-                padding: 10px;
-                min-height: auto; /* Let height be natural on mobile */
+                padding: 16px;
+                min-height: auto;
             }
             .submit-btn {
-                padding: 8px 12px;
+                padding: 12px 16px;
                 font-size: 0.75rem;
-                min-height: 34px;
+                min-height: 44px;
             }
         }
 
-        /* Single card centering (if only one order exists) */
+        /* Single card centering */
         .orders-container.single-item {
             justify-content: center;
         }
 
         .orders-container.single-item .order-card {
             justify-self: stretch;
-            max-width: 400px; /* Limit width of single card if centered */
+            max-width: 420px;
         }
     </style>
-</head>
 <body>
     <div class="container">
         <div class="header">

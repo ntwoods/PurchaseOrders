@@ -70,6 +70,18 @@
             position: relative;
             z-index: 1;
         }
+        .po-number {
+            position: absolute;
+            top: 20px;
+            right: 25px;
+            font-weight: bold;
+            color: #555;
+            font-size: 1rem;
+            background: #f0f0f0;
+            padding: 6px 10px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
 
         /* Loading Spinner */
         .loading {
@@ -557,7 +569,8 @@
                 <div class="order-card">
                     <div class="order-header">
                         <div class="order-info">
-                            <h3>${order.requesterName || 'Unknown Requester'}</h3>
+                            <h3>${order.supplierName || 'Unknown Supplier'}</h3>
+                            <div class="po-number">${(order.purchaseOrderNumber)}</div>
                             <div class="order-timestamp">${formatTimestamp(order.timestamp)}</div>
                         </div>
                         <a href="${order.googleSheetURL}" target="_blank" class="show-po-btn">

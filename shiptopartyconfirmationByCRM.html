@@ -2,9 +2,10 @@
 <html lang="en">
 <head>
   <base target="_top">
-  <title>Order Receiving Acknowledgement for Bill To Ship To Orders</title>
+  <title>Order Receiving Acknowledgement at Godown</title>
   <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <style>
     * {
       margin: 0;
@@ -13,64 +14,78 @@
     }
 
     body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      font-family: 'Poppins', sans-serif;
+      background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
       min-height: 100vh;
       padding: 20px 0;
+      color: #2c3e50;
     }
 
     .main-container {
-      max-width: 1000px;
+      max-width: 1400px;
       margin: 0 auto;
       padding: 0 20px;
     }
 
     .header-section {
       text-align: center;
-      color: white;
+      color: #2c3e50;
       margin-bottom: 40px;
       padding: 30px 0;
+      background: rgba(255, 255, 255, 0.9);
+      border-radius: 20px;
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
     }
 
     .header-section h1 {
       font-size: 2.5em;
       font-weight: 700;
       margin-bottom: 15px;
-      text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+      color: #34495e;
     }
 
     .header-section .tagline {
       font-size: 1.1em;
-      opacity: 0.9;
-      font-weight: 300;
+      color: #7f8c8d;
+      font-weight: 400;
       max-width: 600px;
       margin: 0 auto;
-      line-height: 1.5;
+      line-height: 1.6;
     }
 
     .content-wrapper {
       background: rgba(255, 255, 255, 0.95);
       border-radius: 20px;
       padding: 30px;
-      box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.08);
       backdrop-filter: blur(10px);
     }
 
+    /* Grid Layout for Order Cards */
+    .orders-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(380px, 380px));
+      gap: 25px;
+      margin-top: 20px;
+      justify-content: center;
+    }
+
     .order-card {
-      background: linear-gradient(145deg, #ffffff, #f8f9fa);
-      border-radius: 15px;
-      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
-      margin-bottom: 25px;
+      background: #ffffff;
+      border-radius: 16px;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
       padding: 25px;
       position: relative;
-      border: 1px solid rgba(0,0,0,0.05);
+      border: 1px solid #e8ecef;
       transition: all 0.3s ease;
       overflow: hidden;
+      width: 380px;
+      max-width: 380px;
     }
 
     .order-card:hover {
       transform: translateY(-5px);
-      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.12);
     }
 
     .order-card::before {
@@ -80,7 +95,7 @@
       left: 0;
       right: 0;
       height: 4px;
-      background: linear-gradient(90deg, #28a745, #20c997);
+      background: linear-gradient(90deg, #667eea, #764ba2);
     }
 
     .order-header {
@@ -88,45 +103,44 @@
       justify-content: space-between;
       align-items: flex-start;
       margin-bottom: 20px;
+      flex-wrap: wrap;
+      gap: 10px;
     }
 
     .order-card h5 {
       color: #2c3e50;
       margin: 0;
-      font-size: 1.3em;
+      font-size: 1.2em;
       font-weight: 600;
       display: flex;
       align-items: center;
       gap: 10px;
+      flex: 1;
+      min-width: 200px;
     }
 
     .order-card h5 i {
-      color: #007bff;
-      font-size: 1.1em;
+      color: #667eea;
+      font-size: 1em;
     }
 
     .status-badge {
-      padding: 8px 15px;
-      border-radius: 25px;
-      font-weight: 600;
-      font-size: 0.85em;
-      background: linear-gradient(135deg, #28a745, #20c997);
+      padding: 4px 8px;
+      border-radius: 10px;
+      font-weight: 500;
+      font-size: 0.70em;
+      background: linear-gradient(135deg, #f39c12, #e67e22);
       color: white;
-      box-shadow: 0 4px 8px rgba(40, 167, 69, 0.3);
-      animation: pulse 2s infinite;
-    }
-
-    @keyframes pulse {
-      0% { box-shadow: 0 4px 8px rgba(40, 167, 69, 0.3); }
-      50% { box-shadow: 0 4px 15px rgba(40, 167, 69, 0.5); }
-      100% { box-shadow: 0 4px 8px rgba(40, 167, 69, 0.3); }
+      box-shadow: 0 3px 8px rgba(243, 156, 18, 0.3);
+      white-space: nowrap;
     }
 
     .order-details {
-      background: rgba(108, 117, 125, 0.05);
-      padding: 15px;
-      border-radius: 10px;
+      background: #f8f9fa;
+      padding: 16px;
+      border-radius: 12px;
       margin-bottom: 20px;
+      border: 1px solid #e9ecef;
     }
 
     .order-details p {
@@ -136,6 +150,7 @@
       display: flex;
       align-items: center;
       gap: 10px;
+      font-size: 0.95em;
     }
 
     .order-details i {
@@ -145,47 +160,56 @@
 
     .button-group {
       display: flex;
-      gap: 12px;
-      flex-wrap: wrap;
+      flex-direction: column;
+      gap: 5px;
     }
+
+.button-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 15px; /* space between buttons */
+  width: 100%; /* or max-width: 400px; depending on layout */
+}
 
     .btn-custom {
       border: none;
-      border-radius: 8px;
-      padding: 10px 20px;
-      font-weight: 600;
+      border-radius: 10px;
+      padding: 12px 20px;
+      font-weight: 500;
       font-size: 0.9em;
       transition: all 0.3s ease;
       text-decoration: none;
       display: inline-flex;
       align-items: center;
+      justify-content: center;
       gap: 8px;
-      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+      box-shadow: 0 3px 8px rgba(0,0,0,0.08);
+      font-family: 'Poppins', sans-serif;
     }
 
     .btn-custom:hover {
       transform: translateY(-2px);
-      box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+      box-shadow: 0 6px 15px rgba(0,0,0,0.12);
       text-decoration: none;
     }
 
     .btn-view {
-      background: linear-gradient(135deg, #007bff, #0056b3);
+      background: linear-gradient(135deg, #3498db, #2980b9);
       color: white;
+      justify-content: left;
+      padding: 5px 15px 5px 15px;
     }
 
-    .btn-check {
-      background: linear-gradient(135deg, #17a2b8, #138496);
+    .btn-received{
+      background: teal;
       color: white;
+      padding: 8px;
+      justify-content: center;
+      margin-top: 10px;
     }
-
-    .btn-received {
-      background: linear-gradient(135deg, #28a745, #1e7e34);
-      color: white;
-    }
-
     .btn-received:hover {
-      background: linear-gradient(135deg, #218838, #1c7430);
+      background: pink;
+      color: black;
     }
 
     .btn-custom:disabled {
@@ -197,13 +221,14 @@
     .loading-container, .no-orders-container {
       text-align: center;
       padding: 60px 20px;
+      grid-column: 1 / -1;
     }
 
     .loading-spinner {
       width: 50px;
       height: 50px;
       border: 4px solid #e3e3e3;
-      border-top: 4px solid #007bff;
+      border-top: 4px solid #667eea;
       border-radius: 50%;
       animation: spin 1s linear infinite;
       margin: 0 auto 20px;
@@ -222,12 +247,12 @@
 
     .no-orders-icon {
       font-size: 4em;
-      color: #dc3545;
+      color: #e74c3c;
       margin-bottom: 20px;
     }
 
     .no-orders-text {
-      color: #dc3545;
+      color: #e74c3c;
       font-size: 1.2em;
       font-weight: 500;
     }
@@ -239,18 +264,31 @@
       width: 60px;
       height: 60px;
       border-radius: 50%;
-      background: linear-gradient(135deg, #007bff, #0056b3);
+      background: linear-gradient(135deg, #667eea, #764ba2);
       color: white;
       border: none;
       font-size: 1.5em;
-      box-shadow: 0 8px 20px rgba(0, 123, 255, 0.3);
+      box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
       transition: all 0.3s ease;
       z-index: 1000;
     }
 
     .refresh-btn:hover {
       transform: scale(1.1);
-      box-shadow: 0 12px 25px rgba(0, 123, 255, 0.4);
+      box-shadow: 0 12px 25px rgba(102, 126, 234, 0.4);
+    }
+
+    /* Responsive Design */
+    @media (max-width: 1200px) {
+      .orders-grid {
+        grid-template-columns: repeat(auto-fill, minmax(360px, 360px));
+        gap: 20px;
+      }
+      
+      .order-card {
+        width: 360px;
+        max-width: 360px;
+      }
     }
 
     @media (max-width: 768px) {
@@ -258,17 +296,24 @@
         font-size: 2em;
       }
       
-      .button-group {
-        flex-direction: column;
+      .orders-grid {
+        grid-template-columns: repeat(auto-fill, minmax(320px, 320px));
+        gap: 20px;
       }
       
-      .btn-custom {
-        justify-content: center;
+      .order-card {
+        width: 320px;
+        max-width: 320px;
       }
       
       .order-header {
         flex-direction: column;
-        gap: 15px;
+        align-items: flex-start;
+        gap: 12px;
+      }
+      
+      .order-card h5 {
+        min-width: auto;
       }
       
       .refresh-btn {
@@ -277,6 +322,32 @@
         width: 50px;
         height: 50px;
         font-size: 1.2em;
+      }
+
+      .main-container {
+        padding: 0 15px;
+      }
+
+      .content-wrapper {
+        padding: 20px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .orders-grid {
+        grid-template-columns: 1fr;
+        gap: 15px;
+        justify-items: center;
+      }
+      
+      .order-card {
+        width: 100%;
+        max-width: 350px;
+        padding: 20px;
+      }
+      
+      .header-section {
+        padding: 20px;
       }
     }
   </style>
@@ -289,19 +360,19 @@
     </div>
 
     <div class="content-wrapper">
-      <div id="loadingMessage" class="loading-container">
-        <div class="loading-spinner"></div>
-        <div class="loading-text">Loading pending orders...</div>
-      </div>
-
-      <div id="noOrdersMessage" class="no-orders-container" style="display: none;">
-        <div class="no-orders-icon">
-          <i class="fas fa-inbox"></i>
+      <div class="orders-grid" id="orderCardsContainer">
+        <div id="loadingMessage" class="loading-container">
+          <div class="loading-spinner"></div>
+          <div class="loading-text">Loading pending orders...</div>
         </div>
-        <div class="no-orders-text">No pending orders found</div>
-      </div>
 
-      <div id="orderCardsContainer"></div>
+        <div id="noOrdersMessage" class="no-orders-container" style="display: none;">
+          <div class="no-orders-icon">
+            <i class="fas fa-inbox"></i>
+          </div>
+          <div class="no-orders-text">No pending orders found</div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -318,9 +389,16 @@
     document.addEventListener('DOMContentLoaded', fetchOrders);
 
     async function fetchOrders() {
-      document.getElementById('loadingMessage').style.display = 'block';
-      document.getElementById('noOrdersMessage').style.display = 'none';
-      document.getElementById('orderCardsContainer').innerHTML = '';
+      const container = document.getElementById('orderCardsContainer');
+      const loadingMessage = document.getElementById('loadingMessage');
+      const noOrdersMessage = document.getElementById('noOrdersMessage');
+      
+      // Clear previous cards but keep loading/no orders messages
+      const existingCards = container.querySelectorAll('.order-card');
+      existingCards.forEach(card => card.remove());
+      
+      loadingMessage.style.display = 'block';
+      noOrdersMessage.style.display = 'none';
 
       // Add rotation animation to refresh button
       const refreshBtn = document.querySelector('.refresh-btn i');
@@ -330,7 +408,7 @@
         const response = await fetch(API_URL);
         const result = await response.json();
 
-        document.getElementById('loadingMessage').style.display = 'none';
+        loadingMessage.style.display = 'none';
         refreshBtn.style.animation = '';
 
         if (result.success && result.data.length > 0) {
@@ -338,13 +416,13 @@
             renderOrderCard(order);
           });
         } else if (result.success && result.data.length === 0) {
-          document.getElementById('noOrdersMessage').style.display = 'block';
+          noOrdersMessage.style.display = 'block';
         } else {
           console.error('Error fetching orders:', result.error);
           showNotification('Error fetching orders: ' + result.error, 'error');
         }
       } catch (error) {
-        document.getElementById('loadingMessage').style.display = 'none';
+        loadingMessage.style.display = 'none';
         refreshBtn.style.animation = '';
         console.error('Network or parsing error:', error);
         showNotification('Network or parsing error: ' + error.message, 'error');
@@ -396,6 +474,18 @@
       }
     }
 
+function formatDate(dateStr) {
+  const months = [
+    "January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December"
+  ];
+  const dateObj = new Date(dateStr);
+  const day = String(dateObj.getDate()).padStart(2, '0');
+  const month = months[dateObj.getMonth()];
+  const year = dateObj.getFullYear();
+  return `${day}-${month}-${year}`;
+}
+
     function renderOrderCard(order) {
       const container = document.getElementById('orderCardsContainer');
       const card = document.createElement('div');
@@ -407,30 +497,36 @@
       card.innerHTML = `
         <div class="order-header">
           <h5><i class="fas fa-user"></i> ${order.supplierName || 'N/A'}</h5>
-          <span class="status-badge"><i class="fas fa-clock"></i> Pending</span>
+          <span class="status-badge">${order.purchaseOrderNumber || 'N/A'}</span>
         </div>
         
         <div class="order-details">
-          <p><i class="fas fa-calendar-alt"></i> <strong>Timestamp:</strong> ${displayTimestamp}</p>
+	<strong>Expected Delivery:</strong> ${formatDate(order.expectedDeliveryDate)}
         </div>
         
-        <div class="button-group">
+        <div class="button-grid">
           <a href="${order.poURL}" target="_blank" class="btn-custom btn-view">
             <i class="fas fa-eye"></i> View PO
           </a>
-          <a href="${order.dispatchDetailURL}" target="_blank" class="btn-custom btn-check">
-            <i class="fas fa-truck"></i> Check Dispatch Details
+          <a href="${order.dispatchDetailURL}" target="_blank" class="btn-custom btn-view">
+            <i class="fas fa-truck"></i> Dispatch
           </a>
-          <a href="${order.lrURL}" target="_blank" class="btn-custom btn-check">
-            <i class="fas fa-truck"></i> LR Details
+          <a href="${order.lrUrl}" target="_blank" class="btn-custom btn-view">
+            <i class="fas fa-file-signature"></i> LR
           </a>
-          <button class="btn-custom btn-received received-btn" 
+          <a href="${order.invoiceDetails}" target="_blank" class="btn-custom btn-view">
+            <i class="fas fa-file-invoice"></i> Invoice
+          </a>
+          <a href="${order.orderDataSheet}" target="_blank" class="btn-custom btn-view" style="background: orange; color: black;">
+	  <i class="fas fa-file-order"></i> Order File
+	  </a>
+          <button class="btn-custom btn-received received-btn" class="button-grid" 
                   data-original-timestamp="${order.timestamp}" 
                   data-normalized-timestamp="${normalizedTimestamp}" 
                   data-display-timestamp="${displayTimestamp}">
-            <i class="fas fa-check-circle"></i> Mark as Received
+            <i class="fas fa-check-circle"></i> Received
           </button>
-        </div>
+	  </div>
       `;
       
       container.appendChild(card);
@@ -494,19 +590,20 @@
         top: 20px;
         right: 20px;
         padding: 15px 25px;
-        border-radius: 8px;
+        border-radius: 12px;
         color: white;
-        font-weight: 600;
+        font-weight: 500;
         z-index: 10000;
         max-width: 400px;
-        box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.15);
         animation: slideIn 0.3s ease;
+        font-family: 'Poppins', sans-serif;
       `;
       
       if (type === 'success') {
-        notification.style.background = 'linear-gradient(135deg, #28a745, #20c997)';
+        notification.style.background = 'linear-gradient(135deg, #27ae60, #229954)';
       } else {
-        notification.style.background = 'linear-gradient(135deg, #dc3545, #c82333)';
+        notification.style.background = 'linear-gradient(135deg, #e74c3c, #c0392b)';
       }
       
       notification.innerHTML = `

@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Orders Management Dashboard</title>
     <style>
+        /* General styles */
         * {
             margin: 0;
             padding: 0;
@@ -224,6 +225,16 @@
             background: #f57c00;
             transform: translateY(-2px);
         }
+        
+        .hold-btn {
+            background: #2196f3; /* Blue */
+            color: white;
+        }
+
+        .hold-btn:hover {
+            background: #1976d2; /* Darker blue */
+            transform: translateY(-2px);
+        }
 
         .action-btn:disabled {
             opacity: 0.6;
@@ -231,7 +242,8 @@
             transform: none;
         }
 
-        .delayed-input-section {
+        .delayed-input-section,
+        .hold-input-section {
             display: none;
             margin-top: 10px;
             padding: 10px;
@@ -239,7 +251,8 @@
             border-radius: 8px;
         }
 
-        .delayed-input-section.show {
+        .delayed-input-section.show,
+        .hold-input-section.show {
             display: block;
         }
 
@@ -255,7 +268,8 @@
             font-size: 0.85rem;
         }
 
-        .date-input {
+        .date-input,
+        .text-input {
             width: 100%;
             padding: 8px 12px;
             border: none;
@@ -263,20 +277,42 @@
             font-size: 0.9rem;
         }
 
-        .submit-delayed-btn {
+        .submit-delayed-btn,
+        .submit-hold-btn,
+        .cancel-hold-btn {
             width: 100%;
             padding: 8px 15px;
-            background: #d32f2f;
             color: white;
             border: none;
             border-radius: 5px;
             font-weight: bold;
             cursor: pointer;
             transition: background 0.3s ease;
+            margin-top: 5px; /* Added margin for buttons */
+        }
+
+        .submit-delayed-btn {
+            background: #d32f2f;
         }
 
         .submit-delayed-btn:hover {
             background: #c62828;
+        }
+        
+        .submit-hold-btn {
+            background: #4CAF50; /* Green */
+        }
+
+        .submit-hold-btn:hover {
+            background: #45a049;
+        }
+
+        .cancel-hold-btn {
+            background: #f44336; /* Red */
+        }
+
+        .cancel-hold-btn:hover {
+            background: #d32f2f;
         }
 
         .action-feedback {
@@ -526,6 +562,9 @@
                             <button class="action-btn delayed-btn" onclick="toggleDelayedInput('${order.id}')">
                                 ⏰ Delayed
                             </button>
+                            <button class="action-btn hold-btn" onclick="toggleHoldInput('${order.id}')">
+                                ⏸️ Hold
+                            </button>
                         </div>
                         
                         <div id="delayed-input-${order.id}" class="delayed-input-section">
@@ -535,6 +574,23 @@
                             </div>
                             <button class="submit-delayed-btn" onclick="handleDelayed('${order.timestamp}', '${order.id}')">
                                 Submit Delayed
+                            </button>
+                        </div>
+
+                        <div id="hold-input-${order.id}" class="hold-input-section">
+                            <div class="input-group">
+                                <label class="input-label">Hold Until:</label>
+                                <input type="date" id="hold-until-${order.id}" class="date-input" required>
+                            </div>
+                            <div class="input-group">
+                                <label class="input-label">Hold Remark:</label>
+                                <input type="text" id="hold-remark-${order.id}" class="text-input" placeholder="Reason for hold" required>
+                            </div>
+                            <button class="submit-hold-btn" onclick="handleHold('${order.timestamp}', '${order.id}')">
+                                Mark Hold
+                            </button>
+                            <button class="cancel-hold-btn" onclick="cancelHold('${order.id}')">
+                                Cancel Hold
                             </button>
                         </div>
                         
@@ -704,6 +760,26 @@
         function toggleDelayedInput(orderId) {
             const inputSection = document.getElementById(`delayed-input-${orderId}`);
             inputSection.classList.toggle('show');
+            // Hide hold section if it's open
+            document.getElementById(`hold-input-${orderId}`).classList.remove('show');
+        }
+        
+        // Toggle hold input section
+        function toggleHoldInput(orderId) {
+            const inputSection = document.getElementById(`hold-input-${orderId}`);
+            inputSection.classList.toggle('show');
+            // Hide delayed section if it's open
+            document.getElementById(`delayed-input-${orderId}`).classList.remove('show');
+        }
+
+        // Cancel hold action: simply hide the fields
+        function cancelHold(orderId) {
+            const inputSection = document.getElementById(`hold-input-${orderId}`);
+            inputSection.classList.remove('show');
+            // Clear input fields
+            document.getElementById(`hold-until-${orderId}`).value = '';
+            document.getElementById(`hold-remark-${orderId}`).value = '';
+            showFeedback(orderId, 'Hold action cancelled.', 'error'); // Provide feedback
         }
 
         // Handle Delayed action
@@ -752,6 +828,61 @@
                  setTimeout(() => {
                     submitButton.disabled = false;
                     submitButton.textContent = 'Submit Delayed';
+                }, 2000);
+            }
+        }
+        
+        // Handle Hold action
+        async function handleHold(timestamp, orderId) {
+            const holdUntilInput = document.getElementById(`hold-until-${orderId}`);
+            const holdRemarkInput = document.getElementById(`hold-remark-${orderId}`);
+            const holdUntilDate = holdUntilInput.value; // YYYY-MM-DD format from input type="date"
+            const holdRemark = holdRemarkInput.value;
+            const submitButton = event.target;
+            const feedback = document.getElementById(`feedback-${orderId}`);
+
+            if (!holdUntilDate) {
+                showFeedback(orderId, 'Please select a "Hold Until" date', 'error');
+                return;
+            }
+            if (!holdRemark) {
+                showFeedback(orderId, 'Please enter a "Hold Remark"', 'error');
+                return;
+            }
+
+            submitButton.disabled = true;
+            submitButton.textContent = '⏳ Processing...';
+
+            try {
+                fetch(API_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        action: 'hold',
+                        timestamp: formatTimestampForSheet(timestamp),
+                        holdUntilDate: holdUntilDate, // Send as YYYY-MM-DD
+                        holdRemark: holdRemark
+                    })
+                });
+
+                showFeedback(orderId, 'Hold action submitted successfully (check sheet for update)!', 'success');
+                
+                // Hide input and reset value
+                document.getElementById(`hold-input-${orderId}`).classList.remove('show');
+                holdUntilInput.value = '';
+                holdRemarkInput.value = '';
+
+                setTimeout(loadOrders, 2000); // Refresh orders after a short delay
+            } catch (error) {
+                console.error('Error submitting Hold action:', error);
+                showFeedback(orderId, `Client-side error: ${error.message}`, 'error');
+            } finally {
+                setTimeout(() => {
+                    submitButton.disabled = false;
+                    submitButton.textContent = 'Mark Hold';
                 }, 2000);
             }
         }

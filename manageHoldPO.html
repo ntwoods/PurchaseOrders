@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hold Orders Management</title>
+    <!-- Tailwind CSS CDN for quick styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts - Inter for clean typography -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Custom CSS for the black and golden theme with less shine */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #000000; /* Deep black background */
+            color: #E0E0E0; /* Light gray for general text */
+        }
+        .container {
+            max-width: 96rem; /* Equivalent to max-w-6xl in Tailwind */
+            margin-left: auto;
+            margin-right: auto;
+            padding: 2rem; /* p-8 */
+        }
+        .header h1 {
+            color: #D4AF37; /* Golden color for main heading */
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5); /* Subtle shadow for depth */
+        }
+        .order-card {
+            background-color: #1A1A1A; /* Darker gray for card background */
+            border: 1px solid #7D6B00; /* Muted golden border */
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4); /* Deeper shadow */
+            transition: all 0.3s ease-in-out;
+        }
+        .order-card:hover {
+            border-color: #A38C00; /* Slightly brighter golden on hover */
+            transform: translateY(-5px) scale(1.02); /* Lift and slightly enlarge on hover */
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.6);
+        }
+        .order-card h3 {
+            color: #FFD700; /* Brighter golden for supplier name */
+        }
+        .order-card p {
+            color: #C0C0C0; /* Lighter gray for card text */
+        }
+        .order-card .font-medium {
+            color: #FFBF00; /* Muted golden for labels like 'Hold Until' */
+        }
+        .btn-approve {
+            background-color: #1E8449; /* Darker green */
+            transition: background-color 0.2s ease-in-out;
+        }
+        .btn-approve:hover {
+            background-color: #2ECC71; /* Brighter green on hover */
+        }
+        .btn-cancel {
+            background-color: #C0392B; /* Darker red */
+            transition: background-color 0.2s ease-in-out;
+        }
+        .btn-cancel:hover {
+            background-color: #E74C3C; /* Brighter red on hover */
+        }
+        /* Message box for alerts */
+        .message-box {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #333;
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+            z-index: 1000;
+            display: none; /* Hidden by default */
+            max-width: 80%;
+            text-align: center;
+        }
+        .message-box button {
+            background-color: #D4AF37;
+            color: black;
+            padding: 8px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 15px;
+            font-weight: bold;
+        }
+        .message-box button:hover {
+            background-color: #FFD700;
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+    <div class="container p-8">
+        <header class="header text-center mb-10">
+            <h1 class="text-4xl font-bold mb-2 drop-shadow-lg">Hold Orders Management</h1>
+            <p class="text-gray-400 text-lg">Review and manage pending hold orders.</p>
+        </header>
+
+        <!-- Loading, Error, and No Orders messages -->
+        <div id="status-message" class="text-center text-amber-500 text-xl mt-8">Loading orders...</div>
+
+        <!-- Container for order cards -->
+        <div id="orders-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mt-8">
+            <!-- Order cards will be dynamically inserted here by JavaScript -->
+        </div>
+    </div>
+
+    <!-- Custom Message Box -->
+    <div id="message-box" class="message-box">
+        <p id="message-content"></p>
+        <button onclick="document.getElementById('message-box').style.display = 'none';">OK</button>
+    </div>
+
+    <script>
+        // Define the API URL for fetching and posting data
+        const API_URL = "https://script.google.com/macros/s/AKfycbxmknmN_A0jdyu8B489qcb1UfVSwyG7sGvRs3LPCj6647GyYU2oL0sIf7GaKuLodYfFeg/exec";
+        const ordersContainer = document.getElementById('orders-container');
+        const statusMessage = document.getElementById('status-message');
+        const messageBox = document.getElementById('message-box');
+        const messageContent = document.getElementById('message-content');
+
+        /**
+         * Displays a custom message box instead of alert().
+         * @param {string} message - The message to display.
+         */
+        function showMessageBox(message) {
+            messageContent.textContent = message;
+            messageBox.style.display = 'block';
+        }
+
+        /**
+         * Formats a date string into 'dd-mmm-yyyy' format.
+         * @param {string} dateString - The date string to format (e.g., '2025-06-27T00:00:00.000Z').
+         * @returns {string} Formatted date string or 'N/A' if invalid.
+         */
+        function formatHoldUntilDate(dateString) {
+            if (!dateString) return 'N/A';
+            try {
+                const date = new Date(dateString);
+                // Check if the date is valid
+                if (isNaN(date.getTime())) {
+                    return 'N/A';
+                }
+                const options = { day: '2-digit', month: 'short', year: 'numeric' };
+                return date.toLocaleDateString('en-GB', options).replace(/ /g, '-');
+            } catch (e) {
+                console.error("Error formatting date:", e);
+                return 'N/A';
+            }
+        }
+
+        /**
+         * Fetches order data from the Google Script API.
+         */
+        async function fetchOrders() {
+            statusMessage.textContent = 'Loading orders...';
+            statusMessage.className = 'text-center text-amber-500 text-xl mt-8'; // Reset class for loading
+            ordersContainer.innerHTML = ''; // Clear previous orders
+
+            try {
+                const response = await fetch(API_URL);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const data = await response.json();
+
+                // Assuming data is an array or an object with a 'data' key
+                const orders = Array.isArray(data) ? data : (data.data || []);
+
+                if (orders.length === 0) {
+                    statusMessage.textContent = 'No hold orders found.';
+                    statusMessage.className = 'text-center text-gray-400 text-xl mt-8';
+                    return;
+                }
+
+                statusMessage.style.display = 'none'; // Hide status message once orders are loaded
+                renderOrders(orders); // Render the fetched orders
+            } catch (error) {
+                console.error("Failed to fetch orders:", error);
+                statusMessage.textContent = `Failed to load orders. Please try again later. Error: ${error.message}`;
+                statusMessage.className = 'text-center text-red-500 text-xl mt-8 p-4 bg-red-900 bg-opacity-30 rounded-lg border border-red-700';
+            }
+        }
+
+        /**
+         * Renders the order cards in the DOM.
+         * @param {Array} orders - An array of order objects.
+         */
+        function renderOrders(orders) {
+            ordersContainer.innerHTML = ''; // Clear previous content
+            orders.forEach(order => {
+                const orderCard = document.createElement('div');
+                orderCard.className = 'order-card p-6 rounded-lg shadow-lg transform hover:scale-105 relative'; // Added 'relative' for absolute positioning of PO No.
+                orderCard.innerHTML = `
+                    <div class="flex justify-between items-start mb-2">
+                        <h3 class="text-xl font-semibold">${order.supplierName || 'N/A'}</h3>
+                        <p class="text-xs text-gray-400 font-medium ml-4 mt-1">${order.purchaseOrderNumber || 'PO No.: N/A'}</p>
+                    </div>
+                    <p class="text-sm mb-1">
+                        <span class="font-medium">Hold Until:</span> ${formatHoldUntilDate(order.holdUntil)}
+                    </p>
+                    <p class="text-sm mb-4">
+                        <span class="font-medium">Remark:</span> ${order.holdRemark || 'No remark'}
+                    </p>
+                    <div class="flex justify-end space-x-3">
+                        <button class="btn-approve text-white py-2 px-4 rounded-md text-sm font-semibold shadow-md transform hover:scale-105"
+                                data-order-id="${order.timestamp}" data-action="Approve">
+                            Approve
+                        </button>
+                        <button class="btn-cancel text-white py-2 px-4 rounded-md text-sm font-semibold shadow-md transform hover:scale-105"
+                                data-order-id="${order.timestamp}" data-action="Cancel">
+                            Cancel
+                        </button>
+                    </div>
+                `;
+                ordersContainer.appendChild(orderCard);
+            });
+
+            // Add event listeners to the dynamically created buttons
+            addActionListener();
+        }
+
+        /**
+         * Adds click event listeners to all Approve and Cancel buttons.
+         */
+        function addActionListener() {
+            document.querySelectorAll('.btn-approve, .btn-cancel').forEach(button => {
+                button.addEventListener('click', (event) => {
+                    const orderId = event.target.dataset.orderId;
+                    const actionType = event.target.dataset.action;
+                    handleAction(orderId, actionType);
+                });
+            });
+        }
+
+        /**
+         * Handles the Approve or Cancel action for an order.
+         * @param {string} orderId - The unique identifier for the order (timestamp).
+         * @param {string} actionType - 'Approve' or 'Cancel'.
+         */
+        async function handleAction(orderId, actionType) {
+            try {
+                showMessageBox(`Sending ${actionType} request for Order ID: ${orderId}...`);
+
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: new URLSearchParams({
+                        action: actionType,
+                        orderId: orderId,
+                    }).toString(),
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const result = await response.json();
+                console.log(`${actionType} result:`, result);
+                showMessageBox(`Order ${orderId} has been ${actionType}d successfully!`);
+
+                // Optionally, re-fetch orders to update the UI or remove the processed card
+                // For now, we'll just show a success message.
+                // If you want to refresh the list, uncomment the next line:
+                // fetchOrders();
+
+            } catch (error) {
+                console.error(`Failed to ${actionType} order ${orderId}:`, error);
+                showMessageBox(`Failed to ${actionType} order ${orderId}. Error: ${error.message}`);
+            }
+        }
+
+        // Fetch orders when the window loads
+        window.onload = fetchOrders;
+    </script>
+</body>
+</html>

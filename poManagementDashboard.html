@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Purchase Order Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/heroicons@2.0.18/24/outline/index.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            500: '#0ea5e9',
+                            600: '#0284c7',
+                            700: '#0369a1',
+                            800: '#075985',
+                            900: '#0c4a6e'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        
+        .fade-in {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .pulse-red {
+            animation: pulseRed 2s infinite;
+        }
+        
+        .pulse-green {
+            animation: pulseGreen 2s infinite;
+        }
+        
+        @keyframes pulseRed {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
+            50% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+        }
+        
+        @keyframes pulseGreen {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4); }
+            50% { box-shadow: 0 0 0 10px rgba(34, 197, 94, 0); }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 dark:bg-gray-900 transition-colors duration-300">
+    <!-- Mobile Menu Button -->
+    <button id="mobile-menu-btn" class="lg:hidden fixed top-4 left-4 z-50 p-2 bg-white dark:bg-gray-800 rounded-lg shadow-lg transition-all duration-300 hover:shadow-xl">
+        <i class="fas fa-bars text-gray-700 dark:text-gray-300"></i>
+    </button>
+
+    <!-- Sidebar -->
+    <aside id="sidebar" class="fixed left-0 top-0 z-40 w-64 h-screen bg-white dark:bg-gray-800 shadow-xl transition-transform duration-300 transform -translate-x-full lg:translate-x-0">
+        <div class="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
+            <div class="flex items-center space-x-3">
+                <div class="w-8 h-8 bg-primary-500 rounded-lg flex items-center justify-center">
+                    <i class="fas fa-file-invoice text-white text-sm"></i>
+                </div>
+                <h1 class="text-xl font-bold text-gray-800 dark:text-white">PO Dashboard</h1>
+            </div>
+            <button id="theme-toggle" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200">
+                <i id="theme-icon" class="fas fa-moon text-gray-600 dark:text-gray-400"></i>
+            </button>
+        </div>
+        
+        <nav class="p-4">
+            <div class="space-y-2">
+                <a href="#dashboard" class="nav-link flex items-center space-x-3 p-3 rounded-lg bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-300">
+                    <i class="fas fa-tachometer-alt w-5"></i>
+                    <span class="font-medium">Dashboard</span>
+                </a>
+
+        <!-- Sidebar Footer -->
+        <div class="absolute bottom-4 left-4 right-4">
+            <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-3">
+                <div class="flex items-center space-x-2">
+                    <div class="w-8 h-8 bg-primary-500 rounded-full flex items-center justify-center">
+                        <i class="fas fa-user text-white text-xs"></i>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <p class="text-sm font-medium text-gray-800 dark:text-white truncate">Admin User</p>
+                        <p class="text-xs text-gray-500 dark:text-gray-400">Online</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="lg:ml-64 min-h-screen">
+        <!-- Header -->
+        <header class="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
+            <div class="px-6 py-4">
+                <div class="flex items-center justify-between">
+                    <div class="ml-12 lg:ml-0">
+                        <h2 class="text-2xl font-bold text-gray-800 dark:text-white">Purchase Order Management</h2>
+                        <p class="text-gray-600 dark:text-gray-400 mt-1">Monitor and manage your purchase order workflow</p>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <div class="hidden md:flex items-center space-x-2 bg-gray-100 dark:bg-gray-700 rounded-lg px-3 py-2">
+                            <i class="fas fa-clock text-gray-500 dark:text-gray-400 text-sm"></i>
+                            <span id="current-time" class="text-sm text-gray-700 dark:text-gray-300 font-medium"></span>
+                        </div>
+                        <button class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200 relative">
+                            <i class="fas fa-bell text-gray-600 dark:text-gray-400"></i>
+                            <span class="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full text-xs text-white flex items-center justify-center">3</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Dashboard Content -->
+        <div class="p-6">
+            <!-- Stats Overview -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 hover:shadow-md transition-shadow duration-300">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Total POs</p>
+                            <p class="text-2xl font-bold text-gray-800 dark:text-white mt-1">124</p>
+                        </div>
+                        <div class="w-12 h-12 bg-blue-100 dark:bg-blue-900/20 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-file-alt text-blue-600 dark:text-blue-400"></i>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 hover:shadow-md transition-shadow duration-300">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Pending</p>
+                            <p class="text-2xl font-bold text-orange-600 dark:text-orange-400 mt-1">18</p>
+                        </div>
+                        <div class="w-12 h-12 bg-orange-100 dark:bg-orange-900/20 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-clock text-orange-600 dark:text-orange-400"></i>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 hover:shadow-md transition-shadow duration-300">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Completed</p>
+                            <p class="text-2xl font-bold text-green-600 dark:text-green-400 mt-1">98</p>
+                        </div>
+                        <div class="w-12 h-12 bg-green-100 dark:bg-green-900/20 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-check-circle text-green-600 dark:text-green-400"></i>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 hover:shadow-md transition-shadow duration-300">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Hold PO</p>
+                            <p class="text-2xl font-bold text-red-600 dark:text-red-400 mt-1">8</p>
+                        </div>
+                        <div class="w-12 h-12 bg-red-100 dark:bg-red-900/20 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-exclamation-triangle text-red-600 dark:text-red-400"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PO Workflow Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                <!-- Card 1: Create PO PDFs -->
+                <div id="card-create-po" class="workflow-card bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 hover:shadow-lg transition-all duration-300 cursor-pointer group">
+                    <a href="https://ntwoods.github.io/PurchaseOrders/POverifier" target="_blank" class="block">
+                        <div class="flex items-start justify-between mb-4">
+                            <div class="w-12 h-12 bg-blue-100 dark:bg-blue-900/20 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                                <i class="fas fa-file-pdf text-blue-600 dark:text-blue-400"></i>
+                            </div>
+                            <div id="count-create-po" class="px-3 py-1 bg-gray-100 dark:bg-gray-700 rounded-full">
+                                <span class="text-sm font-semibold text-gray-700 dark:text-gray-300">0</span>
+                            </div>
+                        </div>
+                        <h3 class="text-lg font-semibold text-gray-800 dark:text-white mb-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-300">Create PO PDFs</h3>
+                        <p class="text-gray-600 dark:text-gray-400 text-sm leading-relaxed">Generate new Purchase Order PDFs for your records and distribution to suppliers.</p>
+                        <div class="mt-4 flex items-center text-blue-600 dark:text-blue-400 text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                            <span>Open Tool</span>
+                            <i class="fas fa-arrow-right ml-2"></i>
+                        </div>
+                    </a>
+                </div>
+
+                <!-- Card 2: Send PO to Supplier -->
+                <div id="card-send-po" class="workflow-card bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 hover:shadow-lg transition-all duration-300 cursor-pointer group">
+                    <a href="https://ntwoods.github.io/PurchaseOrders/SendToSupplier" target="_blank" class="block">
+                        <div class="flex items-start justify-between mb-4">
+                            <div class="w-12 h-12 bg-green-100 dark:bg-green-900/20 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                                <i class="fas fa-paper-plane text-green-600 dark:text-green-400"></i>
+                            </div>
+                            <div id="count-send-po" class="px-3 py-1 bg-gray-100 dark:bg-gray-700 rounded-full">
+                                <span class="text-sm font-semibold text-gray-700 dark:text-gray-300">0</span>
+                            </div>
+                        </div>
+                        <h3 class="text-lg font-semibold text-gray-800 dark:text-white mb-2 group-hover:text-green-600 dark:group-hover:text-green-400 transition-colors duration-300">Send PO to Supplier</h3>
+                        <p class="text-gray-600 dark:text-gray-400 text-sm leading-relaxed">Dispatch Purchase Orders directly to your designated suppliers via email or portal.</p>
+                        <div class="mt-4 flex items-center text-green-600 dark:text-green-400 text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                            <span>Open Tool</span>
+                            <i class="fas fa-arrow-right ml-2"></i>
+                        </div>
+                    </a>
+                </div>
+
+                <!-- Card 3: Get Dispatch Date -->
+                <div id="card-get-dispatch-date" class="workflow-card bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 hover:shadow-lg transition-all duration-300 cursor-pointer group">
+                    <a href="https://ntwoods.github.io/PurchaseOrders/GetDispatchDate" target="_blank" class="block">
+                        <div class="flex items-start justify-between mb-4">
+                            <div class="w-12 h-12 bg-purple-100 dark:bg-purple-900/20 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                                <i class="fas fa-calendar-alt text-purple-600 dark:text-purple-400"></i>
+                            </div>
+                            <div id="count-get-dispatch-date" class="px-3 py-1 bg-gray-100 dark:bg-gray-700 rounded-full">
+                                <span class="text-sm font-semibold text-gray-700 dark:text-gray-300">0</span>
+                            </div>
+                        </div>
+                        <h3 class="text-lg font-semibold text-gray-800 dark:text-white mb-2 group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors duration-300">Get Dispatch Date</h3>
+                        <p class="text-gray-600 dark:text-gray-400 text-sm leading-relaxed">Request and confirm the dispatch dates from your suppliers for order tracking.</p>
+                        <div class="mt-4 flex items-center text-purple-600 dark:text-purple-400 text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                            <span>Open Tool</span>
+                            <i class="fas fa-arrow-right ml-2"></i>
+                        </div>
+                    </a>
+                </div>
+
+                <!-- Card 4: Follow Up Dispatch -->
+                <div id="card-follow-up-dispatch" class="workflow-card bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 hover:shadow-lg transition-all duration-300 cursor-pointer group">
+                    <a href="https://ntwoods.github.io/PurchaseOrders/DispatchFollowUp" target="_blank" class="block">
+                        <div class="flex items-start justify-between mb-4">
+                            <div class="w-12 h-12 bg-orange-100 dark:bg-orange-900/20 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                                <i class="fas fa-phone text-orange-600 dark:text-orange-400"></i>
+                            </div>
+                            <div id="count-follow-up-dispatch" class="px-3 py-1 bg-gray-100 dark:bg-gray-700 rounded-full">
+                                <span class="text-sm font-semibold text-gray-700 dark:text-gray-300">0</span>
+                            </div>
+                        </div>
+                        <h3 class="text-lg font-semibold text-gray-800 dark:text-white mb-2 group-hover:text-orange-600 dark:group-hover:text-orange-400 transition-colors duration-300">Follow Up Dispatch</h3>
+                        <p class="text-gray-600 dark:text-gray-400 text-sm leading-relaxed">Initiate follow-ups regarding pending dispatches from suppliers to ensure timely delivery.</p>
+                        <div class="mt-4 flex items-center text-orange-600 dark:text-orange-400 text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                            <span>Open Tool</span>
+                            <i class="fas fa-arrow-right ml-2"></i>
+                        </div>
+                    </a>
+                </div>
+
+                <!-- Card 5: 2nd Follow Up -->
+                <div id="card-2nd-follow-up" class="workflow-card bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 hover:shadow-lg transition-all duration-300 cursor-pointer group">
+                    <a href="https://ntwoods.github.io/PurchaseOrders/DispatchFollowUpADayBefore" target="_blank" class="block">
+                        <div class="flex items-start justify-between mb-4">
+                            <div class="w-12 h-12 bg-red-100 dark:bg-red-900/20 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                                <i class="fas fa-exclamation text-red-600 dark:text-red-400"></i>
+                            </div>
+                            <div id="count-2nd-follow-up" class="px-3 py-1 bg-gray-100 dark:bg-gray-700 rounded-full">
+                                <span class="text-sm font-semibold text-gray-700 dark:text-gray-300">0</span>
+                            </div>
+                        </div>
+                        <h3 class="text-lg font-semibold text-gray-800 dark:text-white mb-2 group-hover:text-red-600 dark:group-hover:text-red-400 transition-colors duration-300">2nd Follow Up (Day Before)</h3>
+                        <p class="text-gray-600 dark:text-gray-400 text-sm leading-relaxed">Perform a second follow-up a day before the scheduled dispatch date.</p>
+                        <div class="mt-4 flex items-center text-red-600 dark:text-red-400 text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                            <span>Open Tool</span>
+                            <i class="fas fa-arrow-right ml-2"></i>
+                        </div>
+                    </a>
+                </div>
+
+                <!-- Card 6: Get Dispatch Details -->
+                <div id="card-get-dispatch-details" class="workflow-card bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 hover:shadow-lg transition-all duration-300 cursor-pointer group">
+                    <a href="https://ntwoods.github.io/PurchaseOrders/GetDispatch&LR" target="_blank" class="block">
+                        <div class="flex items-start justify-between mb-4">
+                            <div class="w-12 h-12 bg-indigo-100 dark:bg-indigo-900/20 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                                <i class="fas fa-truck text-indigo-600 dark:text-indigo-400"></i>
+                            </div>
+                            <div id="count-get-dispatch-details" class="px-3 py-1 bg-gray-100 dark:bg-gray-700 rounded-full">
+                                <span class="text-sm font-semibold text-gray-700 dark:text-gray-300">0</span>
+                            </div>
+                        </div>
+                        <h3 class="text-lg font-semibold text-gray-800 dark:text-white mb-2 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors duration-300">Get Dispatch Details</h3>
+                        <p class="text-gray-600 dark:text-gray-400 text-sm leading-relaxed">Retrieve dispatch details, LR copy, and invoices from suppliers for record keeping.</p>
+                        <div class="mt-4 flex items-center text-indigo-600 dark:text-indigo-400 text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                            <span>Open Tool</span>
+                            <i class="fas fa-arrow-right ml-2"></i>
+                        </div>
+                    </a>
+                </div>
+            </div>
+
+            <!-- 360 View Card - Full Width -->
+            <div class="mt-6">
+                <div id="card-360-view" class="workflow-card bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-gray-800 dark:to-gray-700 rounded-xl shadow-sm border border-blue-200 dark:border-gray-600 p-8 hover:shadow-lg transition-all duration-300 cursor-pointer group">
+                    <a href="https://ntwoods.github.io/PurchaseOrders/WatchOnPurchaseOrders" target="_blank" class="block">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-start space-x-6">
+                                <div class="w-16 h-16 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                                    <i class="fas fa-eye text-white text-xl"></i>
+                                </div>
+                                <div>
+                                    <h3 class="text-2xl font-bold text-gray-800 dark:text-white mb-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-300">360° PO View</h3>
+                                    <p class="text-gray-600 dark:text-gray-400 leading-relaxed max-w-2xl">Access a comprehensive, 360-degree overview of the entire Purchase Order cycle. Monitor all stages, track progress, and get detailed insights into your procurement workflow.</p>
+                                    <div class="mt-4 flex items-center text-blue-600 dark:text-blue-400 font-medium opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                                        <span>Open Complete Overview</span>
+                                        <i class="fas fa-arrow-right ml-2"></i>
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="count-360-view" class="px-4 py-2 bg-white dark:bg-gray-800 rounded-full shadow-sm">
+                                <span class="text-lg font-bold text-gray-700 dark:text-gray-300">∞</span>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Mobile Sidebar Overlay -->
+    <div id="sidebar-overlay" class="fixed inset-0 bg-black bg-opacity-50 z-30 lg:hidden hidden"></div>
+
+<script>
+    // API URLs for fetching counts
+    const API_ENDPOINTS = {
+        purchaseVerify: 'https://script.google.com/macros/s/AKfycbw2hdmC5ZgntoOVLSSqwwandWQpMEm5EteFACbpQ8-EYyvhytnbJPH2MX-snSTVuNnQyA/exec',
+        poSupplier: 'https://script.google.com/macros/s/AKfycbzwhv2y4qc_mNMa9TUAezVA1EUvHReTkYTCcDj8zVYT1zyb3MSaouMYhvDV3ZcyVr0T/exec',
+        getDispatchDate: 'https://script.google.com/macros/s/AKfycbwyskduPHfiIO3d8tuLY4dA0pbRKQeK1ZUvkUXPJFYs5NEPo8eJBCt_dT2UzuJaBub1/exec',
+        dispatchFollowUp: 'https://script.google.com/macros/s/AKfycbwO1_MihNIerxTsnJQzuEnV2hf4UdaOzAwfDjtEXgQuxrJ499jCd3PB8_9j3kMeTdhX/exec',
+        dispatchFollowUpADayBefore: 'https://script.google.com/macros/s/AKfycbynKuCKar5-CgsMfOBwCZm0swnfqxsWvKylbrj8QwLDoHlTNMSoCf1YowAVPAm1EHrOWQ/exec',
+        getDispatchDetails: 'https://script.google.com/macros/s/AKfycbwKB6wQPmrOXmMQ8bM43AMyWgtDobQJ96dPJXntgZpmyJRYogSz9qQHEqIn-OwBY67Qkw/exec',
+        // NEW: API for overall PO stats
+        overallPOStats: 'https://script.google.com/macros/s/AKfycby-pFC_0AeZIal3ZBTV9Ut20h5NOHtP1e6rY_UQ0ZhSi8nEMz6ZEMKx3dT0a-cKbhA4tA/exec' 
+    };
+
+    // Mapping card IDs to API endpoints and count elements (Existing configuration)
+    const CARD_CONFIG = [
+        { id: 'card-create-po', countId: 'count-create-po', apiUrl: API_ENDPOINTS.purchaseVerify },
+        { id: 'card-send-po', countId: 'count-send-po', apiUrl: API_ENDPOINTS.poSupplier },
+        { id: 'card-get-dispatch-date', countId: 'count-get-dispatch-date', apiUrl: API_ENDPOINTS.getDispatchDate },
+        { id: 'card-follow-up-dispatch', countId: 'count-follow-up-dispatch', apiUrl: API_ENDPOINTS.dispatchFollowUp },
+        { id: 'card-2nd-follow-up', countId: 'count-2nd-follow-up', apiUrl: API_ENDPOINTS.dispatchFollowUpADayBefore },
+        { id: 'card-get-dispatch-details', countId: 'count-get-dispatch-details', apiUrl: API_ENDPOINTS.getDispatchDetails }
+    ];
+
+    // Mobile menu functionality (Remains unchanged)
+    const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+    const sidebar = document.getElementById('sidebar');
+    const sidebarOverlay = document.getElementById('sidebar-overlay');
+
+    mobileMenuBtn.addEventListener('click', () => {
+        sidebar.classList.toggle('-translate-x-full');
+        sidebarOverlay.classList.toggle('hidden');
+    });
+
+    sidebarOverlay.addEventListener('click', () => {
+        sidebar.classList.add('-translate-x-full');
+        sidebarOverlay.classList.add('hidden');
+    });
+
+    // Dark mode toggle (Remains unchanged)
+    const themeToggle = document.getElementById('theme-toggle');
+    const themeIcon = document.getElementById('theme-icon');
+    const html = document.documentElement;
+
+    const currentTheme = localStorage.getItem('theme') || 'light';
+    if (currentTheme === 'dark') {
+        html.classList.add('dark');
+        themeIcon.className = 'fas fa-sun text-gray-600 dark:text-gray-400';
+    }
+
+    themeToggle.addEventListener('click', () => {
+        html.classList.toggle('dark');
+        const isDark = html.classList.contains('dark');
+        themeIcon.className = isDark ? 'fas fa-sun text-gray-600 dark:text-gray-400' : 'fas fa-moon text-gray-600 dark:text-gray-400';
+        localStorage.setItem('theme', isDark ? 'dark' : 'light');
+    });
+
+    // Update current time (Remains unchanged)
+    function updateTime() {
+        const now = new Date();
+        const timeString = now.toLocaleTimeString('en-US', { 
+            hour12: true, 
+            hour: '2-digit', 
+            minute: '2-digit' 
+        });
+        document.getElementById('current-time').textContent = timeString;
+    }
+
+    updateTime();
+    setInterval(updateTime, 1000);
+
+    /**
+     * Fetches data from a given URL and updates the count and card styling. (Remains unchanged for workflow cards)
+     * @param {string} url - The API URL to fetch data from.
+     * @param {string} countId - The ID of the HTML element to display the count.
+     * @param {string} cardId - The ID of the card element to apply styling.
+     */
+    async function fetchAndUpdateCount(url, countId, cardId) {
+        const countElement = document.getElementById(countId);
+        const card = document.getElementById(cardId);
+
+        if (!countElement || !card) return;
+
+        countElement.innerHTML = '<i class="fas fa-spinner fa-spin text-xs"></i>';
+        
+        try {
+            const response = await fetch(url);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            const data = await response.json();
+            let count = 0;
+
+            if (data && Array.isArray(data.data)) {
+                count = data.data.length;
+            } else if (data && typeof data.count !== 'undefined' && data.count !== null) {
+                const parsedCount = parseInt(data.count, 10);
+                if (!isNaN(parsedCount)) {
+                    count = parsedCount;
+                }
+            }
+
+            countElement.innerHTML = `<span class="text-sm font-semibold text-gray-700 dark:text-gray-300">${count}</span>`;
+            
+            if (count > 0) {
+                countElement.className = 'px-3 py-1 bg-red-100 dark:bg-red-900/20 rounded-full pulse-red';
+                countElement.innerHTML = `<span class="text-sm font-semibold text-red-700 dark:text-red-300">${count}</span>`;
+            } else {
+                countElement.className = 'px-3 py-1 bg-green-100 dark:bg-green-900/20 rounded-full pulse-green';
+                countElement.innerHTML = `<span class="text-sm font-semibold text-green-700 dark:text-green-300">✓</span>`;
+            }
+
+        } catch (err) {
+            console.error(`Failed to load ${countId}:`, err);
+            countElement.className = 'px-3 py-1 bg-gray-100 dark:bg-gray-700 rounded-full';
+            countElement.innerHTML = '<span class="text-sm font-semibold text-gray-500 dark:text-gray-400">?</span>';
+        }
+    }
+
+    /**
+     * Fetches overall PO stats and updates the dashboard overview.
+     */
+    async function fetchOverallPOStats() {
+        try {
+            const response = await fetch(API_ENDPOINTS.overallPOStats);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            const data = await response.json();
+
+            if (data) {
+                document.querySelector('.grid-cols-1 > div:nth-child(1) .text-2xl').textContent = data.totalOrders !== undefined ? data.totalOrders : 'N/A';
+                document.querySelector('.grid-cols-1 > div:nth-child(2) .text-2xl').textContent = data.pendingOrders !== undefined ? data.pendingOrders : 'N/A';
+                document.querySelector('.grid-cols-1 > div:nth-child(3) .text-2xl').textContent = data.completedOrders !== undefined ? data.completedOrders : 'N/A';
+                document.querySelector('.grid-cols-1 > div:nth-child(4) .text-2xl').textContent = data.ordersOnHold !== undefined ? data.ordersOnHold : 'N/A';
+            }
+        } catch (err) {
+            console.error('Failed to load overall PO stats:', err);
+            // Optionally, set a default or error indicator if API fails
+            document.querySelector('.grid-cols-1 > div:nth-child(1) .text-2xl').textContent = '?';
+            document.querySelector('.grid-cols-1 > div:nth-child(2) .text-2xl').textContent = '?';
+            document.querySelector('.grid-cols-1 > div:nth-child(3) .text-2xl').textContent = '?';
+            document.querySelector('.grid-cols-1 > div:nth-child(4) .text-2xl').textContent = '?';
+        }
+    }
+
+    /**
+     * Initializes the dashboard by fetching and updating counts for all cards and overall stats.
+     */
+    function initializeDashboard() {
+        CARD_CONFIG.forEach(config => {
+            fetchAndUpdateCount(config.apiUrl, config.countId, config.id);
+        });
+        fetchOverallPOStats(); // NEW: Call to fetch overall PO stats
+    }
+
+    // Initialize dashboard on page load (Remains unchanged)
+    document.addEventListener('DOMContentLoaded', () => {
+        const cards = document.querySelectorAll('.workflow-card');
+        cards.forEach((card, index) => {
+            card.style.animationDelay = `${index * 0.1}s`;
+            card.classList.add('fade-in');
+        });
+
+        initializeDashboard();
+    });
+
+    // Set interval for count updates (every 30 seconds) (Now includes overall stats)
+    setInterval(initializeDashboard, 30 * 1000);
+
+    // Set interval for full page reload (every 5 minutes) (Remains unchanged)
+    setTimeout(() => {
+        location.reload();
+    }, 5 * 60 * 1000);
+
+    // Add click handlers for navigation links (Remains unchanged)
+    document.querySelectorAll('.nav-link').forEach(link => {
+        link.addEventListener('click', (e) => {
+            e.preventDefault();
+            
+            document.querySelectorAll('.nav-link').forEach(l => {
+                l.className = 'nav-link flex items-center space-x-3 p-3 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200';
+            });
+            
+            link.className = 'nav-link flex items-center space-x-3 p-3 rounded-lg bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-300';
+            
+            if (window.innerWidth < 1024) {
+                sidebar.classList.add('-translate-x-full');
+                sidebarOverlay.classList.add('hidden');
+            }
+        });
+    });
+
+    // Handle window resize (Remains unchanged)
+    window.addEventListener('resize', () => {
+        if (window.innerWidth >= 1024) {
+            sidebar.classList.remove('-translate-x-full');
+            sidebarOverlay.classList.add('hidden');
+        }
+    });
+
+    // Add smooth scrolling for internal links (Remains unchanged)
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+            e.preventDefault();
+            const target = document.querySelector(this.getAttribute('href'));
+            if (target) {
+                target.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start'
+                });
+            }
+        });
+    });
+
+    // Add loading animation for external links (Remains unchanged)
+    document.querySelectorAll('a[target="_blank"]').forEach(link => {
+        link.addEventListener('click', function() {
+            const card = this.closest('.workflow-card');
+            if (card) {
+                card.style.opacity = '0.6';
+                card.style.transform = 'scale(0.98)';
+                
+                setTimeout(() => {
+                    card.style.opacity = '1';
+                    card.style.transform = 'scale(1)';
+                }, 500);
+            }
+        });
+    });
+</script>
+</body>
+</html>

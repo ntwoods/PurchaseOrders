@@ -129,6 +129,15 @@
     box-shadow: 0 8px 20px rgba(220, 38, 38, 0.25);
   }
 
+  .btn-hold {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); /* Orange gradient */
+  }
+
+  .btn-hold:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(245, 158, 11, 0.25);
+  }
+
   .slide-out {
     animation: slideOut 0.5s ease-in-out forwards;
   }
@@ -164,6 +173,20 @@
   .notification.error {
     background: linear-gradient(135deg, #ef4444 0%, #991b1b 100%);
   }
+
+  /* Styles for the hold fields container */
+  .hold-fields-container {
+    display: none; /* Hidden by default */
+    padding: 1rem;
+    border-radius: 0.75rem;
+    background-color: rgba(255, 255, 255, 0.05); /* Slightly visible background */
+    margin-top: 1rem;
+  }
+
+  .hold-fields-container.active {
+    display: block; /* Shown when active */
+    animation: fadeIn 0.4s ease-out forwards;
+  }
 </style>
 
 </head>
@@ -187,16 +210,16 @@
   <!-- Controls -->
   <div class="max-w-4xl mx-auto mb-6">
     <div class="flex flex-col sm:flex-row gap-3 justify-center">
-      <button 
-        onclick="fetchData()" 
+      <button
+        onclick="fetchData()"
         id="refreshBtn"
         class="btn-primary text-white font-semibold px-6 py-3 rounded-2xl shadow-lg flex items-center justify-center gap-2"
       >
         <span id="refreshIcon">🔄</span>
         <span>Refresh Data</span>
       </button>
-      <button 
-        onclick="toggleAutoRefresh()" 
+      <button
+        onclick="toggleAutoRefresh()"
         id="autoRefreshBtn"
         class="btn-secondary text-black font-semibold px-6 py-3 rounded-2xl shadow-lg flex items-center justify-center gap-2"
       >
@@ -347,6 +370,69 @@ async function markCancel(googleSheetURL, cardId, timestamp, requesterName) {
   }
 }
 
+    // Function to toggle the visibility of hold fields
+    function toggleHoldFields(cardId) {
+      const holdFieldsContainer = document.getElementById(`hold-fields-${cardId}`);
+      if (holdFieldsContainer) {
+        holdFieldsContainer.classList.toggle('active');
+        // Clear fields when hiding
+        if (!holdFieldsContainer.classList.contains('active')) {
+          holdFieldsContainer.querySelector('.hold-until-date').value = '';
+          holdFieldsContainer.querySelector('.hold-remark').value = '';
+        }
+      }
+    }
+
+    // Function to handle marking an order as 'Hold'
+    async function markHold(googleSheetURL, cardId, timestamp, requesterName) {
+      const card = document.getElementById(cardId);
+      const holdFieldsContainer = document.getElementById(`hold-fields-${cardId}`);
+      const holdUntilDate = holdFieldsContainer.querySelector('.hold-until-date').value;
+      const holdRemark = holdFieldsContainer.querySelector('.hold-remark').value;
+      const markHoldBtn = holdFieldsContainer.querySelector('button[onclick*="markHold"]');
+
+      if (!holdUntilDate || !holdRemark) {
+        showNotification('Please provide both "Hold Until" date and "Hold Remark".', 'error');
+        return;
+      }
+
+      markHoldBtn.disabled = true;
+      markHoldBtn.innerHTML = '<span style="animation: spin 1s linear infinite;">⏳</span> Holding...';
+
+      try {
+        await fetch(API_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: new URLSearchParams({
+            action: 'markHold',
+            googleSheetURL,
+            timestamp,
+            requesterName,
+            holdUntil: holdUntilDate,
+            holdRemark: holdRemark
+          })
+        });
+
+        card.classList.add('slide-out');
+        setTimeout(() => {
+          card.remove();
+          const remainingCards = document.getElementById('requestContainer').children;
+          if (remainingCards.length === 0) {
+            document.getElementById('emptyState').classList.remove('hidden');
+          }
+          updateStatisticsAfterRemoval();
+        }, 500);
+
+        showNotification('⏸️ Marked as Hold!');
+      } catch (error) {
+        console.error('Error marking hold:', error);
+        showNotification('❌ Failed to mark hold: ' + error.message, 'error');
+
+        markHoldBtn.disabled = false;
+        markHoldBtn.innerHTML = '<span>✅</span> <span>Mark Hold</span>';
+      }
+    }
+
     function updateStatisticsAfterRemoval() {
       // Get remaining cards and recalculate statistics
       const remainingCards = document.querySelectorAll('[id^="card-"]');
@@ -376,18 +462,18 @@ async function markCancel(googleSheetURL, cardId, timestamp, requesterName) {
       const container = document.getElementById('requestContainer');
       const refreshBtn = document.getElementById('refreshBtn');
       const refreshIcon = document.getElementById('refreshIcon');
-      
+
       // Animate refresh button
       refreshIcon.style.animation = 'spin 1s linear infinite';
       refreshBtn.disabled = true;
-      
+
       // Show loading state
       showLoadingState();
 
       try {
         const response = await fetch(API_URL);
         const result = await response.json();
-        
+
         if (!result.success) {
           throw new Error(result.error || 'Failed to fetch data');
         }
@@ -401,14 +487,14 @@ async function markCancel(googleSheetURL, cardId, timestamp, requesterName) {
 
         if (result.data && result.data.length > 0) {
           document.getElementById('emptyState').classList.add('hidden');
-          
+
           result.data.forEach((request, index) => {
             setTimeout(() => {
               const card = createCard(request, index);
               container.appendChild(card);
             }, index * 100); // Stagger animations
           });
-          
+
           updateStatistics(result.data);
           showNotification(`Loaded ${result.data.length} pending task(s)`);
         } else {
@@ -444,11 +530,11 @@ async function markCancel(googleSheetURL, cardId, timestamp, requesterName) {
     function updateDebugInfo(result) {
       const debugElement = document.getElementById('debugInfo');
       const debugInfo = result.debug || {};
-      
+
       debugElement.innerHTML = `
-        Last updated: ${new Date().toLocaleTimeString()} | 
-        Total rows: ${debugInfo.totalRows || 0} | 
-        Done status: ${debugInfo.doneStatusCount || 0} | 
+        Last updated: ${new Date().toLocaleTimeString()} |
+        Total rows: ${debugInfo.totalRows || 0} |
+        Done status: ${debugInfo.doneStatusCount || 0} |
         With completion timestamp: ${debugInfo.withCompletionTimestamp || 0} |
         Showing: ${result.count || 0} tasks
       `;
@@ -457,7 +543,7 @@ async function markCancel(googleSheetURL, cardId, timestamp, requesterName) {
     function showLoadingState() {
       const container = document.getElementById('requestContainer');
       container.innerHTML = '';
-      
+
       // Create 3 loading cards
       for (let i = 0; i < 3; i++) {
         const loadingCard = document.createElement('div');
@@ -512,7 +598,7 @@ async function markCancel(googleSheetURL, cardId, timestamp, requesterName) {
             ${request.purchaseOrderNumber}
           </span>
         </div>
-        
+
         <div class="mb-4">
           <div class="text-sm text-white/80 mb-2">
             🕐 Task Started: <span class="font-medium text-white">${timeAgo}</span>
@@ -524,37 +610,72 @@ async function markCancel(googleSheetURL, cardId, timestamp, requesterName) {
             Loading...
           </div>
         </div>
-        
+
         ${request.notes ? `
         <div class="mb-4 p-3 bg-white/5 rounded-xl">
           <div class="text-xs text-white/60 mb-1">Notes:</div>
           <div class="text-sm text-white/90">${request.notes}</div>
         </div>
         ` : ''}
-        
+
         <div class="flex flex-col sm:flex-row gap-3">
-          <a 
-            href="${request.fileURL}" 
-            target="_blank" 
+          <a
+            href="${request.fileURL}"
+            target="_blank"
             class="btn-secondary text-black px-4 py-2 rounded-xl text-sm font-medium flex items-center justify-center gap-2 flex-1"
           >
             <span>📊</span>
             <span>View Sheet</span>
           </a>
-          <button 
-            onclick="markDone('${request.googleSheetURL}', '${cardId}', '${request.timestamp}', '${request.requesterName}')" 
+          <button
+            onclick="markDone('${request.googleSheetURL}', '${cardId}', '${request.timestamp}', '${request.requesterName}')"
             class="btn-done text-white px-4 py-2 rounded-xl text-sm font-medium flex items-center justify-center gap-2"
           >
             <span>✅</span>
             <span>Done</span>
           </button>
-          <button 
-            onclick="markCancel('${request.googleSheetURL}', '${cardId}', '${request.timestamp}', '${request.requesterName}')" 
+          <button
+            onclick="markCancel('${request.googleSheetURL}', '${cardId}', '${request.timestamp}', '${request.requesterName}')"
             class="btn-danger text-white px-4 py-2 rounded-xl text-sm font-medium flex items-center justify-center gap-2"
           >
             <span>❌</span>
             <span>Cancel</span>
           </button>
+          <button
+            onclick="toggleHoldFields('${cardId}')"
+            class="btn-hold text-white px-4 py-2 rounded-xl text-sm font-medium flex items-center justify-center gap-2"
+          >
+            <span>⏸️</span>
+            <span>Hold</span>
+          </button>
+        </div>
+
+        <!-- Hold Fields Container -->
+        <div id="hold-fields-${cardId}" class="hold-fields-container mt-4">
+          <div class="mb-3">
+            <label for="hold-until-${cardId}" class="block text-white/80 text-sm font-medium mb-1">Hold Until:</label>
+            <input type="date" id="hold-until-${cardId}" class="hold-until-date w-full p-2 rounded-lg bg-white/10 border border-white/20 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+          </div>
+          <div class="mb-4">
+            <label for="hold-remark-${cardId}" class="block text-white/80 text-sm font-medium mb-1">Hold Remark:</label>
+            <textarea id="hold-remark-${cardId}" class="hold-remark w-full p-2 rounded-lg bg-white/10 border border-white/20 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-blue-500" rows="2" placeholder="Enter remark for holding..."></textarea>
+          </div>
+          <div class="flex gap-3">
+            <button
+              onclick="markHold('${request.googleSheetURL}', '${cardId}', '${request.timestamp}', '${request.requesterName}')"
+              class="btn-primary text-white px-4 py-2 rounded-xl text-sm font-medium flex items-center justify-center gap-2 flex-1"
+            >
+              <span>✅</span>
+              <span>Mark Hold</span>
+            </button>
+            <button
+              onclick="toggleHoldFields('${cardId}')"
+              class="btn-danger text-white px-4 py-2 rounded-xl text-sm font-medium flex items-center justify-center gap-2"
+            >
+              <span>❌</span>
+              <span>Cancel Hold</span>
+            </button>
+          </div>
         </div>
       `;
 
@@ -566,7 +687,7 @@ async function markCancel(googleSheetURL, cardId, timestamp, requesterName) {
       const now = new Date();
       const diffMs = now - date;
       const diffMins = Math.floor(diffMs / 60000);
-      
+
       if (diffMins < 60) {
         return `${diffMins} minutes ago`;
       } else if (diffMins < 1440) {
@@ -605,7 +726,7 @@ async function markCancel(googleSheetURL, cardId, timestamp, requesterName) {
         const now = new Date().getTime();
         const timeDiff = deadline.getTime() - now;
         const el = document.getElementById(elementId);
-        
+
         if (!el) {
           if (countdownIntervals[elementId]) {
             clearInterval(countdownIntervals[elementId]);
@@ -654,7 +775,7 @@ async function markCancel(googleSheetURL, cardId, timestamp, requesterName) {
       requests.forEach(request => {
         const deadline = calculateDeadline(request.timestamp);
         const timeDiff = deadline.getTime() - now;
-        
+
         if (timeDiff < 0) {
           overdue++;
         } else if (timeDiff < 5 * 60 * 1000) { // 5 minutes
@@ -670,7 +791,7 @@ async function markCancel(googleSheetURL, cardId, timestamp, requesterName) {
     function toggleAutoRefresh() {
       const btn = document.getElementById('autoRefreshBtn');
       const text = document.getElementById('autoRefreshText');
-      
+
       if (autoRefreshInterval) {
         clearInterval(autoRefreshInterval);
         autoRefreshInterval = null;
@@ -689,7 +810,7 @@ async function markCancel(googleSheetURL, cardId, timestamp, requesterName) {
 
     // Initialize on load
     window.addEventListener('load', fetchData);
-    
+
     // Cleanup intervals on page unload
     window.addEventListener('beforeunload', () => {
       Object.values(countdownIntervals).forEach(interval => clearInterval(interval));

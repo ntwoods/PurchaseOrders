@@ -166,7 +166,7 @@
                     </div>
                 </div>
                 <a href="https://ntwoods.github.io/PurchaseOrders/manageHoldPO" target="_blank" class="block">
-                    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 hover:shadow-md transition-shadow duration-300">
+                    <div class="hold-po-card bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 hover:shadow-md transition-shadow duration-300">
                         <div class="flex items-center justify-between">
                             <div>
                                 <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Hold PO</p>
@@ -177,7 +177,8 @@
                             </div>
                         </div>
                     </div>
-                </a>               
+                </a>
+         
            </div>
 
             <!-- PO Workflow Cards -->
@@ -467,7 +468,8 @@
                 document.querySelector('.grid-cols-1 > div:nth-child(1) .text-2xl').textContent = data.totalOrders !== undefined ? data.totalOrders : 'N/A';
                 document.querySelector('.grid-cols-1 > div:nth-child(2) .text-2xl').textContent = data.pendingOrders !== undefined ? data.pendingOrders : 'N/A';
                 document.querySelector('.grid-cols-1 > div:nth-child(3) .text-2xl').textContent = data.completedOrders !== undefined ? data.completedOrders : 'N/A';
-                document.querySelector('.grid-cols-1 > div:nth-child(4) .text-2xl').textContent = data.ordersOnHold !== undefined ? data.ordersOnHold : 'N/A';
+                document.querySelector('.hold-po-card .text-2xl').textContent = data.ordersOnHold !== undefined ? data.ordersOnHold : 'N/A';
+
             }
         } catch (err) {
             console.error('Failed to load overall PO stats:', err);

@@ -11,7 +11,6 @@
   body {
     font-family: 'Inter', sans-serif;
     background: #f3f4f6; /* Light gray background */
-    color: #1f2937; /* Dark gray for readable text */
     font-size: 1rem;
     line-height: 1.6;
   }
@@ -109,7 +108,7 @@
   }
 
   .btn-secondary {
-    background: linear-gradient(135deg, #0f766e 0%, #0d9488 100%);
+    background: #91dbfa;
   }
 
   .btn-secondary:hover {
@@ -117,8 +116,12 @@
     box-shadow: 0 8px 20px rgba(13, 148, 136, 0.25);
   }
 
+  .btn-done {
+    background: #a1feb1;
+  }
+
   .btn-danger {
-    background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
+    background: #fa91ad;
   }
 
   .btn-danger:hover {
@@ -195,7 +198,7 @@
       <button 
         onclick="toggleAutoRefresh()" 
         id="autoRefreshBtn"
-        class="btn-secondary text-white font-semibold px-6 py-3 rounded-2xl shadow-lg flex items-center justify-center gap-2"
+        class="btn-secondary text-black font-semibold px-6 py-3 rounded-2xl shadow-lg flex items-center justify-center gap-2"
       >
         <span>⚡</span>
         <span id="autoRefreshText">Enable Auto-Refresh</span>
@@ -301,6 +304,46 @@ async function markDone(googleSheetURL, cardId, timestamp, requesterName) {
 
     button.disabled = false;
     button.innerHTML = '<span>✅</span> <span>Done</span>';
+  }
+}
+
+
+async function markCancel(googleSheetURL, cardId, timestamp, requesterName) {
+  const card = document.getElementById(cardId);
+  const button = card.querySelector('button[onclick*="markCancel"]');
+
+  button.disabled = true;
+  button.innerHTML = '<span style="animation: spin 1s linear infinite;">⏳</span> Marking...';
+
+  try {
+    await fetch(API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        action: 'markCancel',
+        googleSheetURL,
+        timestamp,
+        requesterName
+      })
+    });
+
+    card.classList.add('slide-out');
+    setTimeout(() => {
+      card.remove();
+      const remainingCards = document.getElementById('requestContainer').children;
+      if (remainingCards.length === 0) {
+        document.getElementById('emptyState').classList.remove('hidden');
+      }
+      updateStatisticsAfterRemoval();
+    }, 500);
+
+    showNotification('✅ Marked as cancel!');
+  } catch (error) {
+    console.error('Error marking cancel:', error);
+    showNotification('❌ Failed to mark cancel: ' + error.message, 'error');
+
+    button.disabled = false;
+    button.innerHTML = '<span>❌</span> <span>Cancel</span>';
   }
 }
 
@@ -493,17 +536,24 @@ async function markDone(googleSheetURL, cardId, timestamp, requesterName) {
           <a 
             href="${request.fileURL}" 
             target="_blank" 
-            class="btn-secondary text-white px-4 py-2 rounded-xl text-sm font-medium flex items-center justify-center gap-2 flex-1"
+            class="btn-secondary text-black px-4 py-2 rounded-xl text-sm font-medium flex items-center justify-center gap-2 flex-1"
           >
             <span>📊</span>
             <span>View Sheet</span>
           </a>
           <button 
             onclick="markDone('${request.googleSheetURL}', '${cardId}', '${request.timestamp}', '${request.requesterName}')" 
-            class="btn-danger text-white px-4 py-2 rounded-xl text-sm font-medium flex items-center justify-center gap-2"
+            class="btn-done text-white px-4 py-2 rounded-xl text-sm font-medium flex items-center justify-center gap-2"
           >
             <span>✅</span>
             <span>Done</span>
+          </button>
+          <button 
+            onclick="markCancel('${request.googleSheetURL}', '${cardId}', '${request.timestamp}', '${request.requesterName}')" 
+            class="btn-danger text-white px-4 py-2 rounded-xl text-sm font-medium flex items-center justify-center gap-2"
+          >
+            <span>❌</span>
+            <span>Cancel</span>
           </button>
         </div>
       `;

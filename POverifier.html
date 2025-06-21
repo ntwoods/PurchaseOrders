@@ -869,78 +869,85 @@
         }
 
         // Function to check Google Sheets for missing supplier names
-        async function checkMissingSuppliers(googleSheetURL) {
-            try {
-                let csvUrl = googleSheetURL;
-                if (googleSheetURL.includes('/edit')) {
-                    const sheetId = googleSheetURL.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
-                    if (sheetId) {
-                        csvUrl = `https://docs.google.com/spreadsheets/d/${sheetId[1]}/export?format=csv`;
-                    }
-                }
-
-                const response = await fetch(csvUrl);
-                if (!response.ok) {
-                    throw new Error('Unable to access the Google Sheet');
-                }
-
-                const csvText = await response.text();
-
-                const rows = csvText.split('\n').map(row => {
-                    const cells = [];
-                    let currentCell = '';
-                    let inQuotes = false;
-
-                    for (let i = 0; i < row.length; i++) {
-                        const char = row[i];
-                        if (char === '"' && !inQuotes) {
-                            inQuotes = true;
-                        } else if (char === '"' && inQuotes) {
-                            inQuotes = false;
-                        } else if (char === ',' && !inQuotes) {
-                            cells.push(currentCell.trim());
-                            currentCell = '';
-                        } else {
-                            currentCell += char;
-                        }
-                    }
-                    cells.push(currentCell.trim());
-                    return cells;
-                });
-
-                let missingOrders = [];
-
-                // Column A-C block (Order-1, Order-3, ...)
-                for (let i = 0; i < rows.length; i++) {
-                    const orderCell = rows[i][0] || '';
-                    if (orderCell.toLowerCase().includes('order-')) {
-                        const categoryCell = rows[i][1] || '';
-                        const supplierCell = rows[i][2] || '';
-                        if (!supplierCell || supplierCell.toLowerCase() === 'supplier name') {
-                            missingOrders.push(`${orderCell} (${categoryCell})`);
-                        }
-                    }
-                }
-
-                // Column F-H block (Order-2, Order-4, ...)
-                for (let i = 0; i < rows.length; i++) {
-                    const orderCell = rows[i][5] || '';
-                    if (orderCell.toLowerCase().includes('order-')) {
-                        const categoryCell = rows[i][6] || '';
-                        const supplierCell = rows[i][7] || '';
-                        if (!supplierCell || supplierCell.toLowerCase() === 'supplier name') {
-                            missingOrders.push(`${orderCell} (${categoryCell})`);
-                        }
-                    }
-                }
-
-                return missingOrders;
-            } catch (error) {
-                console.error('Error checking suppliers:', error);
-                throw new Error('Unable to check supplier information. Please ensure the Google Sheet is publicly accessible.');
+async function checkMissingSuppliers(googleSheetURL) {
+    try {
+        let csvUrl = googleSheetURL;
+        if (googleSheetURL.includes('/edit')) {
+            const sheetId = googleSheetURL.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
+            if (sheetId) {
+                csvUrl = `https://docs.google.com/spreadsheets/d/${sheetId[1]}/export?format=csv`;
             }
         }
 
+        const response = await fetch(csvUrl);
+        if (!response.ok) {
+            throw new Error('Unable to access the Google Sheet');
+        }
+
+        const csvText = await response.text();
+        const rows = csvText.split('\n').map(row => {
+            const cells = [];
+            let currentCell = '';
+            let inQuotes = false;
+
+            for (let i = 0; i < row.length; i++) {
+                const char = row[i];
+                if (char === '"' && !inQuotes) {
+                    inQuotes = true;
+                } else if (char === '"' && inQuotes) {
+                    inQuotes = false;
+                } else if (char === ',' && !inQuotes) {
+                    cells.push(currentCell.trim());
+                    currentCell = '';
+                } else {
+                    currentCell += char;
+                }
+            }
+            cells.push(currentCell.trim());
+            return cells;
+        });
+
+        let missingOrders = [];
+        let completedOrders = [];
+
+        // Column A-C block (Order-1, Order-3, ...)
+        for (let i = 0; i < rows.length; i++) {
+            const orderCell = rows[i][0] || '';
+            if (orderCell.toLowerCase().includes('order-')) {
+                const categoryCell = rows[i][1] || '';
+                const supplierCell = rows[i][2] || '';
+                const orderInfo = `${orderCell} (${categoryCell})`;
+                
+                if (!supplierCell || supplierCell.toLowerCase() === 'supplier name') {
+                    missingOrders.push(orderInfo);
+                } else {
+                    completedOrders.push(`${orderInfo} - ${supplierCell}`);
+                }
+            }
+        }
+
+        // Column F-H block (Order-2, Order-4, ...)
+        for (let i = 0; i < rows.length; i++) {
+            const orderCell = rows[i][5] || '';
+            if (orderCell.toLowerCase().includes('order-')) {
+                const categoryCell = rows[i][6] || '';
+                const supplierCell = rows[i][7] || '';
+                const orderInfo = `${orderCell} (${categoryCell})`;
+                
+                if (!supplierCell || supplierCell.toLowerCase() === 'supplier name') {
+                    missingOrders.push(orderInfo);
+                } else {
+                    completedOrders.push(`${orderInfo} - ${supplierCell}`);
+                }
+            }
+        }
+
+        return { missingOrders, completedOrders };
+    } catch (error) {
+        console.error('Error checking suppliers:', error);
+        throw new Error('Unable to check supplier information. Please ensure the Google Sheet is publicly accessible.');
+    }
+}
         function markAsDone(index) {
             currentRequestIndex = index;
             const modal = document.getElementById('confirmModal');
@@ -956,51 +963,72 @@
             const request = requestsData[index];
 
             checkMissingSuppliers(request.googleSheetURL)
-                .then(missingOrders => {
-                    if (Array.isArray(missingOrders) && missingOrders.length > 0) {
-                        modalContent.innerHTML = `
-                            <h3>⚠️ Missing Supplier Information</h3>
-                            <p><strong>${missingOrders.length} order(s)</strong> are missing supplier names:</p>
-                            <div style="max-height: 250px; overflow-y: auto; text-align: left; font-size: 0.9rem; margin-top: 10px; padding-right: 5px;">
-                            <ul>
-                            ${missingOrders.map(o => `<li>• ${o}</li>`).join('')}
-                            </ul>
-                            </div>
-                            <p style="margin-top: 15px;">Please update the Google Sheet with supplier names. Or proceed anyway if intentional.</p>
-                            <div class="modal-actions">
-                                <a href="${request.googleSheetURL}" target="_blank" class="btn btn-primary">📊 Open Sheet</a>
-                                <button class="btn btn-success" onclick="confirmMarkDone()">Proceed Anyway</button>
-                                <button class="btn" onclick="closeModal()" style="background: #95a5a6; color: white;">Cancel</button>
-                            </div>
-                        `;
-                    } else {
-                        modalContent.innerHTML = `
-                            <h3>✅ Ready to Complete</h3>
-                            <p>All orders have supplier information. Are you sure you want to mark this request as done? This action cannot be undone.</p>
-                            <div class="modal-actions">
-                                <button class="btn btn-success" onclick="confirmMarkDone()">
-                                    Yes, Mark Done
-                                </button>
-                                <button class="btn" onclick="closeModal()" style="background: #95a5a6; color: white;">
-                                    Cancel
-                                </button>
-                            </div>
-                        `;
-                    }
-                })
-                .catch(error => {
-                    modalContent.innerHTML = `
-                        <h3>❌ Verification Failed</h3>
-                        <p>Unable to verify supplier information: ${error.message}</p>
-                        <p>You can try again or proceed without verification.</p>
-                        <div class="modal-actions">
-                            <button class="btn btn-primary" onclick="markAsDone(${index})">🔄 Try Again</button>
-                            <button class="btn btn-success" onclick="confirmMarkDone()">Proceed Anyway</button>
-                            <button class="btn" onclick="closeModal()" style="background: #95a5a6; color: white;">Cancel</button>
-                        </div>
-                    `;
-                });
+.then(result => {
+    const { missingOrders, completedOrders } = result;
+    
+    if (Array.isArray(missingOrders) && missingOrders.length > 0) {
+        let completedSection = '';
+        if (completedOrders.length > 0) {
+            completedSection = `
+                <div style="margin-top: 20px;">
+                    <h4 style="color: #27ae60; margin-bottom: 10px;">✅ Orders with Suppliers (${completedOrders.length})</h4>
+                    <div style="max-height: 150px; overflow-y: auto; text-align: left; font-size: 0.85rem; background: #f8f9fa; padding: 10px; border-radius: 5px;">
+                        <ul style="margin: 0; padding-left: 20px;">
+                        ${completedOrders.map(o => `<li style="margin-bottom: 3px;">${o}</li>`).join('')}
+                        </ul>
+                    </div>
+                </div>
+            `;
         }
+        
+        modalContent.innerHTML = `
+            <h3>⚠️ Missing Supplier Information</h3>
+            <div>
+                <h4 style="color: #e74c3c; margin-bottom: 10px;">❌ Missing Suppliers (${missingOrders.length})</h4>
+                <div style="max-height: 200px; overflow-y: auto; text-align: left; font-size: 0.9rem; background: #fff5f5; padding: 10px; border-radius: 5px; border: 1px solid #e74c3c;">
+                    <ul style="margin: 0; padding-left: 20px;">
+                    ${missingOrders.map(o => `<li style="margin-bottom: 3px;">${o}</li>`).join('')}
+                    </ul>
+                </div>
+            </div>
+            ${completedSection}
+            <p style="margin-top: 15px;">Please update the Google Sheet with supplier names. Or proceed anyway if intentional.</p>
+            <div class="modal-actions">
+                <a href="${request.googleSheetURL}" target="_blank" class="btn btn-primary">📊 Open Sheet</a>
+                <button class="btn btn-success" onclick="confirmMarkDone()">Proceed Anyway</button>
+                <button class="btn" onclick="closeModal()" style="background: #95a5a6; color: white;">Cancel</button>
+            </div>
+        `;
+    } else {
+        let completedSection = '';
+        if (completedOrders.length > 0) {
+            completedSection = `
+                <div style="margin-top: 15px;">
+                    <h4 style="color: #27ae60; margin-bottom: 10px;">✅ All Orders with Suppliers (${completedOrders.length})</h4>
+                    <div style="max-height: 250px; overflow-y: auto; text-align: left; font-size: 0.85rem; background: #f8f9fa; padding: 10px; border-radius: 5px;">
+                        <ul style="margin: 0; padding-left: 20px;">
+                        ${completedOrders.map(o => `<li style="margin-bottom: 3px;">${o}</li>`).join('')}
+                        </ul>
+                    </div>
+                </div>
+            `;
+        }
+        
+        modalContent.innerHTML = `
+            <h3>✅ Ready to Complete</h3>
+            <p>All orders have supplier information. Are you sure you want to mark this request as done? This action cannot be undone.</p>
+            ${completedSection}
+            <div class="modal-actions">
+                <button class="btn btn-success" onclick="confirmMarkDone()">
+                    Yes, Mark Done
+                </button>
+                <button class="btn" onclick="closeModal()" style="background: #95a5a6; color: white;">
+                    Cancel
+                </button>
+            </div>
+        `;
+    }
+})
 
         function markAsCancel(index) {
             currentRequestIndex = index;

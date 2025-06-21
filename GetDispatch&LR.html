@@ -678,19 +678,6 @@
                         </div>
 
                         <div class="form-item">
-                            <label for="lrDetails${index}">
-                                🚛 LR Details <span class="required">*</span>
-                            </label>
-                            <div class="file-input-wrapper input-wrapper">
-                                <input type="file" id="lrDetails${index}" class="file-input" multiple accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.xlsx,.xls" required>
-                                <label for="lrDetails${index}" class="file-label">
-                                    <span class="file-icon">📎</span>
-                                    <span class="file-text">Choose LR file...</span>
-                                </label>
-                            </div>
-                        </div>
-
-                        <div class="form-item">
                             <label for="invoice${index}">
                                 📄 Invoice <span class="required">*</span>
                             </label>
@@ -715,7 +702,6 @@
                 // Add a small delay to ensure DOM elements are fully rendered
                 setTimeout(() => {
                     setupFileInput(`dispatchDetails${index}`);
-                    setupFileInput(`lrDetails${index}`); 
                     setupFileInput(`invoice${index}`); 
                     setupFormSubmission(`orderForm${index}`, index);
                 }, 100);
@@ -801,21 +787,16 @@
 
         async function submitOrderForm(orderIndex) {
             const order = orders[orderIndex];
-
             const expectedDeliveryDate = document.getElementById(`expectedDeliveryDate${orderIndex}`).value;
             const billToShipTo = document.getElementById(`billToShipTo${orderIndex}`).value;
             const dispatchFiles = document.getElementById(`dispatchDetails${orderIndex}`).files;
-            const lrFiles = document.getElementById(`lrDetails${orderIndex}`).files;
             const invoiceFiles = document.getElementById(`invoice${orderIndex}`).files;
-
             if (!expectedDeliveryDate) throw new Error('Expected Delivery Date is required');
             if (!dispatchFiles || dispatchFiles.length === 0) throw new Error('Dispatch details file is required');
-            if (!lrFiles || lrFiles.length === 0) throw new Error('LR details file is required');
             if (!invoiceFiles || invoiceFiles.length === 0) throw new Error('Invoice file is required');
 
             const dispatchFileArray = [];
             const invoiceFileArray = [];
-            const lrFileArray = [];
 
             // Process dispatch files
             for (let file of dispatchFiles) {
@@ -839,24 +820,12 @@
                 });
             }
 
-            // Process LR files
-            for (let file of lrFiles) {
-                const base64 = await fileToBase64(file);
-                lrFileArray.push({ 
-                    name: file.name, 
-                    type: file.type, 
-                    size: file.size, 
-                    base64: base64 
-                });
-            }
-
             const payload = {
                 timestamp: order.timestamp,
                 expectedDeliveryDate,
                 billToShipTo,
                 dispatchFileArray,
-                invoiceFileArray,
-                lrFileArray
+                invoiceFileArray
             };
 
             console.log('Submitting payload:', payload);
@@ -872,7 +841,7 @@
                 });
 
                 console.log('Form submitted successfully');
-
+		loadOrders();
             } catch (error) {
                 console.error('Fetch failed:', error);
                 throw error;

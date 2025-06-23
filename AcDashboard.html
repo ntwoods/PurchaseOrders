@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Orders Dashboard</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* General Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+            color: #ffffff;
+            min-height: 100vh;
+            padding: 20px;
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* Header Styles */
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 30px 0;
+            background: linear-gradient(135deg, #2d2d2d, #1a1a1a);
+            border-radius: 20px;
+            border: 1px solid #333;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #ffd700, #ffed4e);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 10px;
+            text-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
+        }
+
+        .header p {
+            color: #ccc;
+            font-size: 1.1rem;
+            font-weight: 300;
+        }
+
+
+        /* Controls Section Styles */
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .refresh-btn {
+            background: linear-gradient(135deg, #ffd700, #ffed4e);
+            color: #1a1a1a;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.95rem;
+        }
+
+        .refresh-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(255, 215, 0, 0.4);
+        }
+
+        .last-updated {
+            color: #ccc;
+            font-size: 0.9rem;
+        }
+
+        /* Loading, Error, Empty State Styles */
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #ffd700;
+            font-size: 1.2rem;
+        }
+
+        .loading i {
+            animation: spin 1s linear infinite;
+            margin-right: 10px;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .error {
+            text-align: center;
+            padding: 40px;
+            color: #ff6b6b;
+            background: rgba(255, 107, 107, 0.1);
+            border-radius: 15px;
+            border: 1px solid rgba(255, 107, 107, 0.3);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #ccc;
+        }
+
+        .empty-state i {
+            font-size: 4rem;
+            color: #444;
+            margin-bottom: 20px;
+        }
+
+        /* Table Styles */
+        .table-container {
+            background: linear-gradient(135deg, #2d2d2d, #1a1a1a);
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
+            border: 1px solid #333;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead {
+            background: linear-gradient(135deg, #1a1a1a, #000);
+        }
+
+        th {
+            padding: 20px 15px;
+            text-align: left;
+            font-weight: 600;
+            color: #ffd700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 0.9rem;
+            border-bottom: 2px solid #ffd700;
+        }
+
+        tbody tr {
+            transition: all 0.3s ease;
+            border-bottom: 1px solid #333;
+        }
+
+        tbody tr:hover {
+            background: rgba(255, 215, 0, 0.1);
+            transform: scale(1.01);
+        }
+
+        tbody tr.completed {
+            opacity: 0.6;
+            background: rgba(0, 255, 0, 0.1);
+        }
+
+        td {
+            padding: 18px 15px;
+            color: #fff;
+            font-weight: 400;
+        }
+
+        .sr-no {
+            font-weight: 600;
+            color: #ffd700;
+            text-align: center;
+            width: 80px;
+        }
+
+        .po-number {
+            font-weight: 600;
+            color: #fff;
+            font-family: 'Courier New', monospace;
+        }
+
+        .supplier-name {
+            color: #ccc;
+        }
+
+        /* Action Buttons */
+        .action-btn {
+            background: linear-gradient(135deg, #28a745, #20c997);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.85rem;
+        }
+
+        .action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(40, 167, 69, 0.4);
+        }
+
+        .action-btn.completed {
+            background: linear-gradient(135deg, #6c757d, #495057);
+            cursor: not-allowed;
+        }
+
+        .action-btn.completed:hover {
+            transform: none;
+            box-shadow: none;
+        }
+
+        /* Invoice Button Specific Styles */
+        .invoice-btn {
+            background: linear-gradient(135deg, #007bff, #0056b3);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.85rem;
+        }
+
+        .invoice-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(0, 123, 255, 0.4);
+        }
+
+        .invoice-btn:disabled {
+            background: linear-gradient(135deg, #6c757d, #495057);
+            cursor: not-allowed;
+        }
+
+        /* Responsive Adjustments */
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2rem;
+            }
+                       
+            table {
+                font-size: 0.9rem;
+            }
+            
+            th, td {
+                padding: 12px 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1><i class="fas fa-id-badge"></i> For Accounts Section</h1>
+            <p>Mark the purchase orders, whether you have entered them or not.</p>
+        </div>
+
+        <div class="controls">
+            <button class="refresh-btn" onclick="fetchOrders()">
+                <i class="fas fa-sync-alt"></i> Refresh Data
+            </button>
+            <div class="last-updated" id="lastUpdated"></div>
+        </div>
+
+        <div class="table-container">
+            <div id="loading" class="loading" style="display: none;">
+                <i class="fas fa-spinner"></i> Loading orders...
+            </div>
+            
+            <div id="error" class="error" style="display: none;"></div>
+            
+            <div id="tableWrapper" style="display: none;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Sr. No.</th>
+                            <th>PO No.</th>
+                            <th>Supplier Name</th>
+                            <th>Invoice</th> <!-- New Invoice Column Header -->
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="ordersTableBody">
+                    </tbody>
+                </table>
+            </div>
+            
+            <div id="emptyState" class="empty-state" style="display: none;">
+                <i class="fas fa-inbox"></i>
+                <h3>No orders found</h3>
+                <p>There are currently no orders to display.</p>
+            </div>
+        </div>
+    </div>
+
+<script>
+    // API endpoint for fetching and updating orders
+    const API_URL = 'https://script.google.com/macros/s/AKfycbwYVf_pKrNX6WWyYF6lBSwsQwB7AIZcgAjoXU1PBR4vmTeb48huKWtagXHJXiDcjeSibw/exec';
+    
+    // Array to store all fetched orders
+    let orders = [];
+    
+    // Set to keep track of completed order purchase order numbers
+    let completedOrders = new Set();
+
+    /**
+     * Fetches orders from the API and updates the UI.
+     */
+    async function fetchOrders() {
+        const loadingEl = document.getElementById('loading');
+        const errorEl = document.getElementById('error');
+        const tableWrapperEl = document.getElementById('tableWrapper');
+        const emptyStateEl = document.getElementById('emptyState');
+        
+        // Show loading state and hide other sections
+        loadingEl.style.display = 'block';
+        errorEl.style.display = 'none';
+        tableWrapperEl.style.display = 'none';
+        emptyStateEl.style.display = 'none';
+        
+        try {
+            const response = await fetch(API_URL);
+            
+            // Check if the network request was successful
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            const data = await response.json();
+            
+            // Check if data is successfully received and in the correct format
+            if (data.success && data.data) {
+                orders = data.data; // Store fetched orders
+                renderOrders();      // Render orders in the table
+                updateLastUpdated(); // Update last updated timestamp
+                
+                // Show empty state or table based on number of orders
+                if (orders.length === 0) {
+                    emptyStateEl.style.display = 'block';
+                } else {
+                    tableWrapperEl.style.display = 'block';
+                }
+            } else {
+                throw new Error('Invalid data format received from API');
+            }
+            
+        } catch (error) {
+            console.error('Error fetching orders:', error);
+            errorEl.textContent = `Error loading orders: ${error.message}`;
+            errorEl.style.display = 'block';
+        } finally {
+            // Hide loading state regardless of success or error
+            loadingEl.style.display = 'none';
+        }
+    }
+
+    /**
+     * Renders the orders array into the HTML table.
+     */
+    function renderOrders() {
+        const tbody = document.getElementById('ordersTableBody');
+        tbody.innerHTML = ''; // Clear existing table rows
+        
+        orders.forEach((order, index) => {
+            const row = document.createElement('tr');
+            // Check if the order is marked as completed
+            const isCompleted = completedOrders.has(order.purchaseOrderNumber);
+            
+            if (isCompleted) {
+                row.classList.add('completed');
+            }
+            
+            // Populate row with order data, including new Invoice button
+            row.innerHTML = `
+                <td class="sr-no">${index + 1}</td>
+                <td class="po-number">${order.purchaseOrderNumber}</td>
+                <td class="supplier-name">${order.supplierName}</td>
+                <td>
+                    ${order.invoiceUrl ? 
+                        `<button class="invoice-btn" 
+                                onclick="showInvoice('${order.invoiceUrl}')">
+                            <i class="fas fa-file-invoice"></i> Show Invoice
+                        </button>` 
+                        : 'N/A' // Display 'N/A' if invoiceUrl is not available
+                    }
+                </td>
+                <td>
+                    <button class="action-btn ${isCompleted ? 'completed' : ''}" 
+                            id="markDoneBtn-${order.purchaseOrderNumber}"
+                            onclick="markDone(this, '${order.purchaseOrderNumber}')"
+                            ${isCompleted ? 'disabled' : ''}>
+                        <i class="fas ${isCompleted ? 'fa-check' : 'fa-check-circle'}"></i>
+                        ${isCompleted ? 'Completed' : 'Mark Done'}
+                    </button>
+                </td>
+            `;
+            
+            tbody.appendChild(row);
+        });
+    }
+
+    /**
+     * Marks an order as done by sending a POST request to the API.
+     * @param {HTMLElement} buttonElement The button element that triggered the action.
+     * @param {string} poNumber The purchase order number to mark as done.
+     */
+    async function markDone(buttonElement, poNumber) {
+        // Prevent marking done if already completed
+        if (completedOrders.has(poNumber)) return;
+
+        // Find the order details based on PO number
+        const order = orders.find(o => o.purchaseOrderNumber === poNumber);
+        if (!order || !order.timestamp) {
+            // Use a custom modal or message box instead of alert
+            // For simplicity, a console error is used here. In a real app, use a proper UI notification.
+            console.error("Timestamp not found for the selected order.");
+            return;
+        }
+
+        // Store original button content and class for revert
+        const originalButtonHtml = buttonElement.innerHTML;
+        const originalButtonClass = buttonElement.className;
+
+        // Show loading state on the button
+        buttonElement.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+        buttonElement.className = 'action-btn completed'; // Gray out and disable
+        buttonElement.disabled = true;
+
+        try {
+            await fetch(API_URL, {
+                method: 'POST',
+                mode: 'no-cors', // Important for Apps Script web apps that don't send CORS headers
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    action: 'markDone',
+                    timestamp: order.timestamp,
+                    purchaseOrderNumber: poNumber
+                })
+            });
+
+            // Optimistically update UI assuming success
+            completedOrders.add(poNumber);
+
+            // Visual feedback for success on the button
+            buttonElement.innerHTML = '<i class="fas fa-check"></i> Done!';
+            buttonElement.className = 'action-btn completed';
+            buttonElement.disabled = true;
+
+            // Re-render the table after a short delay to reflect the true state
+            setTimeout(() => {
+                const row = buttonElement.closest('tr');
+                if (row) {
+                    row.classList.add('completed');
+                }
+                renderOrders(); 
+            }, 1500); // Wait for 1.5 seconds to show "Done!" before re-rendering
+		fetchOrders();
+        } catch (error) {
+            console.error('Fetch failed:', error);
+            // Use a custom modal or message box instead of alert
+            console.error('Network error — request not sent. Please try again.');
+            // Revert button to original state on error
+            buttonElement.innerHTML = originalButtonHtml;
+            buttonElement.className = originalButtonClass;
+            buttonElement.disabled = false;
+        }
+    }
+
+    /**
+     * Opens the invoice URL in a new tab.
+     * @param {string} invoiceUrl The URL of the invoice.
+     */
+    function showInvoice(invoiceUrl) {
+        window.open(invoiceUrl, '_blank');
+    }
+
+    /**
+
+    /**
+     * Updates the "Last updated" timestamp on the UI.
+     */
+    function updateLastUpdated() {
+        const now = new Date();
+        const timeString = now.toLocaleTimeString('en-US', { 
+            hour12: true, 
+            hour: 'numeric', 
+            minute: '2-digit' 
+        });
+        document.getElementById('lastUpdated').textContent = `Last updated: ${timeString}`;
+        document.getElementById('lastUpdated').style.color = '#ccc';
+        document.getElementById('lastUpdated').style.fontSize = '0.9rem';
+    }
+
+    // Auto-refresh orders every 30 seconds
+    setInterval(fetchOrders, 30000);
+
+    // Initial load of orders when the page loads
+    fetchOrders();
+</script>
+</body>
+</html>

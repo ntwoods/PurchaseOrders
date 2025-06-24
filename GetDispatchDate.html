@@ -525,12 +525,14 @@
                                 📄 View PO
                             </button>
                         </div>
-                        <div class="order-actions">
-                            <button class="view-po-btn" "('${order.googleSheetURL}')">
-                                📄 View G-Sheet
-                            </button>
-                        </div>			
-                     
+			<a href="${order.orderSheet}" target="_blank">
+			  <div class="order-actions">
+			    <button class="view-po-btn">
+			      📄 View G-Sheet
+			    </button>
+			  </div>
+			</a>
+
                         <div class="dispatch-section">
                             <label class="dispatch-label" for="dispatch-date-${index}">
                                 📅 Dispatch Date *

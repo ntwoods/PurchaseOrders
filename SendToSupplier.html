@@ -4,13 +4,13 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Purchase Order Tracker</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.tailwindcss.com"></script>
 
 <style>
   body {
-    font-family: 'Inter', sans-serif;
-    background: #f3f4f6; /* Light gray background */
+    font-family: 'Poppins', sans-serif; /* Changed to Poppins */
+    background: #d3e4f7; /* Light gray background */
     font-size: 1rem;
     line-height: 1.6;
   }
@@ -87,16 +87,21 @@
     to { color: #991b1b; }
   }
 
-  .btn {
-    padding: 0.6rem 1.2rem;
-    font-weight: 600;
-    border-radius: 0.75rem;
-    transition: all 0.3s ease;
-    color: white;
-    text-align: center;
-    display: inline-block;
-    font-size: 0.95rem;
-  }
+.btn {
+  width: auto; /* Allow content to dictate width, but flexbox will manage it */
+  padding: 0.75rem 1rem; /* Slightly more padding for a better feel */
+  font-weight: 600;
+  border-radius: 0.75rem;
+  transition: all 0.3s ease;
+  color: white;
+  text-align: center;
+  display: inline-flex; /* Use inline-flex for better icon/text alignment */
+  align-items: center;
+  justify-content: center;
+  font-size: 0.95rem;
+  box-sizing: border-box;
+  text-decoration: none; /* Remove underline for anchor tags */
+}
 
   .btn-primary {
     background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
@@ -108,25 +113,33 @@
   }
 
   .btn-secondary {
-    background: #91dbfa;
+    background: #91dbfa; /* Light blue for general actions */
+    color: #1f2937; /* Dark text for light background */
   }
 
   .btn-secondary:hover {
     transform: translateY(-2px);
-    box-shadow: 0 8px 20px rgba(13, 148, 136, 0.25);
+    box-shadow: 0 8px 20px rgba(145, 219, 250, 0.25);
   }
 
   .btn-done {
-    background: #a1feb1;
+    background: linear-gradient(135deg, #22c55e 0%, #15803d 100%); /* Stronger green */
+    color: white; /* Changed to white */
+  }
+
+  .btn-done:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(34, 197, 94, 0.25);
   }
 
   .btn-danger {
-    background: #fa91ad;
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); /* Brighter red */
+    color: white; /* Changed to white */
   }
 
   .btn-danger:hover {
     transform: translateY(-2px);
-    box-shadow: 0 8px 20px rgba(220, 38, 38, 0.25);
+    box-shadow: 0 8px 20px rgba(239, 68, 68, 0.25);
   }
 
   .btn-hold {
@@ -174,6 +187,20 @@
     background: linear-gradient(135deg, #ef4444 0%, #991b1b 100%);
   }
 
+  .button-group {
+    display: flex;
+    flex-wrap: wrap; /* Allows buttons to wrap to the next line */
+    gap: 0.75rem; /* Space between buttons */
+    margin-top: 1rem;
+    justify-content: center; /* Center buttons horizontally */
+  }
+
+  .button-group .btn {
+    flex: 1 1 auto; /* Allow buttons to grow and shrink, with a flexible base */
+    min-width: 120px; /* Minimum width for buttons */
+  }
+
+
   /* Styles for the hold fields container */
   .hold-fields-container {
     display: none; /* Hidden by default */
@@ -191,7 +218,6 @@
 
 </head>
 <body class="min-h-screen p-4">
-  <!-- Header -->
   <div class="max-w-4xl mx-auto mb-6">
     <div class="glass-effect rounded-3xl p-6 text-center">
       <h1 class="text-3xl md:text-4xl font-bold text-white mb-2">
@@ -207,7 +233,6 @@
     </div>
   </div>
 
-  <!-- Controls -->
   <div class="max-w-4xl mx-auto mb-6">
     <div class="flex flex-col sm:flex-row gap-3 justify-center">
       <button
@@ -229,7 +254,6 @@
     </div>
   </div>
 
-  <!-- Statistics -->
   <div class="max-w-4xl mx-auto mb-6" id="statsContainer">
     <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
       <div class="glass-effect rounded-2xl p-4 text-center">
@@ -247,14 +271,11 @@
     </div>
   </div>
 
-  <!-- Request Container -->
   <div class="max-w-4xl mx-auto">
     <div id="requestContainer" class="grid grid-cols-1 md:grid-cols-2 gap-6">
-      <!-- Loading will be inserted here -->
-    </div>
+      </div>
   </div>
 
-  <!-- Empty State -->
   <div id="emptyState" class="max-w-4xl mx-auto text-center py-12 hidden">
     <div class="glass-effect rounded-3xl p-8">
       <div class="text-6xl mb-4">✅</div>
@@ -264,7 +285,6 @@
     </div>
   </div>
 
-  <!-- Debug Info -->
   <div class="max-w-4xl mx-auto mt-6">
     <div class="glass-effect rounded-2xl p-4 text-center">
       <div class="text-white/60 text-xs" id="debugInfo">
@@ -618,39 +638,44 @@ async function markCancel(googleSheetURL, cardId, timestamp, requesterName) {
         </div>
         ` : ''}
 
-        <div class="flex flex-col sm:flex-row gap-3">
+	<div class="button-group">
+          <a
+            href="${request.orderSheet}"
+            target="_blank"
+            class="btn btn-secondary"
+          >
+            <span>Order Sheet</span>
+          </a>
           <a
             href="${request.fileURL}"
             target="_blank"
-            class="btn-secondary text-black px-4 py-2 rounded-xl text-sm font-medium flex items-center justify-center gap-2 flex-1"
+            class="btn btn-secondary"
           >
             <span>📊</span>
-            <span>View Sheet</span>
+            <span>View PO</span>
           </a>
           <button
             onclick="markDone('${request.googleSheetURL}', '${cardId}', '${request.timestamp}', '${request.requesterName}')"
-            class="btn-done text-white px-4 py-2 rounded-xl text-sm font-medium flex items-center justify-center gap-2"
+            class="btn btn-done"
           >
             <span>✅</span>
             <span>Done</span>
           </button>
           <button
             onclick="markCancel('${request.googleSheetURL}', '${cardId}', '${request.timestamp}', '${request.requesterName}')"
-            class="btn-danger text-white px-4 py-2 rounded-xl text-sm font-medium flex items-center justify-center gap-2"
+            class="btn btn-danger"
           >
             <span>❌</span>
             <span>Cancel</span>
           </button>
           <button
             onclick="toggleHoldFields('${cardId}')"
-            class="btn-hold text-white px-4 py-2 rounded-xl text-sm font-medium flex items-center justify-center gap-2"
+            class="btn btn-hold"
           >
             <span>⏸️</span>
             <span>Hold</span>
           </button>
-        </div>
-
-        <!-- Hold Fields Container -->
+	</div>
         <div id="hold-fields-${cardId}" class="hold-fields-container mt-4">
           <div class="mb-3">
             <label for="hold-until-${cardId}" class="block text-white/80 text-sm font-medium mb-1">Hold Until:</label>
@@ -660,17 +685,17 @@ async function markCancel(googleSheetURL, cardId, timestamp, requesterName) {
             <label for="hold-remark-${cardId}" class="block text-white/80 text-sm font-medium mb-1">Hold Remark:</label>
             <textarea id="hold-remark-${cardId}" class="hold-remark w-full p-2 rounded-lg bg-white/10 border border-white/20 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-blue-500" rows="2" placeholder="Enter remark for holding..."></textarea>
           </div>
-          <div class="flex gap-3">
+          <div class="button-group">
             <button
               onclick="markHold('${request.googleSheetURL}', '${cardId}', '${request.timestamp}', '${request.requesterName}')"
-              class="btn-primary text-white px-4 py-2 rounded-xl text-sm font-medium flex items-center justify-center gap-2 flex-1"
+              class="btn btn-primary"
             >
               <span>✅</span>
               <span>Mark Hold</span>
             </button>
             <button
               onclick="toggleHoldFields('${cardId}')"
-              class="btn-danger text-white px-4 py-2 rounded-xl text-sm font-medium flex items-center justify-center gap-2"
+              class="btn btn-danger"
             >
               <span>❌</span>
               <span>Cancel Hold</span>

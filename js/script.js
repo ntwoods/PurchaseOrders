@@ -17,7 +17,7 @@ document.addEventListener('DOMContentLoaded', () => {
         loadingMessage.style.display = 'block';
         ordersGrid.innerHTML = ''; // Clear existing orders
         try {
-            const response = await fetch(API_BASE_URL + '?action=getOrders');
+            const response = await fetch(API_BASE_URL);
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }

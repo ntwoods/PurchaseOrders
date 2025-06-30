@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Orders Management Dashboard</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>Orders Management Dashboard</h1>
+            <p>Track and manage your orders efficiently</p>
+        </header>
+
+        <div class="search-bar">
+            <input type="text" id="searchInput" placeholder="Search by Order ID, Client Name, Dispatcher...">
+            <button id="searchButton">Search</button>
+            <button id="resetButton">Reset</button>
+        </div>
+
+        <div class="loading" id="loadingMessage">Loading orders...</div>
+
+        <div class="filters">
+            <div class="filter-group">
+                <label for="statusFilter">Filter by Status:</label>
+                <select id="statusFilter">
+                    <option value="">All</option>
+                    <option value="dispatched">Dispatched</option>
+                    <option value="pending">Pending</option>
+                    <option value="hold">Hold</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label for="dispatcherFilter">Filter by Dispatcher:</label>
+                <select id="dispatcherFilter">
+                    <option value="">All</option>
+                    </select>
+            </div>
+        </div>
+
+        <div class="orders-grid" id="ordersGrid">
+            </div>
+    </div>
+
+    <script src="js/script.js" defer></script>
+</body>
+</html>

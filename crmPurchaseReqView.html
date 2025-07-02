@@ -394,49 +394,36 @@
         });
 
         // Function to fetch data from your Google Apps Script
-        async function fetchRequests() {
-            const loading = document.getElementById('loading');
-            const container = document.getElementById('requests-container');
-            const emptyState = document.getElementById('empty-state');
+async function fetchRequests() {
+    const loading = document.getElementById('loading');
+    const container = document.getElementById('requests-container');
+    const emptyState = document.getElementById('empty-state');
 
-            loading.style.display = 'block'; // Show loading spinner
-            container.style.display = 'none';
-            emptyState.style.display = 'none';
+    loading.style.display = 'block';
+    container.style.display = 'none';
+    emptyState.style.display = 'none';
 
-            try {
-                // Fetch requests from the Google Apps Script
-                const response = await fetch(`${GAS_WEB_APP_URL}?action=getRequests`);
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                requests = await response.json();
-                renderRequests();
-            } catch (error) {
-                console.error('Error fetching requests:', error);
-                // Fallback to sample data if API fails
-                requests = [
-                    {
-                        dealer: "Vohra plywood Badaun",
-                        product: "27mm WPC DOOR\n78X30=30 PCS\n78X24=5 PCS",
-                        qty: 35,
-                        priority: "High",
-                        remark: "Put a order on priority basis try to available as soon as possible.",
-                        crm: "Km Kalpana"
-                    },
-                    {
-                        dealer: "Shree Krishna plywood kasganj",
-                        product: "78*36\n78*30",
-                        qty: 15,
-                        priority: "High",
-                        remark: "....",
-                        crm: "Priyam Dixit"
-                    }
-                ];
-                renderRequests();
-            } finally {
-                loading.style.display = 'none'; // Hide loading spinner regardless of success or failure
-            }
+    try {
+        const response = await fetch(`${GAS_WEB_APP_URL}?action=getRequests`);
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+
+        const result = await response.json();
+        console.log('Fetched response:', result);
+        
+        if (!Array.isArray(result.data)) {
+            throw new Error("Expected 'data' to be an array");
         }
+
+        requests = result.data;
+        renderRequests();
+    } catch (error) {
+        console.error('Error fetching requests:', error);
+        requests = []; // Clear requests on error
+        renderRequests();
+    } finally {
+        loading.style.display = 'none';
+    }
+}
 
         // Fetch PO numbers from Google Sheet using Google Visualization API (with JSONP workaround)
         // This requires your Google Sheet to be publicly viewable.

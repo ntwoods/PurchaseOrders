@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Request Dashboard</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            background-color: #f8fafc; /* bg-gray-50 */
+        }
+        .modal-overlay {
+            background-color: rgba(17, 24, 39, 0.5); /* bg-gray-900 bg-opacity-50 */
+        }
+        .whitespace-pre-line {
+            white-space: pre-line;
+        }
+    </style>
+</head>
+<body class="min-h-screen p-4">
+    <header class="text-center py-6">
+        <h1 class="text-4xl font-bold text-blue-800 mb-2">Request Dashboard</h1>
+        <p class="text-lg text-gray-600">Overview of pending requests</p>
+    </header>
+
+    <div id="loading-indicator" class="min-h-screen flex items-center justify-center text-blue-600 hidden">
+        <p class="text-xl font-semibold">Loading requests...</p>
+    </div>
+
+    <div id="error-message" class="min-h-screen flex items-center justify-center text-red-700 bg-red-50 hidden">
+        <p class="text-xl font-semibold"></p>
+    </div>
+
+    <div id="requests-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-7xl mx-auto">
+        <!-- Request cards will be dynamically inserted here by JavaScript -->
+    </div>
+
+    <!-- Response Modal Structure -->
+    <div id="response-modal" class="fixed inset-0 modal-overlay flex items-center justify-center z-50 p-4 hidden">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-md overflow-hidden transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full border border-blue-200">
+            <div class="px-6 py-5 bg-blue-600 text-white flex justify-between items-center rounded-t-lg">
+                <h3 class="text-2xl font-bold">Mark Response</h3>
+                <button id="close-modal-btn" class="text-white hover:text-blue-100 focus:outline-none focus:ring-2 focus:ring-blue-300 rounded-full p-1" aria-label="Close modal">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            <form id="response-form" class="p-6 space-y-6">
+                <div>
+                    <label for="poNo" class="block text-gray-700 text-sm font-medium mb-2">
+                        Expected with PO No.
+                    </label>
+                    <select
+                        id="poNo"
+                        class="block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm bg-white text-gray-900"
+                        required
+                    >
+                        <option value="">Select PO Number</option>
+                        <!-- PO Numbers will be dynamically inserted here -->
+                    </select>
+                </div>
+
+                <div>
+                    <label for="remark" class="block text-gray-700 text-sm font-medium mb-2">
+                        Remark
+                    </label>
+                    <textarea
+                        id="remark"
+                        rows="3"
+                        class="block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm resize-y text-gray-900"
+                        placeholder="Enter your remark here..."
+                    ></textarea>
+                </div>
+
+                <div>
+                    <label for="expectedBy" class="block text-gray-700 text-sm font-medium mb-2">
+                        Expected by:
+                    </label>
+                    <input
+                        type="date"
+                        id="expectedBy"
+                        class="block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-gray-900"
+                        required
+                    />
+                </div>
+
+                <div class="flex justify-end space-x-3 pt-4">
+                    <button
+                        type="button"
+                        id="cancel-modal-btn"
+                        class="px-5 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200"
+                    >
+                        Cancel
+                    </button>
+                    <button
+                        type="submit"
+                        class="px-5 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200"
+                    >
+                        Submit
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const requestsContainer = document.getElementById('requests-container');
+        const loadingIndicator = document.getElementById('loading-indicator');
+        const errorMessage = document.getElementById('error-message');
+        const responseModal = document.getElementById('response-modal');
+        const closeModalBtn = document.getElementById('close-modal-btn');
+        const cancelModalBtn = document.getElementById('cancel-modal-btn');
+        const responseForm = document.getElementById('response-form');
+        const poNoSelect = document.getElementById('poNo');
+        const remarkTextarea = document.getElementById('remark');
+        const expectedByInput = document.getElementById('expectedBy');
+
+        let currentSelectedRequest = null; // To store the request object when modal is open
+
+        // Function to show loading indicator
+        function showLoading() {
+            loadingIndicator.classList.remove('hidden');
+            requestsContainer.classList.add('hidden');
+            errorMessage.classList.add('hidden');
+        }
+
+        // Function to hide loading indicator
+        function hideLoading() {
+            loadingIndicator.classList.add('hidden');
+        }
+
+        // Function to show error message
+        function showError(message) {
+            errorMessage.classList.remove('hidden');
+            errorMessage.querySelector('p').textContent = message;
+            requestsContainer.classList.add('hidden');
+            loadingIndicator.classList.add('hidden');
+        }
+
+        // Function to hide error message
+        function hideError() {
+            errorMessage.classList.add('hidden');
+        }
+
+        // Function to fetch requests
+        async function fetchRequests() {
+            showLoading();
+            try {
+                const response = await fetch('https://script.google.com/a/macros/ntwoods.com/s/AKfycbxU1-uoV9B1rgPkjFv_4L4q5h1rWeCLvE6NgM_rzeZ5RyhFwnl3d_j4lw7G9BWtGATM9g/exec');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const data = await response.json();
+                displayRequests(data);
+            } catch (e) {
+                console.error("Failed to fetch requests:", e);
+                showError("Failed to load requests. Please try again later.");
+            } finally {
+                hideLoading();
+            }
+        }
+
+        // Function to display requests as cards
+        function displayRequests(requests) {
+            requestsContainer.innerHTML = ''; // Clear previous requests
+            if (requests.length === 0) {
+                requestsContainer.classList.remove('grid'); // Remove grid layout if no requests
+                requestsContainer.innerHTML = '<p class="col-span-full text-center text-gray-600 text-lg">No requests found.</p>';
+            } else {
+                requestsContainer.classList.add('grid'); // Ensure grid layout is applied
+                requests.forEach(request => {
+                    const card = document.createElement('div');
+                    card.className = 'bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 overflow-hidden border border-blue-100';
+                    card.innerHTML = `
+                        <div class="p-6">
+                            <h2 class="text-xl font-semibold text-blue-700 mb-3">
+                                <span class="font-normal text-gray-500">Dealer Name:</span> ${request.dealer}
+                            </h2>
+                            <div class="space-y-2 text-gray-700 text-base">
+                                <p>
+                                    <span class="font-medium text-blue-600">Product:</span>
+                                    <span class="whitespace-pre-line">${request.product}</span>
+                                </p>
+                                <p>
+                                    <span class="font-medium text-blue-600">Qty:</span> ${request.qty}
+                                </p>
+                                <p>
+                                    <span class="font-medium text-blue-600">Priority:</span>
+                                    <span class="font-semibold ${request.priority === 'High' ? 'text-red-600' : 'text-green-600'}">
+                                        ${request.priority}
+                                    </span>
+                                </p>
+                                <p>
+                                    <span class="font-medium text-blue-600">Remark:</span> ${request.remark}
+                                </p>
+                                <p>
+                                    <span class="font-medium text-blue-600">CRM:</span> ${request.crm}
+                                </p>
+                            </div>
+                        </div>
+                        <div class="p-6 bg-blue-50 border-t border-blue-100 flex justify-end">
+                            <button class="mark-response-btn bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md shadow-md transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50">
+                                Mark Response
+                            </button>
+                        </div>
+                    `;
+                    const markResponseBtn = card.querySelector('.mark-response-btn');
+                    markResponseBtn.addEventListener('click', () => openModal(request));
+                    requestsContainer.appendChild(card);
+                });
+            }
+            requestsContainer.classList.remove('hidden'); // Show container after content is ready
+        }
+
+        // Simulate fetching PO Numbers
+        async function fetchPoNumbers() {
+            // In a real application, you would fetch this from your Google Apps Script
+            // that reads Column AA from Sheet ID: 1MPBE5EED1iN8np3oVqcn3VSAYl7M-OUXaLj9_YJogh0, Sheet Name: Requests
+            // For now, using dummy data.
+            await new Promise(resolve => setTimeout(resolve, 500)); // Simulate delay
+            return ['PO-001', 'PO-002', 'PO-003', 'PO-004', 'PO-005', 'N/A'];
+        }
+
+        // Function to populate PO numbers dropdown
+        async function populatePoNumbers() {
+            poNoSelect.innerHTML = '<option value="">Select PO Number</option>'; // Reset options
+            const poNumbers = await fetchPoNumbers();
+            poNumbers.forEach(po => {
+                const option = document.createElement('option');
+                option.value = po;
+                option.textContent = po;
+                poNoSelect.appendChild(option);
+            });
+        }
+
+        // Function to open the modal
+        function openModal(request) {
+            currentSelectedRequest = request;
+            // Reset form fields
+            poNoSelect.value = '';
+            remarkTextarea.value = '';
+            expectedByInput.value = '';
+
+            populatePoNumbers(); // Populate PO numbers when modal opens
+            responseModal.classList.remove('hidden');
+        }
+
+        // Function to close the modal
+        function closeModal() {
+            responseModal.classList.add('hidden');
+            currentSelectedRequest = null;
+        }
+
+        // Event listeners for modal buttons
+        closeModalBtn.addEventListener('click', closeModal);
+        cancelModalBtn.addEventListener('click', closeModal);
+
+        // Handle form submission
+        responseForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const responseDetails = {
+                poNo: poNoSelect.value,
+                remark: remarkTextarea.value,
+                expectedBy: expectedByInput.value
+            };
+
+            console.log("Submitting response for request:", currentSelectedRequest);
+            console.log("Response details:", responseDetails);
+
+            // Placeholder for actual POST request
+            // You will implement the doPost function on your server (Google Apps Script)
+            // to handle this submission.
+            /*
+            try {
+                const postResponse = await fetch('YOUR_DOPOST_ENDPOINT_HERE', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        // Assuming your request data has a unique identifier like 'id'
+                        // If not, you might need to pass other identifying info
+                        requestId: currentSelectedRequest.id,
+                        ...responseDetails,
+                    }),
+                });
+                if (!postResponse.ok) {
+                    throw new Error(`Failed to submit response: ${postResponse.status}`);
+                }
+                console.log('Response submitted successfully!');
+                // Optionally, update the UI or show a success message
+            } catch (submitError) {
+                console.error('Error submitting response:', submitError);
+                // Show an error message to the user
+            }
+            */
+
+            // Instead of alert, you might use a custom message box or toast notification
+            // as alert() is not recommended in iframes.
+            // For now, keeping the alert as per previous instruction for debugging.
+            alert("Response data logged to console. Implement your server-side doPost function to handle this submission.");
+            closeModal(); // Close modal after submission
+        });
+
+        // Initial fetch of requests when the page loads
+        document.addEventListener('DOMContentLoaded', fetchRequests);
+    </script>
+</body>
+</html>

@@ -512,7 +512,7 @@
                 </div>
                 <div class="stat-card overdue">
                     <div class="stat-number" id="overdue-count">0</div>
-                    <div class="stat-label">Overdue</div>
+                    <div class="stat-label">Will Remove Soon</div>
                 </div>
             </div>
 
@@ -653,7 +653,7 @@
 
         function formatCountdown(milliseconds) {
             if (milliseconds <= 0) {
-                return { text: 'OVERDUE', isOverdue: true };
+                return { text: 'Will Remove Soon', isOverdue: true };
             }
             
             const totalSeconds = Math.floor(milliseconds / 1000);
@@ -701,7 +701,7 @@
                 sectionElement.classList.add('overdue');
                 deadlineInfo.classList.add('overdue');
                 card.classList.add('overdue');
-                labelElement.textContent = 'OVERDUE!';
+                labelElement.textContent = 'Will disappear soon!';
             } else if (countdown.isUrgent) {
                 timerElement.classList.add('urgent');
                 sectionElement.classList.add('urgent');

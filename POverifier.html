@@ -1116,7 +1116,8 @@ async function checkMissingSuppliers(googleSheetURL) {
                     
                     requestsData.splice(currentRequestIndex, 1);
                     countdownIntervals.splice(currentRequestIndex, 1);
-                    displayRequests(requestsData);
+                    loadRequests();
+		    displayRequests(requestsData);
                     updateStats();
                     closeModal();
                     

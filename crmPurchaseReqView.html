@@ -394,15 +394,25 @@
             setupFormValidation();
         });
 
-        // Fetch requests from API
-        async function fetchRequests() {
-            try {
-                const response = await fetch(apiUrl);
-                const data = await response.json();
+        // Fetch requests from API using JSONP for Google Apps Script
+        function fetchRequests() {
+            // Create a unique callback name
+            const callbackName = 'jsonpCallback_' + Date.now();
+            
+            // Create the callback function
+            window[callbackName] = function(data) {
                 requests = data;
                 renderRequests();
-            } catch (error) {
-                console.error('Error fetching requests:', error);
+                // Clean up
+                document.head.removeChild(script);
+                delete window[callbackName];
+            };
+            
+            // Create script element for JSONP
+            const script = document.createElement('script');
+            script.src = apiUrl + '?callback=' + callbackName;
+            script.onerror = function() {
+                console.error('Error fetching requests from API, using fallback data');
                 // Fallback to sample data
                 requests = [
                     {
@@ -423,15 +433,24 @@
                     }
                 ];
                 renderRequests();
-            }
+                // Clean up
+                document.head.removeChild(script);
+                delete window[callbackName];
+            };
+            
+            document.head.appendChild(script);
         }
 
-        // Fetch PO numbers from Google Sheets
-        async function fetchPoNumbers() {
+        // Fetch PO numbers from Google Sheets using JSONP
+        function fetchPoNumbers() {
+            // For Google Sheets, we'll use a different approach
+            // You can modify this to use JSONP if your Google Sheets API supports it
             try {
-                // For demo purposes, using sample PO numbers
-                // In production, you'd fetch from Google Sheets API
-                poNumbers = ['PO-2024-001', 'PO-2024-002', 'PO-2024-003', 'PO-2024-004'];
+                // Using sample PO numbers for now
+                // If you want to fetch from Google Sheets, you might need to:
+                // 1. Make the sheet public and use CSV export
+                // 2. Or create another Google Apps Script to serve the PO data
+                poNumbers = ['PO-2024-001', 'PO-2024-002', 'PO-2024-003', 'PO-2024-004', 'PO-2024-005'];
                 populatePoDropdown();
             } catch (error) {
                 console.error('Error fetching PO numbers:', error);
@@ -580,8 +599,8 @@
             document.getElementById('submit-btn').disabled = !isValid;
         }
 
-        // Submit response
-        async function submitResponse() {
+        // Submit response using form submission or JSONP
+        function submitResponse() {
             const formData = {
                 expectedPoNo: document.getElementById('expectedPoNo').value,
                 remark: document.getElementById('remark').value.trim(),
@@ -598,15 +617,33 @@
             try {
                 console.log('Submitting:', submissionData);
                 
-                // Here you would make the POST request to your backend
-                // const response = await fetch(yourPostEndpoint, {
-                //     method: 'POST',
-                //     headers: { 'Content-Type': 'application/json' },
-                //     body: JSON.stringify(submissionData)
-                // });
-
-                alert('Response submitted successfully!');
-                closeModal();
+                // Option 1: Using JSONP for POST (if your doPost supports callback)
+                const callbackName = 'submitCallback_' + Date.now();
+                window[callbackName] = function(response) {
+                    console.log('Submission response:', response);
+                    alert('Response submitted successfully!');
+                    closeModal();
+                    // Clean up
+                    document.head.removeChild(script);
+                    delete window[callbackName];
+                };
+                
+                const script = document.createElement('script');
+                const params = new URLSearchParams({
+                    action: 'submit',
+                    data: JSON.stringify(submissionData),
+                    callback: callbackName
+                });
+                script.src = apiUrl + '?' + params.toString();
+                script.onerror = function() {
+                    console.error('Error submitting response');
+                    alert('Error submitting response. Please try again.');
+                    // Clean up
+                    document.head.removeChild(script);
+                    delete window[callbackName];
+                };
+                document.head.appendChild(script);
+                
             } catch (error) {
                 console.error('Error submitting response:', error);
                 alert('Error submitting response. Please try again.');

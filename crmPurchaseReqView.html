@@ -513,7 +513,12 @@
         let selectedPoNo = ''; // To store the selected PO number from searchable dropdown
 
         // API URLs
+        // IMPORTANT: Replace this with your actual Google Apps Script Web App URL
         const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbw0I7ulkRPKpDS6TGl3YwYjVpGpIW8fZ6jMzEkI2p9hY3wDFOeZy5KGe2LnlXnPxiEUHg/exec';
+        // IMPORTANT: Replace this with your actual Google Sheet URL for PO numbers
+        // Ensure this sheet is published to the web for the Google Visualization API to access it.
+        const GOOGLE_SHEET_PO_URL = 'https://docs.google.com/spreadsheets/d/1MPBE5EED1iN8np3oVqcn3VSAYl7M-OUXaLj9_YJogh0/gviz/tq?tqx=out:json&sheet=Requests&range=AA:AA';
+
 
         // Initialize the application
         document.addEventListener('DOMContentLoaded', function() {
@@ -544,7 +549,9 @@
                     throw new Error("Expected 'data' to be an array");
                 }
 
-                requests = result.data;
+                // Assuming each request object in result.data contains a 'timestamp' property
+                // as per the user's description (row[6] for timestamp)
+                requests = result.data; 
                 renderRequests();
             } catch (error) {
                 console.error('Error fetching requests:', error);
@@ -557,16 +564,14 @@
         }
 
         // Fetch PO numbers from Google Sheet using Google Visualization API
-        // This requires your Google Sheet to be publicly viewable.
         async function fetchPoNumbers() {
-            const googleSheetPoUrl = 'https://docs.google.com/spreadsheets/d/1MPBE5EED1iN8np3oVqcn3VSAYl7M-OUXaLj9_YJogh0/gviz/tq?tqx=out:json&sheet=Requests&range=AA:AA';
-
             try {
-                const response = await fetch(googleSheetPoUrl);
+                const response = await fetch(GOOGLE_SHEET_PO_URL);
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
                 const text = await response.text();
+                // Extract JSON part from the response
                 const jsonText = text.substring(text.indexOf('{'), text.lastIndexOf('}') + 1);
                 const data = JSON.parse(jsonText);
 
@@ -584,7 +589,7 @@
             } catch (error) {
                 console.error('Error fetching PO numbers:', error);
                 showToast('Error loading PO numbers. Fallback used.', 'error');
-                // Fallback PO numbers if fetching fails
+                // Fallback PO numbers if fetching fails for development/testing
                 poNumbers = ['PO-2024-001-Fallback', 'PO-2024-002-Fallback', 'PO-2024-003-Fallback'];
                 poNumbers = [...new Set(poNumbers)].sort();
                 filteredPoNumbers = [...poNumbers];
@@ -668,7 +673,8 @@
 
         // Open modal
         function openModal(index) {
-            selectedRequest = { ...requests[index], index };
+            // Store the full request object including its timestamp
+            selectedRequest = { ...requests[index], index }; 
             document.getElementById('modal-overlay').style.display = 'block';
             document.body.style.overflow = 'hidden';
             
@@ -832,10 +838,14 @@
 
             const submissionData = {
                 action: 'submitResponse',
-                dealerIndex: selectedRequest.index,
-                dealer: selectedRequest.dealer, // Include dealer name for context if script needs it
-                ...formData,
-                timestamp: new Date().toISOString()
+                // Send the original timestamp received for the request
+                // assuming 'timestamp' is a property of the request object
+                timeStamp: selectedRequest.timestamp, 
+                // Include details for updating Requests sheet column AH
+                dealer: selectedRequest.dealer, 
+                product: selectedRequest.product,
+                qty: selectedRequest.qty,
+                ...formData
             };
 
             const submitBtn = document.getElementById('submit-btn');

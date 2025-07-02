@@ -275,9 +275,9 @@
             border: none;
             padding: 0.75rem 1.5rem;
             border-radius: 8px;
-            cursor: pointer;
             font-size: 1rem;
             font-weight: 600;
+            cursor: pointer;
             transition: all 0.2s ease;
         }
 
@@ -345,7 +345,6 @@
         </div>
     </div>
 
-    <!-- Modal -->
     <div id="modal-overlay" class="modal-overlay">
         <div class="modal">
             <div class="modal-header">
@@ -384,36 +383,37 @@
         let selectedRequest = null;
 
         // API URLs
-        const apiUrl = 'https://script.google.com/a/macros/ntwoods.com/s/AKfycbxU1-uoV9B1rgPkjFv_4L4q5h1rWeCLvE6NgM_rzeZ5RyhFwnl3d_j4lw7G9BWtGATM9g/exec';
-        const sheetsUrl = 'https://docs.google.com/spreadsheets/d/1MPBE5EED1iN8np3oVqcn3VSAYl7M-OUXaLj9_YJogh0/gviz/tq?tqx=out:json&sheet=Requests&range=AA:AA';
+        // Ensure your Google Apps Script web app is deployed to allow 'Anyone' access
+        const GAS_WEB_APP_URL = 'https://script.google.com/a/macros/ntwoods.com/s/AKfycbxU1-uoV9B1rgPkjFv_4L4q5h1rWeCLvE6NgM_rzeZ5RyhFwnl3d_j4lw7G9BWtGATM9g/exec';
 
         // Initialize the application
         document.addEventListener('DOMContentLoaded', function() {
             fetchRequests();
-            fetchPoNumbers();
+            fetchPoNumbers(); // This will now fetch from Google Sheet API
             setupFormValidation();
         });
 
-        // Fetch requests from API using JSONP for Google Apps Script
-        function fetchRequests() {
-            // Create a unique callback name
-            const callbackName = 'jsonpCallback_' + Date.now();
-            
-            // Create the callback function
-            window[callbackName] = function(data) {
-                requests = data;
+        // Function to fetch data from your Google Apps Script
+        async function fetchRequests() {
+            const loading = document.getElementById('loading');
+            const container = document.getElementById('requests-container');
+            const emptyState = document.getElementById('empty-state');
+
+            loading.style.display = 'block'; // Show loading spinner
+            container.style.display = 'none';
+            emptyState.style.display = 'none';
+
+            try {
+                // Fetch requests from the Google Apps Script
+                const response = await fetch(`${GAS_WEB_APP_URL}?action=getRequests`);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                requests = await response.json();
                 renderRequests();
-                // Clean up
-                document.head.removeChild(script);
-                delete window[callbackName];
-            };
-            
-            // Create script element for JSONP
-            const script = document.createElement('script');
-            script.src = apiUrl + '?callback=' + callbackName;
-            script.onerror = function() {
-                console.error('Error fetching requests from API, using fallback data');
-                // Fallback to sample data
+            } catch (error) {
+                console.error('Error fetching requests:', error);
+                // Fallback to sample data if API fails
                 requests = [
                     {
                         dealer: "Vohra plywood Badaun",
@@ -433,28 +433,37 @@
                     }
                 ];
                 renderRequests();
-                // Clean up
-                document.head.removeChild(script);
-                delete window[callbackName];
-            };
-            
-            document.head.appendChild(script);
+            } finally {
+                loading.style.display = 'none'; // Hide loading spinner regardless of success or failure
+            }
         }
 
-        // Fetch PO numbers from Google Sheets using JSONP
-        function fetchPoNumbers() {
-            // For Google Sheets, we'll use a different approach
-            // You can modify this to use JSONP if your Google Sheets API supports it
+        // Fetch PO numbers from Google Sheet using Google Visualization API (with JSONP workaround)
+        // This requires your Google Sheet to be publicly viewable.
+        async function fetchPoNumbers() {
+            const googleSheetPoUrl = 'https://docs.google.com/spreadsheets/d/1MPBE5EED1iN8np3oVqcn3VSAYl7M-OUXaLj9_YJogh0/gviz/tq?tqx=out:json&sheet=Requests&range=AA:AA';
+
             try {
-                // Using sample PO numbers for now
-                // If you want to fetch from Google Sheets, you might need to:
-                // 1. Make the sheet public and use CSV export
-                // 2. Or create another Google Apps Script to serve the PO data
-                poNumbers = ['PO-2024-001', 'PO-2024-002', 'PO-2024-003', 'PO-2024-004', 'PO-2024-005'];
+                // Using fetch and text() to parse the Google Visualization API response
+                const response = await fetch(googleSheetPoUrl);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const text = await response.text();
+                // Extract the JSON part from the Google Visualization API response
+                const jsonText = text.substring(text.indexOf('{'), text.lastIndexOf('}') + 1);
+                const data = JSON.parse(jsonText);
+
+                // Assuming the first column (col0) of the first table (table) contains the PO numbers
+                poNumbers = data.table.rows
+                    .map(row => row.c[0]?.v) // Access the value 'v' from the first column 'c[0]'
+                    .filter(value => value !== undefined && value !== null); // Filter out empty or null values
+
                 populatePoDropdown();
             } catch (error) {
                 console.error('Error fetching PO numbers:', error);
-                poNumbers = ['PO-2024-001', 'PO-2024-002', 'PO-2024-003'];
+                // Fallback PO numbers if fetching fails
+                poNumbers = ['PO-2024-001-Fallback', 'PO-2024-002-Fallback', 'PO-2024-003-Fallback'];
                 populatePoDropdown();
             }
         }
@@ -464,7 +473,10 @@
             const select = document.getElementById('expectedPoNo');
             select.innerHTML = '<option value="">Select PO Number</option>';
             
-            poNumbers.forEach(po => {
+            // Add unique PO numbers to avoid duplicates if any
+            const uniquePoNumbers = [...new Set(poNumbers)]; 
+
+            uniquePoNumbers.forEach(po => {
                 const option = document.createElement('option');
                 option.value = po;
                 option.textContent = po;
@@ -482,6 +494,7 @@
 
             if (requests.length === 0) {
                 emptyState.style.display = 'block';
+                container.style.display = 'none';
                 return;
             }
 
@@ -599,8 +612,8 @@
             document.getElementById('submit-btn').disabled = !isValid;
         }
 
-        // Submit response using form submission or JSONP
-        function submitResponse() {
+        // Submit response
+        async function submitResponse() {
             const formData = {
                 expectedPoNo: document.getElementById('expectedPoNo').value,
                 remark: document.getElementById('remark').value.trim(),
@@ -608,45 +621,48 @@
             };
 
             const submissionData = {
-                dealerIndex: selectedRequest.index,
+                action: 'submitResponse', // Action for your Google Apps Script to identify
+                dealerIndex: selectedRequest.index, // Assuming your script needs this to update
                 dealer: selectedRequest.dealer,
                 ...formData,
                 timestamp: new Date().toISOString()
             };
 
+            const submitBtn = document.getElementById('submit-btn');
+            submitBtn.disabled = true; // Disable button to prevent multiple submissions
+            submitBtn.textContent = 'Submitting...';
+
             try {
                 console.log('Submitting:', submissionData);
-                
-                // Option 1: Using JSONP for POST (if your doPost supports callback)
-                const callbackName = 'submitCallback_' + Date.now();
-                window[callbackName] = function(response) {
-                    console.log('Submission response:', response);
+                const response = await fetch(GAS_WEB_APP_URL, {
+                    method: 'POST', // Use POST for submitting data
+                    headers: {
+                        'Content-Type': 'application/json' // Indicate JSON body
+                    },
+                    body: JSON.stringify(submissionData)
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const result = await response.json(); // Assuming your Apps Script returns JSON
+                console.log('Submission response:', result);
+
+                if (result.success) {
                     alert('Response submitted successfully!');
                     closeModal();
-                    // Clean up
-                    document.head.removeChild(script);
-                    delete window[callbackName];
-                };
-                
-                const script = document.createElement('script');
-                const params = new URLSearchParams({
-                    action: 'submit',
-                    data: JSON.stringify(submissionData),
-                    callback: callbackName
-                });
-                script.src = apiUrl + '?' + params.toString();
-                script.onerror = function() {
-                    console.error('Error submitting response');
-                    alert('Error submitting response. Please try again.');
-                    // Clean up
-                    document.head.removeChild(script);
-                    delete window[callbackName];
-                };
-                document.head.appendChild(script);
-                
+                    fetchRequests(); // Re-fetch requests to update the dashboard
+                } else {
+                    alert('Error submitting response: ' + (result.message || 'Unknown error.'));
+                }
+
             } catch (error) {
                 console.error('Error submitting response:', error);
                 alert('Error submitting response. Please try again.');
+            } finally {
+                submitBtn.disabled = false; // Re-enable button
+                submitBtn.textContent = 'Submit';
             }
         }
 

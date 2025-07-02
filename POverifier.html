@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Verify Purchase Orders</title>
     <style>
-        /* Your existing CSS remains unchanged */
         * {
             margin: 0;
             padding: 0;
@@ -14,7 +13,7 @@
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #e0f2f7 0%, #bbdefb 100%); /* Light blue shades */
             min-height: 100vh;
             padding: 20px;
             color: #333;
@@ -23,7 +22,7 @@
         .container {
             max-width: 1200px;
             margin: 0 auto;
-            background: rgba(255, 255, 255, 0.95);
+            background: rgba(255, 255, 255, 0.98); /* More opaque white */
             border-radius: 20px;
             box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
             overflow: hidden;
@@ -31,10 +30,10 @@
         }
         
         .header {
-            background: linear-gradient(135deg, #e0e0e0 0%, #f5f5f5 100%);
+            background: linear-gradient(135deg, #e0f7fa 0%, #b3e5fc 100%); /* Light blue shades */
             padding: 30px;
             text-align: center;
-            color: #333;
+            color: #1a237e; /* Dark blue for text */
             position: relative;
             overflow: hidden;
         }
@@ -62,8 +61,8 @@
             position: absolute;
             top: 20px;
             right: 20px;
-            background: teal;
-            border: 2px solid rgba(255, 255, 255, 0.3);
+            background: #2196f3; /* Blue */
+            border: 2px solid rgba(33, 150, 243, 0.3);
             color: white;
             padding: 10px 15px;
             border-radius: 50px;
@@ -74,7 +73,7 @@
         }
 
         .refresh-btn:hover {
-            background: red;
+            background: #1976d2; /* Darker blue */
             transform: translateY(-2px);
         }
 
@@ -87,7 +86,7 @@
             width: 60px;
             height: 60px;
             border: 4px solid #f3f3f3;
-            border-top: 4px solid #4facfe;
+            border-top: 4px solid #2196f3; /* Blue */
             border-radius: 50%;
             animation: spin 1s linear infinite;
             margin: 0 auto 20px;
@@ -110,7 +109,7 @@
         }
 
         .stat-card {
-            background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
+            background: linear-gradient(135deg, #90caf9 0%, #64b5f6 100%); /* Blue shades */
             padding: 20px;
             border-radius: 15px;
             text-align: center;
@@ -125,11 +124,11 @@
         }
 
         .stat-card.overdue {
-            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+            background: linear-gradient(135deg, #ef9a9a 0%, #e57373 100%); /* Light red, changed from original to fit theme or indicate warning */
         }
 
         .stat-card.urgent {
-            background: linear-gradient(135deg, #ffa726 0%, #ff7043 100%);
+            background: linear-gradient(135deg, #ffcc80 0%, #ffb74d 100%); /* Light orange, changed from original */
         }
 
         .stat-number {
@@ -150,11 +149,11 @@
         }
 
         .request-card {
-            background: white;
+            background: #ffffff; /* White */
             border-radius: 15px;
             padding: 25px;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-            border: 1px solid #e0e0e0;
+            border: 1px solid #e3f2fd; /* Very light blue border */
             transition: all 0.3s ease;
             position: relative;
             overflow: hidden;
@@ -167,32 +166,27 @@
             left: 0;
             right: 0;
             height: 4px;
-            background: linear-gradient(90deg, #4facfe, #00f2fe);
+            background: linear-gradient(90deg, #2196f3, #64b5f6); /* Blue gradient */
             transition: background 0.3s ease;
         }
 
         .request-card.overdue {
-            border-color: #ff6b6b;
-            background: linear-gradient(135deg, rgba(255, 107, 107, 0.05), rgba(238, 90, 36, 0.05));
+            border-color: #90caf9; /* Light blue border */
+            background: linear-gradient(135deg, rgba(144, 202, 249, 0.05), rgba(100, 181, 246, 0.05));
         }
 
         .request-card.overdue::before {
-            background: linear-gradient(90deg, #ff6b6b, #ee5a24);
-            animation: pulse 2s infinite;
+            background: linear-gradient(90deg, #2196f3, #64b5f6); /* Keep blue */
+            animation: none; /* Remove pulse animation if no longer urgent/overdue */
         }
 
         .request-card.urgent {
-            border-color: #ffa726;
-            background: linear-gradient(135deg, rgba(255, 167, 38, 0.05), rgba(255, 112, 67, 0.05));
+            border-color: #90caf9; /* Light blue border */
+            background: linear-gradient(135deg, rgba(144, 202, 249, 0.05), rgba(100, 181, 246, 0.05));
         }
 
         .request-card.urgent::before {
-            background: linear-gradient(90deg, #ffa726, #ff7043);
-        }
-
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.6; }
+            background: linear-gradient(90deg, #2196f3, #64b5f6); /* Keep blue */
         }
 
         .request-card:hover {
@@ -210,7 +204,7 @@
         }
 
         .request-id {
-            background: linear-gradient(135deg, #667eea, #764ba2);
+            background: linear-gradient(135deg, #1976d2, #2196f3); /* Darker to lighter blue */
             color: white;
             padding: 5px 12px;
             border-radius: 20px;
@@ -238,75 +232,7 @@
             font-size: 1.1rem;
         }
 
-        .countdown-section {
-            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
-            border-radius: 10px;
-            padding: 15px;
-            margin: 20px 0;
-            text-align: center;
-            border: 2px solid #dee2e6;
-            transition: all 0.3s ease;
-        }
-
-        .countdown-section.urgent {
-            background: linear-gradient(135deg, #fff3cd, #ffeaa7);
-            border-color: #ffa726;
-        }
-
-        .countdown-section.overdue {
-            background: linear-gradient(135deg, #f8d7da, #ffb3ba);
-            border-color: #ff6b6b;
-            animation: urgentPulse 2s infinite;
-        }
-
-        @keyframes urgentPulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.02); }
-        }
-
-        .countdown-timer {
-            font-size: 1.8rem;
-            font-weight: bold;
-            color: #2d3436;
-            margin-bottom: 5px;
-            font-family: 'Courier New', monospace;
-        }
-
-        .countdown-timer.urgent {
-            color: #e17055;
-        }
-
-        .countdown-timer.overdue {
-            color: #d63031;
-            animation: blink 1s infinite;
-        }
-
-        @keyframes blink {
-            0%, 50% { opacity: 1; }
-            51%, 100% { opacity: 0.5; }
-        }
-
-        .countdown-label {
-            font-size: 0.9rem;
-            color: #636e72;
-            font-weight: 500;
-        }
-
-        .countdown-label.overdue {
-            color: #d63031;
-            font-weight: 600;
-        }
-
-        .deadline-info {
-            font-size: 0.8rem;
-            color: #74b9ff;
-            margin-top: 5px;
-            font-style: italic;
-        }
-
-        .deadline-info.overdue {
-            color: #d63031;
-        }
+        /* Countdown related styles removed */
 
         .actions {
             display: flex;
@@ -332,12 +258,12 @@
         }
 
         .btn-primary {
-            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            background: linear-gradient(135deg, #2196f3 0%, #64b5f6 100%); /* Blue gradient */
             color: white;
         }
 
         .btn-success {
-            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            background: linear-gradient(135deg, #4caf50 0%, #81c784 100%); /* Kept green for success for clarity */
             color: white;
         }
 
@@ -363,7 +289,7 @@
 
         .progress-fill {
             height: 100%;
-            background: linear-gradient(90deg, #4facfe, #00f2fe);
+            background: linear-gradient(90deg, #2196f3, #64b5f6); /* Blue gradient */
             border-radius: 2px;
             animation: progress 2s ease-in-out;
         }
@@ -465,10 +391,6 @@
             .content {
                 padding: 20px;
             }
-
-            .countdown-timer {
-                font-size: 1.5rem;
-            }
         }
 
         @media (max-width: 480px) {
@@ -484,10 +406,6 @@
                 width: 95%;
                 margin: 20% auto;
                 padding: 25px;
-            }
-
-            .countdown-timer {
-                font-size: 1.3rem;
             }
         }
     </style>
@@ -541,7 +459,7 @@
             <p>Are you sure you want to mark this request as done? This action cannot be undone.</p>
             <div class="modal-actions">
                 <button class="btn btn-success" onclick="confirmMarkDone()">Yes, Mark Done</button>
-                <button class="btn" onclick="closeModal()" style="background: #95a5a6; color: white;">Cancel</button>
+                <button class="btn" onclick="closeModal()" style="background: #90caf9; color: white;">Cancel</button>
             </div>
         </div>
     </div>
@@ -553,7 +471,7 @@
             <p>Are you sure you want to cancel this request? This action cannot be undone.</p>
             <div class="modal-actions">
                 <button class="btn btn-success" onclick="confirmMarkCancel()">Yes, Mark Cancel</button>
-                <button class="btn" onclick="closeModal()" style="background: red; color: white;">Cancel</button>
+                <button class="btn" onclick="closeModal()" style="background: #e57373; color: white;">Cancel</button>
             </div>
         </div>
     </div>
@@ -564,7 +482,7 @@
         const API_URL2 = 'https://script.google.com/macros/s/AKfycbxf_U4YKEkMFVh4YYLNQ9VBRmf9HGMTQAQxGULiDZq1_WnPyNcRCrdGUaHoxpHoB5dg/exec';
         let currentRequestIndex = null;
         let requestsData = [];
-        let countdownIntervals = [];
+        // countdownIntervals removed as countdown functionality is removed
 
         // Load requests on page load
         document.addEventListener('DOMContentLoaded', loadRequests);
@@ -574,7 +492,6 @@
         }
 
 
-        // THE SINGLE, CORRECT closeModal function - REMOVE THE DUPLICATE BELOW
         function closeModal() {
             document.getElementById('confirmModal').style.display = 'none';
             document.getElementById('customOrderModal').style.display = 'none';
@@ -619,7 +536,7 @@
                 if (data.success) {
                     requestsData = data.data;
                     displayRequests(requestsData);
-                    updateStats();
+                    // updateStats(); // Removed as stats are also removed or will not have overdue/urgent logic
 		            closeModal();
                 } else {
                     throw new Error(data.error || 'Failed to load requests');
@@ -635,7 +552,7 @@
             document.getElementById('requests-container').style.display = 'none';
             document.getElementById('empty-state').style.display = 'none';
             document.getElementById('error-state').style.display = 'none';
-            document.getElementById('stats').style.display = 'none';
+            // document.getElementById('stats').style.display = 'none'; // This line caused the error, removed as stats are no longer in HTML
         }
 
         function displayRequests(requests) {
@@ -676,10 +593,6 @@
                 
                 <div class="requester">${request.requesterName}</div>
                 
-                <div class="countdown-section">
-                    <div class="deadline-info">It will disappear 3 hrs. after the request time.</div>
-                </div>
-                
                 <div class="actions">
                     <a href="${request.googleSheetURL}" target="_blank" class="btn btn-primary">
                         📊 View Sheet
@@ -687,16 +600,13 @@
                     <button class="btn btn-success" onclick="markAsDone(${index})">
                         ✅ Mark Done
                     </button>
-                    <button class="btn btn-primary" onclick="markAsCancel(${index})" style="background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);">
+                    <button class="btn btn-primary" onclick="markAsCancel(${index})" style="background: linear-gradient(135deg, #f44336 0%, #e57373 100%);">
                         ❌ Cancel
                     </button>
                 </div>
             `;
             
-            // Start countdown for this card
-            setTimeout(() => {
-                startCountdown(card, deadline, card, index);
-            }, 100);
+            // Countdown initiation removed
             
             return card;
         }
@@ -837,7 +747,7 @@ async function checkMissingSuppliers(googleSheetURL) {
 	            <div class="modal-actions">
 	                <a href="${request.googleSheetURL}" target="_blank" class="btn btn-primary">📊 Open Sheet</a>
 	                <button class="btn btn-success" onclick="confirmMarkDone()">Proceed Anyway</button>
-	                <button class="btn" onclick="closeModal()" style="background: #95a5a6; color: white;">Cancel</button>
+	                <button class="btn" onclick="closeModal()" style="background: #90caf9; color: white;">Cancel</button>
 	            </div>
 	        `;
 	    } else {
@@ -863,7 +773,7 @@ async function checkMissingSuppliers(googleSheetURL) {
 	                <button class="btn btn-success" onclick="confirmMarkDone()">
 	                    Yes, Mark Done
 	                </button>
-	                <button class="btn" onclick="closeModal()" style="background: #95a5a6; color: white;">
+	                <button class="btn" onclick="closeModal()" style="background: #90caf9; color: white;">
 	                    Cancel
 	                </button>
 	            </div>
@@ -903,14 +813,11 @@ async function checkMissingSuppliers(googleSheetURL) {
                 const result = await response.json();
 
                 if (result.success) {
-                    if (countdownIntervals[currentRequestIndex]) {
-                        clearInterval(countdownIntervals[currentRequestIndex]);
-                    }
-
+                    // clearInterval for countdown removed
                     requestsData.splice(currentRequestIndex, 1);
-                    countdownIntervals.splice(currentRequestIndex, 1);
+                    // countdownIntervals.splice(currentRequestIndex, 1); // Removed
                     displayRequests(requestsData);
-                    updateStats();
+                    // updateStats(); // Removed
                     closeModal();
 
                     showSuccessMessage('Request marked as cancelled!');
@@ -951,15 +858,12 @@ async function checkMissingSuppliers(googleSheetURL) {
                 const result = await response.json();
                 
                 if (result.success) {
-                    if (countdownIntervals[currentRequestIndex]) {
-                        clearInterval(countdownIntervals[currentRequestIndex]);
-                    }
-                    
+                    // clearInterval for countdown removed
                     requestsData.splice(currentRequestIndex, 1);
-                    countdownIntervals.splice(currentRequestIndex, 1);
+                    // countdownIntervals.splice(currentRequestIndex, 1); // Removed
                     loadRequests();
-		    displayRequests(requestsData);
-                    updateStats();
+		            displayRequests(requestsData);
+                    // updateStats(); // Removed
                     closeModal();
                     
                     showSuccessMessage('Request marked as complete!');
@@ -981,7 +885,7 @@ async function checkMissingSuppliers(googleSheetURL) {
                 position: fixed;
                 top: 20px;
                 right: 20px;
-                background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+                background: linear-gradient(135deg, #4caf50 0%, #81c784 100%); /* Kept green for success */
                 color: white;
                 padding: 15px 25px;
                 border-radius: 10px;
@@ -1007,12 +911,12 @@ async function checkMissingSuppliers(googleSheetURL) {
             }
         }
 
-        // Cleanup intervals when page is unloaded
-        window.addEventListener('beforeunload', () => {
-            countdownIntervals.forEach(interval => {
-                if (interval) clearInterval(interval);
-            });
-        });
+        // Cleanup intervals when page is unloaded - removed as countdown intervals are no longer used
+        // window.addEventListener('beforeunload', () => {
+        //     countdownIntervals.forEach(interval => {
+        //         if (interval) clearInterval(interval);
+        //     });
+        // });
 
         // Add CSS animation for success message
         const style = document.createElement('style');

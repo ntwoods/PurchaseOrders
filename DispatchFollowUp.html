@@ -14,7 +14,7 @@
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #e0f2f7 0%, #bbdefb 100%); /* Light Blue Gradient */
             min-height: 100vh;
             padding: 20px;
         }
@@ -26,19 +26,19 @@
 
         .header {
             text-align: center;
-            color: white;
+            color: #0d47a1; /* Darker Blue for Header */
             margin-bottom: 30px;
         }
 
         .header h1 {
             font-size: 2.5rem;
             margin-bottom: 10px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
         }
 
         .loading {
             text-align: center;
-            color: white;
+            color: #1565c0; /* Blue for Loading Text */
             font-size: 1.2rem;
             margin: 50px 0;
         }
@@ -51,18 +51,18 @@
 
         /* Order Card styles */
         .order-card {
-            background: rgba(255, 255, 255, 0.95);
+            background: rgba(255, 255, 255, 0.95); /* White with slight transparency */
             border-radius: 15px;
             padding: 20px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255,255,255,0.3);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1); /* Lighter shadow */
+            backdrop-filter: blur(5px); /* Less blur */
+            border: 1px solid rgba(187, 222, 251, 0.5); /* Border matching gradient */
             transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
 
         .order-card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.2); /* Slightly more prominent shadow on hover */
         }
 
         .order-header {
@@ -71,13 +71,13 @@
             align-items: center;
             margin-bottom: 15px;
             padding-bottom: 10px;
-            border-bottom: 2px solid #f0f0f0;
+            border-bottom: 2px solid #e3f2fd; /* Lighter blue border */
         }
 
         .order-id {
             font-weight: bold;
             font-size: 1.1rem;
-            color: #333;
+            color: #212121; /* Dark grey for text */
         }
 
         .status-badge {
@@ -89,13 +89,13 @@
         }
 
         .status-active {
-            background: #e3f2fd;
-            color: #1976d2;
+            background: #e3f2fd; /* Lightest blue */
+            color: #1565c0; /* Medium blue */
         }
 
         .status-overdue {
-            background: #ffebee;
-            color: #d32f2f;
+            background: #ffcdd2; /* Light red for overdue */
+            color: #c62828; /* Dark red for overdue text */
             animation: pulse 2s infinite;
         }
 
@@ -118,18 +118,18 @@
 
         .detail-label {
             font-weight: 600;
-            color: #555;
+            color: #424242; /* Darker grey */
         }
 
         .detail-value {
-            color: #333;
+            color: #212121; /* Dark grey */
             text-align: right;
             max-width: 60%;
             word-wrap: break-word;
         }
 
         .countdown-section {
-            background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
+            background: linear-gradient(135deg, #bbdefb 0%, #90caf9 100%); /* Blue gradient for countdown */
             padding: 15px;
             border-radius: 10px;
             text-align: center;
@@ -139,20 +139,20 @@
         .countdown-title {
             font-size: 0.9rem;
             font-weight: bold;
-            color: #333;
+            color: #1976d2; /* Darker blue */
             margin-bottom: 8px;
         }
 
         .countdown-timer {
             font-size: 1.5rem;
             font-weight: bold;
-            color: #d32f2f;
+            color: #0d47a1; /* Even darker blue */
             font-family: 'Courier New', monospace;
         }
 
         .countdown-overdue {
             color: #fff;
-            background: #d32f2f;
+            background: #c62828; /* Dark red for overdue background */
             padding: 10px;
             border-radius: 8px;
             font-size: 1.2rem;
@@ -161,7 +161,7 @@
 
         .view-po-btn {
             display: inline-block;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #2196f3 0%, #1976d2 100%); /* Blue gradient button */
             color: white;
             padding: 8px 16px;
             text-decoration: none;
@@ -173,20 +173,21 @@
 
         .view-po-btn:hover {
             transform: scale(1.05);
+            background: linear-gradient(135deg, #1976d2 0%, #1565c0 100%);
         }
 
         /* Actions section styles */
         .actions-section {
             margin-top: 15px;
             padding: 15px;
-            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            background: linear-gradient(135deg, #90caf9 0%, #64b5f6 100%); /* Blue gradient for actions */
             border-radius: 10px;
         }
 
         .actions-title {
             font-size: 0.9rem;
             font-weight: bold;
-            color: white;
+            color: #0d47a1; /* Dark blue for title */
             margin-bottom: 10px;
             text-align: center;
         }
@@ -195,12 +196,12 @@
             display: flex;
             gap: 10px;
             margin-bottom: 10px;
-            flex-wrap: wrap; /* Allow buttons to wrap on smaller screens */
+            flex-wrap: wrap;
         }
 
         .action-btn {
             flex: 1;
-            min-width: 120px; /* Ensure buttons don't get too small */
+            min-width: 120px;
             padding: 10px 15px;
             border: none;
             border-radius: 20px;
@@ -208,35 +209,33 @@
             cursor: pointer;
             transition: all 0.3s ease;
             font-size: 0.9rem;
+            color: white; /* All action buttons will have white text */
         }
 
         .on-time-btn {
-            background: #4caf50;
-            color: white;
+            background: #4caf50; /* Green */
         }
 
         .on-time-btn:hover {
-            background: #45a049;
+            background: #43a047;
             transform: translateY(-2px);
         }
 
         .delayed-btn {
-            background: #ff9800;
-            color: white;
+            background: #ffb300; /* Amber/Orange */
         }
 
         .delayed-btn:hover {
-            background: #f57c00;
+            background: #fb8c00;
             transform: translateY(-2px);
         }
 
         .hold-btn {
-            background: #2196f3; /* Blue color for Hold */
-            color: white;
+            background: #2196f3; /* Blue */
         }
 
         .hold-btn:hover {
-            background: #1976d2;
+            background: #1e88e5;
             transform: translateY(-2px);
         }
 
@@ -246,11 +245,11 @@
             transform: none;
         }
 
-        .input-section { /* Generic class for all input sections */
+        .input-section {
             display: none;
             margin-top: 10px;
             padding: 10px;
-            background: rgba(255,255,255,0.2);
+            background: rgba(255,255,255,0.3); /* Lighter background for input section */
             border-radius: 8px;
         }
 
@@ -264,36 +263,38 @@
 
         .input-label {
             display: block;
-            color: white;
+            color: #0d47a1; /* Dark blue for labels */
             font-weight: bold;
             margin-bottom: 5px;
             font-size: 0.85rem;
         }
 
         .date-input,
-        .text-input { /* Apply styles to both date and text inputs */
+        .text-input {
             width: 100%;
             padding: 8px 12px;
-            border: none;
+            border: 1px solid #90caf9; /* Light blue border */
             border-radius: 5px;
             font-size: 0.9rem;
+            background-color: #e3f2fd; /* Very light blue input field background */
+            color: #212121;
         }
 
-        .submit-btn { /* Generic class for submit buttons */
+        .submit-btn {
             width: 100%;
             padding: 8px 15px;
-            background: #d32f2f;
+            background: #1e88e5; /* Blue submit button */
             color: white;
             border: none;
             border-radius: 5px;
             font-weight: bold;
             cursor: pointer;
             transition: background 0.3s ease;
-            margin-top: 5px; /* Add some margin for button groups */
+            margin-top: 5px;
         }
 
         .submit-btn:hover {
-            background: #c62828;
+            background: #1565c0;
         }
 
         .mark-hold-btn {
@@ -301,7 +302,7 @@
             color: white;
         }
         .mark-hold-btn:hover {
-            background: #45a049;
+            background: #43a047;
         }
 
         .cancel-hold-btn {
@@ -332,19 +333,19 @@
         }
 
         .error-message {
-            background: #ffebee;
-            color: #d32f2f;
+            background: #ffebee; /* Light red background for errors */
+            color: #c62828; /* Dark red text for errors */
             padding: 15px;
             border-radius: 10px;
             text-align: center;
             margin: 20px 0;
-            border-left: 4px solid #d32f2f;
+            border-left: 4px solid #c62828;
         }
 
         .refresh-btn {
-            background: rgba(255,255,255,0.2);
-            color: white;
-            border: 2px solid white;
+            background: #bbdefb; /* Light blue */
+            color: #1976d2; /* Medium blue */
+            border: 2px solid #64b5f6; /* Complementary blue border */
             padding: 10px 20px;
             border-radius: 25px;
             cursor: pointer;
@@ -354,8 +355,9 @@
         }
 
         .refresh-btn:hover {
-            background: white;
-            color: #667eea;
+            background: #90caf9;
+            color: #0d47a1;
+            border-color: #2196f3;
         }
     </style>
 </head>

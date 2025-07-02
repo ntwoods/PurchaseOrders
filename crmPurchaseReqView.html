@@ -548,9 +548,6 @@
                 if (!Array.isArray(result.data)) {
                     throw new Error("Expected 'data' to be an array");
                 }
-
-                // Assuming each request object in result.data contains a 'timestamp' property
-                // as per the user's description (row[6] for timestamp)
                 requests = result.data; 
                 renderRequests();
             } catch (error) {
@@ -840,7 +837,7 @@
                 action: 'submitResponse',
                 // Send the original timestamp received for the request
                 // assuming 'timestamp' is a property of the request object
-                timeStamp: selectedRequest.timestamp, 
+                id: selectedRequest.id, 
                 // Include details for updating Requests sheet column AH
                 dealer: selectedRequest.dealer, 
                 product: selectedRequest.product,

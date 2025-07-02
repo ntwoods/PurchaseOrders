@@ -500,22 +500,6 @@
             <p>Make corrections in Google Sheets & Then Verify PO by clicking on Mark Done.</p>
         </div>
 
-        <div class="content">
-            <div class="stats" id="stats" style="display: none;">
-                <div class="stat-card">
-                    <div class="stat-number" id="pending-count">0</div>
-                    <div class="stat-label">Pending Requests</div>
-                </div>
-                <div class="stat-card urgent">
-                    <div class="stat-number" id="urgent-count">0</div>
-                    <div class="stat-label">Urgent (< 10 min)</div>
-                </div>
-                <div class="stat-card overdue">
-                    <div class="stat-number" id="overdue-count">0</div>
-                    <div class="stat-label">Will Remove Soon</div>
-                </div>
-            </div>
-
             <div class="loading" id="loading">
                 <div class="loader"></div>
                 <p>Loading purchase requests...</p>
@@ -585,30 +569,6 @@
         // Load requests on page load
         document.addEventListener('DOMContentLoaded', loadRequests);
 
-        function calculateDeadline(requestDate) {
-            const request = new Date(requestDate);
-            const hour = request.getHours();
-            
-            // If request is made between 5:00 PM (17:00) and 7:00 PM (19:00)
-            if (hour >= 17 && hour < 19) {
-                let nextDay = new Date(request);
-                nextDay.setDate(request.getDate() + 1);
-                nextDay.setHours(10, 0, 0, 0); // Set to 10:00 AM
-                
-                // If next day is Sunday (0), move to Monday
-                if (nextDay.getDay() === 0) {
-                    nextDay.setDate(nextDay.getDate() + 1);
-                }
-                
-                return nextDay;
-            } else {
-                // Normal case: 30 minutes from request time
-                const deadline = new Date(request);
-                deadline.setMinutes(deadline.getMinutes() + 30);
-                return deadline;
-            }
-        }
-
         function createCustomOrder() {
             document.getElementById("customOrderModal").style.display = "block";
         }
@@ -649,95 +609,10 @@
                 alert("Error: " + err.message);
             }
         }
-
-
-        function formatCountdown(milliseconds) {
-            if (milliseconds <= 0) {
-                return { text: 'Will Remove Soon', isOverdue: true };
-            }
-            
-            const totalSeconds = Math.floor(milliseconds / 1000);
-            const hours = Math.floor(totalSeconds / 3600);
-            const minutes = Math.floor((totalSeconds % 3600) / 60);
-            const seconds = totalSeconds % 60;
-            
-            if (hours > 0) {
-                return { 
-                    text: `${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`,
-                    isOverdue: false,
-                    isUrgent: false
-                };
-            } else {
-                return { 
-                    text: `${minutes}:${seconds.toString().padStart(2, '0')}`,
-                    isOverdue: false,
-                    isUrgent: minutes < 10
-                };
-            }
-        }
-
-        function updateCountdown(element, deadline, card, index) {
-            const now = new Date().getTime();
-            const timeLeft = deadline.getTime() - now;
-            const countdown = formatCountdown(timeLeft);
-            
-            const timerElement = element.querySelector('.countdown-timer');
-            const labelElement = element.querySelector('.countdown-label');
-            const sectionElement = element.querySelector('.countdown-section');
-            const deadlineInfo = element.querySelector('.deadline-info');
-            
-            timerElement.textContent = countdown.text;
-            
-            // Remove all status classes
-            timerElement.classList.remove('urgent', 'overdue');
-            labelElement.classList.remove('overdue');
-            sectionElement.classList.remove('urgent', 'overdue');
-            deadlineInfo.classList.remove('overdue');
-            card.classList.remove('urgent', 'overdue');
-            
-            if (countdown.isOverdue) {
-                timerElement.classList.add('overdue');
-                labelElement.classList.add('overdue');
-                sectionElement.classList.add('overdue');
-                deadlineInfo.classList.add('overdue');
-                card.classList.add('overdue');
-                labelElement.textContent = 'Will disappear soon!';
-            } else if (countdown.isUrgent) {
-                timerElement.classList.add('urgent');
-                sectionElement.classList.add('urgent');
-                card.classList.add('urgent');
-                labelElement.textContent = 'Time Remaining (URGENT)';
-            } else {
-                labelElement.textContent = 'Time Remaining';
-            }
-        }
-
-        function startCountdown(element, deadline, card, index) {
-            // Clear existing interval if any
-            if (countdownIntervals[index]) {
-                clearInterval(countdownIntervals[index]);
-            }
-            
-            // Initial update
-            updateCountdown(element, deadline, card, index);
-            
-            // Set up interval for live updates
-            countdownIntervals[index] = setInterval(() => {
-                updateCountdown(element, deadline, card, index);
-                updateStats(); // Update stats in real-time
-            }, 1000);
-        }
-
         async function loadRequests() {
             showLoading();
             
-            try {
-                // Clear existing intervals
-                countdownIntervals.forEach(interval => {
-                    if (interval) clearInterval(interval);
-                });
-                countdownIntervals = [];
-                
+            try {            
                 const response = await fetch(API_URL);
                 const data = await response.json();
                 
@@ -790,18 +665,9 @@
             card.className = 'request-card';
             
             const timestamp = new Date(request.timestamp);
-            const deadline = calculateDeadline(request.timestamp);
             const formattedDate = timestamp.toLocaleDateString();
             const formattedTime = timestamp.toLocaleTimeString();
-            const deadlineFormatted = deadline.toLocaleDateString() + ' ' + deadline.toLocaleTimeString();
-            
-            // Determine if it's a special deadline (5-7 PM rule)
-            const hour = timestamp.getHours();
-            const isSpecialDeadline = hour >= 17 && hour < 19;
-            const deadlineText = isSpecialDeadline ? 
-                `Next business day at ${deadline.toLocaleTimeString()}` : 
-                `30 minutes from request`;
-            
+                     
             card.innerHTML = `
                 <div class="request-header">
                     <div class="request-id">REQ #${index + 1}</div>
@@ -811,8 +677,6 @@
                 <div class="requester">${request.requesterName}</div>
                 
                 <div class="countdown-section">
-                    <div class="countdown-timer">--:--</div>
-                    <div class="countdown-label">Time Remaining</div>
                     <div class="deadline-info">It will disappear 3 hrs. after the request time.</div>
                 </div>
                 
@@ -835,29 +699,6 @@
             }, 100);
             
             return card;
-        }
-
-        function updateStats() {
-            let pendingCount = requestsData.length;
-            let urgentCount = 0;
-            let overdueCount = 0;
-            
-            requestsData.forEach((request) => {
-                const deadline = calculateDeadline(request.timestamp);
-                const now = new Date().getTime();
-                const timeLeft = deadline.getTime() - now;
-                
-                if (timeLeft <= 0) {
-                    overdueCount++;
-                } else if (timeLeft <= 10 * 60 * 1000) { // Less than 10 minutes
-                    urgentCount++;
-                }
-            });
-            
-            document.getElementById('pending-count').textContent = pendingCount;
-            document.getElementById('urgent-count').textContent = urgentCount;
-            document.getElementById('overdue-count').textContent = overdueCount;
-            document.getElementById('stats').style.display = pendingCount > 0 ? 'grid' : 'none';
         }
 
         function showError(message) {

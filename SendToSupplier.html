@@ -508,15 +508,22 @@ async function markCancel(googleSheetURL, cardId, timestamp, requesterName) {
         if (result.data && result.data.length > 0) {
           document.getElementById('emptyState').classList.add('hidden');
 
-          result.data.forEach((request, index) => {
-            setTimeout(() => {
-              const card = createCard(request, index);
-              container.appendChild(card);
-            }, index * 100); // Stagger animations
-          });
-
-          updateStatistics(result.data);
-          showNotification(`Loaded ${result.data.length} pending task(s)`);
+	result.data.forEach((request, index) => {
+	  setTimeout(() => {
+	    const card = createCard(request, index);
+	    container.appendChild(card);
+	    
+	    // Apply read-only mode to this specific card after it's created
+	    if (window.setReadOnlyMode) {
+	      setTimeout(() => {
+	        window.setReadOnlyMode();
+	      }, 10);
+	    }
+	  }, index * 100); // Stagger animations
+	});
+	
+	updateStatistics(result.data);
+	showNotification(`Loaded ${result.data.length} pending task(s)`);
         } else {
           document.getElementById('emptyState').classList.remove('hidden');
           updateStatistics([]);
@@ -543,15 +550,7 @@ async function markCancel(googleSheetURL, cardId, timestamp, requesterName) {
 	} finally {
 	        // Reset refresh button
 	        refreshIcon.style.animation = '';
-	        refreshBtn.disabled = false;
-	        
-	        // Apply read-only mode after cards are created
-	        if (window.setReadOnlyMode) {
-	          // Use setTimeout to ensure DOM is fully updated
-	          setTimeout(() => {
-	            window.setReadOnlyMode();
-	          }, 50);
-	        }
+	        refreshBtn.disabled = false;        
 	      }
     	}
 

@@ -491,6 +491,9 @@
                         this.previousOrderCount = newOrderCount;
                         this.orders = result.data;
                         this.renderOrders();
+		            if (typeof setReadOnlyMode === "function") {
+		                  setReadOnlyMode();
+		                }			    
                         this.updateStatus();
                         
                         document.getElementById('loading').style.display = 'none';
@@ -533,7 +536,7 @@
 			    </button>
 			  </div>
 			</a>
-
+			<div class="editable">		
                         <div class="dispatch-section">
                             <label class="dispatch-label" for="dispatch-date-${index}">
                                 📅 Dispatch Date *
@@ -585,6 +588,7 @@
                                 </button>
                             </div>
                         </div>
+			</div>
                     </div>
                 `).join('');
             }
@@ -817,5 +821,6 @@
             }
         });
     </script>
+   <script src="https://ntwoods.github.io/ordertodispatch/js/viewOnly.js"></script>
 </body>
 </html>

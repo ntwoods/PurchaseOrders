@@ -694,6 +694,9 @@
                 
                 // Start countdown timers for each order
                 startCountdownTimers();
+                if (typeof setReadOnlyMode === "function") {
+                  setReadOnlyMode();
+                }                
                 
             } catch (error) {
                 console.error('Error loading orders:', error);

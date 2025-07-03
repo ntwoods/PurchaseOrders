@@ -540,15 +540,20 @@ async function markCancel(googleSheetURL, cardId, timestamp, requesterName) {
           </div>
         `;
         showNotification('Failed to load data', 'error');
-      } finally {
-        // Reset refresh button
-        refreshIcon.style.animation = '';
-        refreshBtn.disabled = false;
-            if (window.setReadOnlyMode) { // Ensure the function exists before calling
-                window.setReadOnlyMode();
-            }
-      }
-    }
+	} finally {
+	        // Reset refresh button
+	        refreshIcon.style.animation = '';
+	        refreshBtn.disabled = false;
+	        
+	        // Apply read-only mode after cards are created
+	        if (window.setReadOnlyMode) {
+	          // Use setTimeout to ensure DOM is fully updated
+	          setTimeout(() => {
+	            window.setReadOnlyMode();
+	          }, 50);
+	        }
+	      }
+    	}
 
     function updateDebugInfo(result) {
       const debugElement = document.getElementById('debugInfo');

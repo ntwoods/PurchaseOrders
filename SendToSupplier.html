@@ -654,6 +654,7 @@ async function markCancel(googleSheetURL, cardId, timestamp, requesterName) {
             <span>📊</span>
             <span>View PO</span>
           </a>
+	  <div class="editable">		
           <button
             onclick="markDone('${request.googleSheetURL}', '${cardId}', '${request.timestamp}', '${request.requesterName}')"
             class="btn btn-done"
@@ -702,6 +703,7 @@ async function markCancel(googleSheetURL, cardId, timestamp, requesterName) {
             </button>
           </div>
         </div>
+	</div>
       `;
 
       startCountdown(deadline, countdownId);
@@ -842,5 +844,6 @@ async function markCancel(googleSheetURL, cardId, timestamp, requesterName) {
       if (autoRefreshInterval) clearInterval(autoRefreshInterval);
     });
   </script>
+<script src="https://ntwoods.github.io/ordertodispatch/js/viewOnly.js"></script>
 </body>
 </html>

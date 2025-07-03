@@ -587,6 +587,9 @@
                 }
                 
                 renderOrders();
+		if (typeof setReadOnlyMode === "function") {
+		  setReadOnlyMode();
+		}		    
                 showLoading(false);
             } catch (error) {
                 console.error('Error loading orders:', error);
@@ -644,7 +647,7 @@
                             📋 G-Sheet
                         </a> 
                     </div>
-
+		<div class="editable">
                     <form id="orderForm${index}" class="form-section">
                         <div class="form-item">
                             <label for="expectedDeliveryDate${index}">
@@ -697,6 +700,7 @@
                             ✅ Submit Order Details
                         </button>
                     </form>
+		</div>
                 </div>
             `).join('');
 
@@ -864,5 +868,14 @@
             });
         }
     </script>
+	<script src="https://ntwoods.github.io/ordertodispatch/js/viewOnly.js"></script>
+    <script>
+      // Wait until DOM is loaded, then check and apply readonly mode
+      document.addEventListener('DOMContentLoaded', () => {
+        if (typeof setReadOnlyMode === "function") {
+          setReadOnlyMode();
+        }
+      });
+    </script>	
 </body>
 </html>

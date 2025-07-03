@@ -836,10 +836,12 @@ async function markCancel(googleSheetURL, cardId, timestamp, requesterName) {
     }
 
     // Initialize on load
-    window.addEventListener('load', fetchData);
-	if (typeof setReadOnlyMode === "function") {
-	      setReadOnlyMode();
-	    }	  
+	window.addEventListener('load', () => {
+	  fetchData();
+	  if (typeof setReadOnlyMode === "function") {
+	    setReadOnlyMode();
+	  }
+	});
 
     // Cleanup intervals on page unload
     window.addEventListener('beforeunload', () => {

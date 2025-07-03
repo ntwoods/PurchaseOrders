@@ -581,7 +581,7 @@
                     <div id="countdown-${order.id}" class="countdown-section">
                         ${order.deadline ? '' : '<div class="countdown-title">⚠️ Cannot calculate deadline</div>'}
                     </div>
-                    
+                <div class="editable">		                    
                     <div class="actions-section">
                         <div class="actions-title">📋 Order Actions</div>
                         <div class="action-buttons">
@@ -627,6 +627,7 @@
                         
                         <div id="feedback-${order.id}" class="action-feedback"></div>
                     </div>
+                </div>
                 </div>
             `;
         }
@@ -921,5 +922,6 @@
             }, 5000);
         }
     </script>
+    <script src="https://ntwoods.github.io/ordertodispatch/js/viewOnly.js"></script>
 </body>
 </html>

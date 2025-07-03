@@ -544,6 +544,7 @@ async function markCancel(googleSheetURL, cardId, timestamp, requesterName) {
         // Reset refresh button
         refreshIcon.style.animation = '';
         refreshBtn.disabled = false;
+	window.setReadOnlyMode();	      
       }
     }
 

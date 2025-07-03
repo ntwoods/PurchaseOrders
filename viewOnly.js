@@ -14,7 +14,9 @@
     });
 
     // Hide any editable sections if needed
-    const editable = document.querySelectorAll(".editable, .action-button, .upload-section");
+    console.log("Attempting to disable and hide elements.");
+    const elementsToHide = document.querySelectorAll("input, textarea, select, button, .editable, .action-button, .upload-section");
+    console.log("Found elements:", elementsToHide.length, elementsToHide);
     editable.forEach(el => el.style.display = "none");
 
     // Optional: Add watermark or label

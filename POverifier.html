@@ -413,7 +413,9 @@
 <body>
     <div class="container">
         <div class="header">
+	  <div class="editable">		
             <button class="refresh-btn" onclick="createCustomOrder()">🔮 Create Custom Order</button>
+	  </div>
             <h1>Purchase Order Management</h1>
             <p>Make corrections in Google Sheets & Then Verify PO by clicking on Mark Done.</p>
         </div>
@@ -536,6 +538,9 @@
                 if (data.success) {
                     requestsData = data.data;
                     displayRequests(requestsData);
+	            if (typeof setReadOnlyMode === "function") {
+	                  setReadOnlyMode();
+	                }			
                     // updateStats(); // Removed as stats are also removed or will not have overdue/urgent logic
 		            closeModal();
                 } else {
@@ -592,7 +597,7 @@
                 </div>
                 
                 <div class="requester">${request.requesterName}</div>
-                
+                <div class="editable">		
                 <div class="actions">
                     <a href="${request.googleSheetURL}" target="_blank" class="btn btn-primary">
                         📊 View Sheet
@@ -604,6 +609,7 @@
                         ❌ Cancel
                     </button>
                 </div>
+		</div>
             `;
             
             // Countdown initiation removed

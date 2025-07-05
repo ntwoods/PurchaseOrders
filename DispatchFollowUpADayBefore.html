@@ -579,6 +579,8 @@
                             <div class="input-group">
                                 <label class="input-label">Next Dispatch Date:</label>
                                 <input type="date" id="next-dispatch-${order.id}" class="date-input" required>
+                                <label for="delayed-reason-${order.id}" class="input-label">Delayed Reason:</label>
+                                <input type="text" id="delayed-reason-${order.id}" class="date-input" required>                                  
                             </div>
                             <button class="submit-delayed-btn" onclick="handleDelayed('${order.timestamp}', '${order.id}')">
                                 Submit Delayed
@@ -801,6 +803,8 @@
         async function handleDelayed(timestamp, orderId) {
             const nextDispatchInput = document.getElementById(`next-dispatch-${orderId}`);
             const nextDispatchDate = nextDispatchInput.value; // YYYY-MM-DD format from input type="date"
+            const delayedRemarkInput = document.getElementById(`delayed-reason-${orderId}`);
+            const delayedRemarkText = delayedRemarkInput.value; 
             const submitButton = event.target;
             const feedback = document.getElementById(`feedback-${orderId}`);
             
@@ -823,6 +827,7 @@
                     body: JSON.stringify({
                         action: 'delayed',
                         timestamp: formatTimestampForSheet(timestamp),
+                        delayedRemark: delayedRemarkText,
                         nextDispatchDate: nextDispatchDate // Send as YYYY-MM-DD
                     })
                 });

@@ -350,6 +350,42 @@
         padding: 20px;
       }
     }
+	/* Styling for the New Remark Section */
+	.remark-container {
+	    grid-column: 2; /* Position it in the second column */
+	    grid-row: 3; /* Position it in the third row, below the Order File button */
+	    background-color: #f8f8f8; /* Light background for the remark area */
+	    border: 1px solid #ddd;
+	    border-radius: 8px;
+	    padding: 10px;
+	    display: flex;
+	    flex-direction: column; /* Stack label and text */
+	    justify-content: center; /* Center content vertically if space allows */
+	    align-items: flex-start; /* Align text to the start */
+	    overflow: hidden; /* Hide overflow if text is too long for its container */
+	    max-height: 100px; /* Optional: Set a max height to prevent it from growing too large */
+	    word-wrap: break-word; /* Break long words */
+	    box-sizing: border-box; /* Include padding and border in the element's total width and height */
+	}
+	
+	.remark-label {
+	    font-weight: bold;
+	    color: #555;
+	    margin-bottom: 5px; /* Space between label and text */
+	    font-size: 0.85em; /* Smaller font for label */
+	}
+	
+	.remark-text {
+	    font-size: 0.9em; /* Smaller font for the remark text */
+	    color: #666;
+	    line-height: 1.4;
+	    text-overflow: ellipsis; /* Add ellipsis for overflow */
+	    display: -webkit-box;
+	    -webkit-line-clamp: 3; /* Limit to 3 lines, adjust as needed */
+	    -webkit-box-orient: vertical;
+	    overflow: hidden; /* Hide overflow */
+	}
+	  
   </style>
 </head>
 <body>
@@ -517,6 +553,10 @@ function formatDate(dateStr) {
           <a href="${order.orderDataSheet}" target="_blank" class="btn-custom btn-view" style="background: orange; color: black;">
 	  <i class="fas fa-file-order"></i> Order File
 	  </a>
+	<div class="remark-container">
+	    <div class="remark-label">Remark:</div>
+	    <div class="remark-text">"${order.remark}"</div>
+	</div>   
           <button class="btn-custom btn-received received-btn" class="button-grid" 
                   data-original-timestamp="${order.timestamp}" 
                   data-normalized-timestamp="${normalizedTimestamp}" 

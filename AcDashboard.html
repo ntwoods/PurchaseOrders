@@ -370,6 +370,9 @@
             if (data.success && data.data) {
                 orders = data.data; // Store fetched orders
                 renderOrders();      // Render orders in the table
+	    if (typeof setReadOnlyMode === "function") {
+		  setReadOnlyMode();
+		}			    
                 updateLastUpdated(); // Update last updated timestamp
                 
                 // Show empty state or table based on number of orders
@@ -414,15 +417,18 @@
                 <td class="po-number">${order.purchaseOrderNumber}</td>
                 <td class="supplier-name">${order.supplierName}</td>
                 <td>
-                    ${order.invoiceUrl ? 
+		<div class="editable">
+		    ${order.invoiceUrl ? 
                         `<button class="invoice-btn" 
                                 onclick="showInvoice('${order.invoiceUrl}')">
                             <i class="fas fa-file-invoice"></i> Show Invoice
                         </button>` 
                         : 'N/A' // Display 'N/A' if invoiceUrl is not available
                     }
+		</div>
                 </td>
-                <td>
+                <div class="editable">
+		<td>
                     <button class="action-btn ${isCompleted ? 'completed' : ''}" 
                             id="markDoneBtn-${order.purchaseOrderNumber}"
                             onclick="markDone(this, '${order.purchaseOrderNumber}')"
@@ -431,6 +437,7 @@
                         ${isCompleted ? 'Completed' : 'Mark Done'}
                     </button>
                 </td>
+		</div>
             `;
             
             tbody.appendChild(row);
@@ -537,5 +544,6 @@
     // Initial load of orders when the page loads
     fetchOrders();
 </script>
+   <script src="https://ntwoods.github.io/ordertodispatch/js/viewOnly.js"></script>	
 </body>
 </html>

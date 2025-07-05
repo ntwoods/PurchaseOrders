@@ -540,6 +540,10 @@
                         </div>
                         ` : ''}
                         <div class="detail-row">
+                            <span class="detail-label">🪵 Delayed Reason:</span>
+                            <span class="detail-value">${order.delayedRemark || 'N/A'}</span>
+                        </div>                      
+                        <div class="detail-row">
                             <span class="detail-label">📋 View PO:</span>
                             <span class="detail-value">
                                 ${order.googleSheetURL ? 

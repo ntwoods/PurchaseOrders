@@ -350,42 +350,113 @@
         padding: 20px;
       }
     }
-	/* Styling for the New Remark Section */
+/* ... (Previous CSS for order-card, button-grid, action-button, remark-container, remark-label, remark-text) ... */
+
+/* Adjust remark-container for button */
 	.remark-container {
-	    grid-column: 2; /* Position it in the second column */
-	    grid-row: 3; /* Position it in the third row, below the Order File button */
-	    background-color: #f8f8f8; /* Light background for the remark area */
-	    border: 1px solid #ddd;
-	    border-radius: 8px;
-	    padding: 10px;
-	    display: flex;
-	    flex-direction: column; /* Stack label and text */
-	    justify-content: center; /* Center content vertically if space allows */
-	    align-items: flex-start; /* Align text to the start */
-	    overflow: hidden; /* Hide overflow if text is too long for its container */
-	    max-height: 100px; /* Optional: Set a max height to prevent it from growing too large */
-	    word-wrap: break-word; /* Break long words */
-	    box-sizing: border-box; /* Include padding and border in the element's total width and height */
-	}
-	
-	.remark-label {
-	    font-weight: bold;
-	    color: #555;
-	    margin-bottom: 5px; /* Space between label and text */
-	    font-size: 0.85em; /* Smaller font for label */
+	    /* ... existing styles ... */
+	    display: flex; /* Change to flex */
+	    flex-direction: column; /* Stack label, text, and button */
+	    justify-content: space-between; /* Push button to bottom */
+	    align-items: flex-start;
+	    padding-bottom: 5px; /* Adjust padding if needed to make space for button */
 	}
 	
 	.remark-text {
-	    font-size: 0.9em; /* Smaller font for the remark text */
-	    color: #666;
-	    line-height: 1.4;
-	    text-overflow: ellipsis; /* Add ellipsis for overflow */
-	    display: -webkit-box;
-	    -webkit-line-clamp: 3; /* Limit to 3 lines, adjust as needed */
-	    -webkit-box-orient: vertical;
-	    overflow: hidden; /* Hide overflow */
+	    /* ... existing styles for truncation ... */
+	    margin-bottom: 5px; /* Space between text and button */
 	}
-	  
+	
+	.read-more-btn {
+	    background: none;
+	    border: none;
+	    color: #007bff; /* Link-like blue */
+	    text-decoration: underline;
+	    cursor: pointer;
+	    font-size: 0.8em;
+	    padding: 0;
+	    align-self: flex-end; /* Align to the right within the flex container */
+	    margin-top: auto; /* Push to the bottom */
+	}
+	
+	.read-more-btn:hover {
+	    color: #0056b3;
+	}
+	
+	/* Modal Styles */
+	.modal {
+	    display: none; /* Hidden by default */
+	    position: fixed; /* Stay in place */
+	    z-index: 1000; /* Sit on top */
+	    left: 0;
+	    top: 0;
+	    width: 100%; /* Full width */
+	    height: 100%; /* Full height */
+	    overflow: auto; /* Enable scroll if needed */
+	    background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+	    backdrop-filter: blur(5px); /* Optional: Adds a blur effect behind the modal */
+	    -webkit-backdrop-filter: blur(5px); /* Safari support */
+	    display: flex; /* Use flexbox to center content */
+	    align-items: center; /* Center vertically */
+	    justify-content: center; /* Center horizontally */
+	}
+	
+	.modal-content {
+	    background-color: #fefefe;
+	    margin: auto; /* For browsers that don't support flex centering */
+	    padding: 20px;
+	    border-radius: 10px;
+	    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+	    width: 80%; /* Could be max-width for responsiveness */
+	    max-width: 500px; /* Max width for the modal */
+	    position: relative; /* For absolute positioning of close button */
+	    animation: fadeInScale 0.3s ease-out forwards; /* Simple animation */
+	}
+	
+	.modal-content h2 {
+	    margin-top: 0;
+	    color: #333;
+	    font-size: 1.5em;
+	    border-bottom: 1px solid #eee;
+	    padding-bottom: 10px;
+	    margin-bottom: 15px;
+	}
+	
+	.modal-content p {
+	    color: #555;
+	    line-height: 1.6;
+	    white-space: pre-wrap; /* Preserves whitespace and line breaks from the original remark */
+	}
+	
+	.close-button {
+	    color: #aaa;
+	    float: right;
+	    font-size: 28px;
+	    font-weight: bold;
+	    position: absolute;
+	    top: 10px;
+	    right: 15px;
+	    cursor: pointer;
+	}
+	
+	.close-button:hover,
+	.close-button:focus {
+	    color: #000;
+	    text-decoration: none;
+	    cursor: pointer;
+	}
+	
+	/* Animation for Modal */
+	@keyframes fadeInScale {
+	    from {
+	        opacity: 0;
+	        transform: scale(0.9);
+	    }
+	    to {
+	        opacity: 1;
+	        transform: scale(1);
+	    }
+	}	  
   </style>
 </head>
 <body>
@@ -553,11 +624,19 @@ function formatDate(dateStr) {
           <a href="${order.orderDataSheet}" target="_blank" class="btn-custom btn-view" style="background: orange; color: black;">
 	  <i class="fas fa-file-order"></i> Order File
 	  </a>
-	<div class="remark-container">
-	    <div class="remark-label">Remark:</div>
-	    <div class="remark-text">"${order.remark}"</div>
-	</div>   
+        <div class="remark-container">
+            <div class="remark-label">Remark:</div>
+            <div class="remark-text" data-full-remark=${order.remark}
+            </div>
+            <button class="read-more-btn">Read More</button> </div>
           <button class="btn-custom btn-received received-btn" class="button-grid" 
+	<div id="remark-modal" class="modal">
+	    <div class="modal-content">
+	        <span class="close-button">&times;</span>
+	        <h2>Order Remark</h2>
+	        <p id="full-remark-content"></p>
+	    </div>
+	</div>	  
                   data-original-timestamp="${order.timestamp}" 
                   data-normalized-timestamp="${normalizedTimestamp}" 
                   data-display-timestamp="${displayTimestamp}">

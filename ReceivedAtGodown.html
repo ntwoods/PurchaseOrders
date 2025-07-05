@@ -553,17 +553,17 @@ function formatDate(dateStr) {
           <a href="${order.orderDataSheet}" target="_blank" class="btn-custom btn-view" style="background: orange; color: black;">
 	  <i class="fas fa-file-order"></i> Order File
 	  </a>
-	<div class="remark-container">
-	    <div class="remark-label">Remark:</div>
-	    <div class="remark-text">"${order.remark}"</div>
-	</div>   
           <button class="btn-custom btn-received received-btn" class="button-grid" 
                   data-original-timestamp="${order.timestamp}" 
                   data-normalized-timestamp="${normalizedTimestamp}" 
                   data-display-timestamp="${displayTimestamp}">
             <i class="fas fa-check-circle"></i> Received
           </button>
-	  </div>
+	<div class="remark-container">
+	    <div class="remark-label">Remark:</div>
+	    <div class="remark-text">"${order.remark}"</div>
+	</div>     
+	</div>
       `;
       
       container.appendChild(card);

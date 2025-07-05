@@ -645,7 +645,17 @@
                         </a>
                         <a href="${order.orderSheet}" target="_blank" class="show-po-btn">
                             📋 G-Sheet
-                        </a> 
+                        </a>
+                        <div class="editable">
+			<div class="form-item">
+                            <label for="remark${index}">
+                                📝 Remark
+                            </label>
+                            <div class="input-wrapper">
+                                <input type="text" id="remark${index}" class="date-field" placeholder="Enter remarks here...">
+                            </div>
+                        </div>
+			</div>
                     </div>
 		<div class="editable">
                     <form id="orderForm${index}" class="form-section">
@@ -798,6 +808,7 @@
             const billToShipTo = document.getElementById(`billToShipTo${orderIndex}`).value;
             const dispatchFiles = document.getElementById(`dispatchDetails${orderIndex}`).files;
             const invoiceFiles = document.getElementById(`invoice${orderIndex}`).files;
+            const remark = document.getElementById(`remark${orderIndex}`).value;		
             if (!expectedDeliveryDate) throw new Error('Expected Delivery Date is required');
             if (!dispatchFiles || dispatchFiles.length === 0) throw new Error('Dispatch details file is required');
             if (!invoiceFiles || invoiceFiles.length === 0) throw new Error('Invoice file is required');
@@ -832,6 +843,7 @@
                 expectedDeliveryDate,
                 billToShipTo,
                 dispatchFileArray,
+		remark,		    
                 invoiceFileArray
             };
 

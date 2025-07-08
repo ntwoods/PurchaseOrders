@@ -156,7 +156,7 @@
                         <table class="min-w-full divide-y divide-gray-200">
                             <thead class="table-header">
                                 <tr>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider rounded-tl-xl">Order Date</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider rounded-tl-xl">PO Number</th>
                                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Supplier Name</th>
                                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Status</th>
                                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Expected Dispatch</th>
@@ -343,7 +343,7 @@
                 }
 
                 row.innerHTML = `
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-800">${formatDateTime(order.poNumber)}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-800">${order.poNumber}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-800">${order.supplierName || 'N/A'}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-800">${orderStatusDisplay}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-800">${formatDateTime(order.expectedDispatchDate)}</td>

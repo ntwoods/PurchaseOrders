@@ -14,12 +14,13 @@
             color: #333;
         }
         .container {
-            max-width: 1200px;
+            max-width: 1600px; /* Increased max-width for more landscape view */
             margin: 0 auto;
             background-color: #ffffff;
             padding: 30px;
             border-radius: 8px;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            overflow-x: auto; /* Allow horizontal scrolling if table overflows */
         }
         h1 {
             text-align: center;
@@ -29,6 +30,7 @@
         }
         table {
             width: 100%;
+            min-width: 1000px; /* Give the table a minimum width to prevent excessive squeezing */
             border-collapse: collapse;
             margin-top: 20px;
         }
@@ -72,8 +74,37 @@
             font-style: italic;
             color: #757575;
         }
-        /* Responsive Table */
+
+        /* Specific widths and nowrap for critical columns */
+        th:nth-child(1), td:nth-child(1) { /* PO Number */
+            min-width: 120px;
+            white-space: nowrap;
+        }
+        th:nth-child(2), td:nth-child(2) { /* Supplier Name */
+            min-width: 250px; /* Give more space for longer names */
+            white-space: nowrap;
+        }
+        /* Apply nowrap and min-width to all date columns, and others as needed */
+        th:nth-child(3), td:nth-child(3), /* Send To Supplier */
+        th:nth-child(4), td:nth-child(4), /* Dispatch Date */
+        th:nth-child(5), td:nth-child(5), /* Dispatch Follow Up Reminder */
+        th:nth-child(6), td:nth-child(6), /* Follow Up A Day Before */
+        th:nth-child(7), td:nth-child(7), /* Dispatch Details Received */
+        th:nth-child(8), td:nth-child(8), /* Expected Delivery Date */
+        th:nth-child(9), td:nth-child(9)  /* Invoice URL */
+        {
+            white-space: nowrap; /* Prevent text wrapping */
+            min-width: 100px; /* Adjust as needed for content */
+        }
+        
+        /* Responsive Table adjustments for smaller screens */
         @media screen and (max-width: 768px) {
+            .container {
+                padding: 15px; /* Adjust padding for small screens */
+            }
+            table {
+                min-width: unset; /* Remove min-width on small screens for better fluidity */
+            }
             table, thead, tbody, th, td, tr {
                 display: block;
             }
@@ -92,6 +123,7 @@
                 position: relative;
                 padding-left: 50%;
                 text-align: right;
+                white-space: normal; /* Allow wrapping on small screens */
             }
             td:before {
                 position: absolute;
@@ -104,7 +136,7 @@
                 font-weight: 700;
                 color: #555;
             }
-            /* Data-title attributes for responsive view */
+            /* Data-title attributes for responsive view - ensure these match your TH order */
             td:nth-of-type(1):before { content: "PO Number"; }
             td:nth-of-type(2):before { content: "Supplier Name"; }
             td:nth-of-type(3):before { content: "Send To Supplier"; }            
@@ -166,15 +198,11 @@
             if (!isoString) return '';
             try {
                 const date = new Date(isoString);
-                // Adjust for local time if necessary or display as UTC depending on requirement
+                // Only display year, month, and day for DD/MM/YYYY format
                 return date.toLocaleString('en-IN', {
                     year: 'numeric',
                     month: '2-digit',
-                    day: '2-digit',
-                    hour: '2-digit',
-                    minute: '2-digit',
-                    second: '2-digit',
-                    hour12: false
+                    day: '2-digit'
                 });
             } catch (e) {
                 return isoString; // Return original if invalid date
@@ -199,7 +227,7 @@
                     let cellContent = item[key];
 
                     // Apply special formatting for dates
-                    if (key.includes('Date') || key.includes('Reminder') || key.includes('Day')) { // Fixed typo here
+                    if (key.includes('Date') || key.includes('Reminder') || key.includes('Day')) {
                         cellContent = formatDate(cellContent);
                     }
 
@@ -239,6 +267,16 @@
                 const bValue = b[sortKey];
 
                 if (typeof aValue === 'string' && typeof bValue === 'string') {
+                    // Handle date string sorting for date columns
+                    if (sortKey.includes('Date') || sortKey.includes('Reminder') || sortKey.includes('Day')) {
+                        const dateA = new Date(aValue);
+                        const dateB = new Date(bValue);
+                        if (isNaN(dateA.getTime()) && isNaN(dateB.getTime())) return 0; // Both invalid dates
+                        if (isNaN(dateA.getTime())) return isAscending ? 1 : -1; // Invalid date goes last
+                        if (isNaN(dateB.getTime())) return isAscending ? -1 : 1; // Invalid date goes last
+                        return isAscending ? dateA.getTime() - dateB.getTime() : dateB.getTime() - dateA.getTime();
+                    }
+                    // For other strings, use localeCompare
                     return isAscending ? aValue.localeCompare(bValue) : bValue.localeCompare(aValue);
                 }
                 if (typeof aValue === 'number' && typeof bValue === 'number') {

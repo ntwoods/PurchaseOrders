@@ -490,8 +490,8 @@
 		
 		calculateDeadline(timestamp) {
 		    const date = new Date(timestamp);
-		    date.setDate(date.getDate() + 1); // Next day
-		    date.setHours(18, 0, 0, 0); // 6:00 PM
+		    date.setDate(date.getDate()); // Next day
+		    date.setHours(20, 0, 0, 0); // 8:00 PM
 		
 		    // If deadline is Sunday, shift to Monday 6:00 PM
 		    if (date.getDay() === 0) { // Sunday is 0

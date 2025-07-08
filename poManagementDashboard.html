@@ -136,43 +136,43 @@
         <div class="p-6">
             <!-- Stats Overview -->
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 hover:shadow-md transition-shadow duration-300">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Total POs</p>
-                            <p class="text-2xl font-bold text-gray-800 dark:text-white mt-1">--</p>
-                        </div>
-                        <div class="w-12 h-12 bg-blue-100 dark:bg-blue-900/20 rounded-lg flex items-center justify-center">
-                            <i class="fas fa-file-alt text-blue-600 dark:text-blue-400"></i>
-                        </div>
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 hover:shadow-md transition-shadow duration-300">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Total POs</p>
+                        <p id="total-pos-count" class="text-2xl font-bold text-gray-800 dark:text-white mt-1">--</p>
+                    </div>
+                    <div class="w-12 h-12 bg-blue-100 dark:bg-blue-900/20 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-file-alt text-blue-600 dark:text-blue-400"></i>
                     </div>
                 </div>
-                
-                <a href="https://ntwoods.github.io/PurchaseOrders/pendingPOstatus.html" target="_blank" class="block">
-                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 hover:shadow-md transition-shadow duration-300">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Pending</p>
-                            <p class="text-2xl font-bold text-orange-600 dark:text-orange-400 mt-1">--</p>
-                        </div>
-                        <div class="w-12 h-12 bg-orange-100 dark:bg-orange-900/20 rounded-lg flex items-center justify-center">
-                            <i class="fas fa-clock text-orange-600 dark:text-orange-400"></i>
-                        </div>
+            </div>
+            
+            <a href="https://ntwoods.github.io/PurchaseOrders/pendingPOstatus.html" target="_blank" class="block">
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 hover:shadow-md transition-shadow duration-300">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Pending</p>
+                        <p id="pending-pos-count" class="text-2xl font-bold text-orange-600 dark:text-orange-400 mt-1">--</p>
+                    </div>
+                    <div class="w-12 h-12 bg-orange-100 dark:bg-orange-900/20 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-clock text-orange-600 dark:text-orange-400"></i>
                     </div>
                 </div>
-                </a>
-                
-                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 hover:shadow-md transition-shadow duration-300">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Completed</p>
-                            <p class="text-2xl font-bold text-green-600 dark:text-green-400 mt-1">--</p>
-                        </div>
-                        <div class="w-12 h-12 bg-green-100 dark:bg-green-900/20 rounded-lg flex items-center justify-center">
-                            <i class="fas fa-check-circle text-green-600 dark:text-green-400"></i>
-                        </div>
+            </div>
+            </a>
+            
+            <div class="bg-white dark:bg-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 hover:shadow-md transition-shadow duration-300">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Completed</p>
+                        <p id="completed-pos-count" class="text-2xl font-bold text-green-600 dark:text-green-400 mt-1">--</p>
+                    </div>
+                    <div class="w-12 h-12 bg-green-100 dark:bg-green-900/20 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-check-circle text-green-600 dark:text-green-400"></i>
                     </div>
                 </div>
+            </div>
                 <a href="https://ntwoods.github.io/PurchaseOrders/manageHoldPO" target="_blank" class="block">
                     <div class="hold-po-card bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 hover:shadow-md transition-shadow duration-300">
                         <div class="flex items-center justify-between">
@@ -464,31 +464,40 @@
     /**
      * Fetches overall PO stats and updates the dashboard overview.
      */
-    async function fetchOverallPOStats() {
-        try {
-            const response = await fetch(API_ENDPOINTS.overallPOStats);
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            const data = await response.json();
-
-            if (data) {
-                document.querySelector('.grid-cols-1 > div:nth-child(1) .text-2xl').textContent = data.totalOrders !== undefined ? data.totalOrders : 'N/A';
-                document.querySelector('.grid-cols-1 > div:nth-child(2) .text-2xl').textContent = data.pendingOrders !== undefined ? data.pendingOrders : 'N/A';
-                document.querySelector('.grid-cols-1 > div:nth-child(3) .text-2xl').textContent = data.completedOrders !== undefined ? data.completedOrders : 'N/A';
-                document.querySelector('.hold-po-card .text-2xl').textContent = data.ordersOnHold !== undefined ? data.ordersOnHold : 'N/A';
-
-            }
-        } catch (err) {
-            console.error('Failed to load overall PO stats:', err);
-            // Optionally, set a default or error indicator if API fails
-            document.querySelector('.grid-cols-1 > div:nth-child(1) .text-2xl').textContent = '?';
-            document.querySelector('.grid-cols-1 > div:nth-child(2) .text-2xl').textContent = '?';
-            document.querySelector('.grid-cols-1 > div:nth-child(3) .text-2xl').textContent = '?';
-            document.querySelector('.grid-cols-1 > div:nth-child(4) .text-2xl').textContent = '?';
+async function fetchOverallPOStats() {
+    try {
+        const response = await fetch(API_ENDPOINTS.overallPOStats);
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
         }
-    }
+        const data = await response.json();
 
+        if (data) {
+            // Use specific IDs for robustness
+            const totalPosCountElem = document.getElementById('total-pos-count');
+            const pendingPosCountElem = document.getElementById('pending-pos-count');
+            const completedPosCountElem = document.getElementById('completed-pos-count');
+            const holdPoCountElem = document.querySelector('.hold-po-card .text-2xl'); // This one already uses a specific class
+
+            if (totalPosCountElem) totalPosCountElem.textContent = data.totalOrders !== undefined ? data.totalOrders : 'N/A';
+            if (pendingPosCountElem) pendingPosCountElem.textContent = data.pendingOrders !== undefined ? data.pendingOrders : 'N/A';
+            if (completedPosCountElem) completedPosCountElem.textContent = data.completedOrders !== undefined ? data.completedOrders : 'N/A';
+            if (holdPoCountElem) holdPoCountElem.textContent = data.ordersOnHold !== undefined ? data.ordersOnHold : 'N/A';
+        }
+    } catch (err) {
+        console.error('Failed to load overall PO stats:', err);
+        // Optionally, set a default or error indicator if API fails
+        const totalPosCountElem = document.getElementById('total-pos-count');
+        const pendingPosCountElem = document.getElementById('pending-pos-count');
+        const completedPosCountElem = document.getElementById('completed-pos-count');
+        const holdPoCountElem = document.querySelector('.hold-po-card .text-2xl');
+
+        if (totalPosCountElem) totalPosCountElem.textContent = '?';
+        if (pendingPosCountElem) pendingPosCountElem.textContent = '?';
+        if (completedPosCountElem) completedPosCountElem.textContent = '?';
+        if (holdPoCountElem) holdPoCountElem.textContent = '?';
+    }
+}
     /**
      * Initializes the dashboard by fetching and updating counts for all cards and overall stats.
      */

@@ -107,14 +107,14 @@
             /* Data-title attributes for responsive view */
             td:nth-of-type(1):before { content: "PO Number"; }
             td:nth-of-type(2):before { content: "Supplier Name"; }
-            td:nth-of-type(3):before { content: "Expected Delivery Date"; }
-            td:nth-of-type(4):before { content: "Invoice URL"; }
-            td:nth-of-type(5):before { content: "Dispatch Follow Up"; }
-            td:nth-of-type(6):before { content: "Dispatch Date"; }
-            td:nth-of-type(7):before { content: "Dispatch Follow Up Reminder"; }
-            td:nth-of-type(8):before { content: "Follow Up A Day Before"; }
-            td:nth-of-type(9):before { content: "Send To Supplier"; }
-            td:nth-of-type(10):before { content: "Dispatch Details Received"; }
+            td:nth-of-type(3):before { content: "Send To Supplier"; }            
+            td:nth-of-type(4):before { content: "Dispatch Date"; }
+            td:nth-of-type(5):before { content: "Dispatch Follow Up Reminder"; }
+            td:nth-of-type(6):before { content: "Follow Up A Day Before"; }
+            td:nth-of-type(7):before { content: "Dispatch Details Received"; }
+            td:nth-of-type(8):before { content: "Expected Delivery Date"; }
+            td:nth-of-type(9):before { content: "Invoice URL"; }
+            td:nth-of-type(10):before { content: "Dispatch Follow Up"; }
         }
     </style>
 </head>
@@ -126,14 +126,14 @@
                 <tr>
                     <th onclick="sortTable(0)">PO Number</th>
                     <th onclick="sortTable(1)">Supplier Name</th>
-                    <th onclick="sortTable(2)">Expected Delivery Date</th>
-                    <th onclick="sortTable(3)">Invoice URL</th>
-                    <th onclick="sortTable(4)">Dispatch Follow Up</th>
-                    <th onclick="sortTable(5)">Dispatch Date</th>
-                    <th onclick="sortTable(6)">Dispatch Follow Up Reminder</th>
-                    <th onclick="sortTable(7)">Follow Up A Day Before</th>
-                    <th onclick="sortTable(8)">Send To Supplier</th>
-                    <th onclick="sortTable(9)">Dispatch Details Received</th>
+                    <th onclick="sortTable(2)">Send To Supplier</th>            
+                    <th onclick="sortTable(3)">Dispatch Date</th>
+                    <th onclick="sortTable(4)">Dispatch Follow Up Reminder</th>
+                    <th onclick="sortTable(5)">Follow Up A Day Before</th>
+                    <th onclick="sortTable(6)">Dispatch Details Received</th>
+                    <th onclick="sortTable(7)">Expected Delivery Date</th>
+                    <th onclick="sortTable(8)">Invoice URL</th>
+                    <th onclick="sortTable(9)">Dispatch Follow Up</th>                    
                 </tr>
             </thead>
             <tbody>
@@ -147,6 +147,20 @@
         let tableData = []; // Store the fetched data
 
         const tableBody = document.querySelector('#poTable tbody');
+
+        // Define the explicit order of columns based on your HTML headers
+        const columnOrder = [
+            'poNumber',
+            'supplierName',
+            'sendToSupplier',
+            'dispatchDate',
+            'dispatchFollowUPReminder',
+            'followUPADaybefore',
+            'dispatchDetailsReceived',
+            'expectedDeliveryDate',
+            'invoiceURL',
+            'dispatchFollowUP'
+        ];
 
         function formatDate(isoString) {
             if (!isoString) return '';
@@ -178,12 +192,14 @@
 
             dataToRender.forEach(item => {
                 const row = tableBody.insertRow();
-                Object.keys(item).forEach((key, index) => {
-                    const cell = row.insertCell(index);
+                
+                // Iterate through the predefined columnOrder to ensure correct data-to-column mapping
+                columnOrder.forEach(key => {
+                    const cell = row.insertCell(); // insertCell() without index adds to the end
                     let cellContent = item[key];
 
                     // Apply special formatting for dates
-                    if (key.includes('Date') || key.includes('Reminder')) {
+                    if (key.includes('Date') || key.includes('Reminder') || key.includes('Day')) { // Fixed typo here
                         cellContent = formatDate(cellContent);
                     }
 
@@ -217,8 +233,10 @@
             sortDirection[columnIndex] = isAscending ? 'desc' : 'asc';
 
             const sortedData = [...tableData].sort((a, b) => {
-                const aValue = Object.values(a)[columnIndex];
-                const bValue = Object.values(b)[columnIndex];
+                // Get the correct key name based on the column index in columnOrder
+                const sortKey = columnOrder[columnIndex]; 
+                const aValue = a[sortKey];
+                const bValue = b[sortKey];
 
                 if (typeof aValue === 'string' && typeof bValue === 'string') {
                     return isAscending ? aValue.localeCompare(bValue) : bValue.localeCompare(aValue);

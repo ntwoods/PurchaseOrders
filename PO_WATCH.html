@@ -344,8 +344,7 @@
                 }
 
                 row.innerHTML = `
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-800">${formatDateTime(order.timestamp)}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${order.requesterName || 'N/A'}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-800">${formatDateTime(order.poNumber)}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-800">${order.supplierName || 'N/A'}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-800">${orderStatusDisplay}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-800">${formatDateTime(order.expectedDispatchDate)}</td>

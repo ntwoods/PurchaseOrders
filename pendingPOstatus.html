@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Purchase Order Dispatch Status</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f7f6;
+            color: #333;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        }
+        h1 {
+            text-align: center;
+            color: #1a237e; /* Darker blue for heading */
+            margin-bottom: 30px;
+            font-weight: 700;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #e0e0e0; /* Light gray border */
+        }
+        th {
+            background-color: #e3f2fd; /* Lightest blue for header background */
+            color: #1a237e; /* Dark blue for header text */
+            font-weight: 700;
+            cursor: pointer; /* Indicate sortable columns */
+            position: sticky;
+            top: 0;
+            z-index: 1;
+        }
+        th:hover {
+            background-color: #bbdefb; /* Slightly darker blue on hover */
+        }
+        tr:nth-child(even) {
+            background-color: #fbfdff; /* Very light blue for even rows */
+        }
+        tr:hover {
+            background-color: #eaf6ff; /* Slightly darker blue on row hover */
+        }
+        .status-delayed {
+            color: #d32f2f; /* Red for Delayed */
+            font-weight: 500;
+        }
+        .status-on-time {
+            color: #388e3c; /* Green for On Time */
+            font-weight: 500;
+        }
+        .status-hold {
+            color: #fbc02d; /* Orange for Hold */
+            font-weight: 500;
+        }
+        .no-data {
+            text-align: center;
+            font-style: italic;
+            color: #757575;
+        }
+        /* Responsive Table */
+        @media screen and (max-width: 768px) {
+            table, thead, tbody, th, td, tr {
+                display: block;
+            }
+            thead tr {
+                position: absolute;
+                top: -9999px;
+                left: -9999px;
+            }
+            tr {
+                border: 1px solid #e0e0e0;
+                margin-bottom: 15px;
+            }
+            td {
+                border: none;
+                border-bottom: 1px solid #eee;
+                position: relative;
+                padding-left: 50%;
+                text-align: right;
+            }
+            td:before {
+                position: absolute;
+                top: 0;
+                left: 6px;
+                width: 45%;
+                padding-right: 10px;
+                white-space: nowrap;
+                text-align: left;
+                font-weight: 700;
+                color: #555;
+            }
+            /* Data-title attributes for responsive view */
+            td:nth-of-type(1):before { content: "PO Number"; }
+            td:nth-of-type(2):before { content: "Supplier Name"; }
+            td:nth-of-type(3):before { content: "Expected Delivery Date"; }
+            td:nth-of-type(4):before { content: "Invoice URL"; }
+            td:nth-of-type(5):before { content: "Dispatch Follow Up"; }
+            td:nth-of-type(6):before { content: "Dispatch Date"; }
+            td:nth-of-type(7):before { content: "Dispatch Follow Up Reminder"; }
+            td:nth-of-type(8):before { content: "Follow Up A Day Before"; }
+            td:nth-of-type(9):before { content: "Send To Supplier"; }
+            td:nth-of-type(10):before { content: "Dispatch Details Received"; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Purchase Order Dispatch Status</h1>
+        <table id="poTable">
+            <thead>
+                <tr>
+                    <th onclick="sortTable(0)">PO Number</th>
+                    <th onclick="sortTable(1)">Supplier Name</th>
+                    <th onclick="sortTable(2)">Expected Delivery Date</th>
+                    <th onclick="sortTable(3)">Invoice URL</th>
+                    <th onclick="sortTable(4)">Dispatch Follow Up</th>
+                    <th onclick="sortTable(5)">Dispatch Date</th>
+                    <th onclick="sortTable(6)">Dispatch Follow Up Reminder</th>
+                    <th onclick="sortTable(7)">Follow Up A Day Before</th>
+                    <th onclick="sortTable(8)">Send To Supplier</th>
+                    <th onclick="sortTable(9)">Dispatch Details Received</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td colspan="10" class="no-data">Loading data...</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        const API_URL = "https://script.google.com/macros/s/AKfycbyoWOwfZwFtn1MsXw4xTl95s1DXpFJPTtq_ocUCvW80_nglL7Ls-EHgcJfVvb8IlhiQ/exec";
+        let tableData = []; // Store the fetched data
+
+        const tableBody = document.querySelector('#poTable tbody');
+
+        function formatDate(isoString) {
+            if (!isoString) return '';
+            try {
+                const date = new Date(isoString);
+                // Adjust for local time if necessary or display as UTC depending on requirement
+                return date.toLocaleString('en-IN', {
+                    year: 'numeric',
+                    month: '2-digit',
+                    day: '2-digit',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit',
+                    hour12: false
+                });
+            } catch (e) {
+                return isoString; // Return original if invalid date
+            }
+        }
+
+        function renderTable(dataToRender) {
+            tableBody.innerHTML = ''; // Clear existing rows
+            if (dataToRender.length === 0) {
+                const noDataRow = document.createElement('tr');
+                noDataRow.innerHTML = `<td colspan="10" class="no-data">No data available.</td>`;
+                tableBody.appendChild(noDataRow);
+                return;
+            }
+
+            dataToRender.forEach(item => {
+                const row = tableBody.insertRow();
+                Object.keys(item).forEach((key, index) => {
+                    const cell = row.insertCell(index);
+                    let cellContent = item[key];
+
+                    // Apply special formatting for dates
+                    if (key.includes('Date') || key.includes('Reminder')) {
+                        cellContent = formatDate(cellContent);
+                    }
+
+                    // Apply classes for Dispatch Follow Up status
+                    if (key === 'dispatchFollowUP') {
+                        if (cellContent.toLowerCase() === 'delayed') {
+                            cell.classList.add('status-delayed');
+                        } else if (cellContent.toLowerCase() === 'on time') {
+                            cell.classList.add('status-on-time');
+                        } else if (cellContent.toLowerCase() === 'hold') {
+                            cell.classList.add('status-hold');
+                        }
+                    } else if (key === 'sendToSupplier' && cellContent.toLowerCase() === 'hold') {
+                         cell.classList.add('status-hold');
+                    }
+
+                    // Make invoiceURL clickable
+                    if (key === 'invoiceURL' && cellContent) {
+                        cell.innerHTML = `<a href="${cellContent}" target="_blank">View Invoice</a>`;
+                    } else {
+                        cell.textContent = cellContent;
+                    }
+                });
+            });
+        }
+
+        let sortDirection = {}; // To keep track of sort direction for each column
+
+        function sortTable(columnIndex) {
+            const isAscending = sortDirection[columnIndex] === 'asc';
+            sortDirection[columnIndex] = isAscending ? 'desc' : 'asc';
+
+            const sortedData = [...tableData].sort((a, b) => {
+                const aValue = Object.values(a)[columnIndex];
+                const bValue = Object.values(b)[columnIndex];
+
+                if (typeof aValue === 'string' && typeof bValue === 'string') {
+                    return isAscending ? aValue.localeCompare(bValue) : bValue.localeCompare(aValue);
+                }
+                if (typeof aValue === 'number' && typeof bValue === 'number') {
+                    return isAscending ? aValue - bValue : bValue - aValue;
+                }
+                // Handle empty strings/nulls for sorting
+                if (!aValue && !bValue) return 0;
+                if (!aValue) return isAscending ? 1 : -1;
+                if (!bValue) return isAscending ? -1 : 1;
+
+                return isAscending ? (aValue > bValue ? 1 : -1) : (aValue < bValue ? 1 : -1);
+            });
+            renderTable(sortedData);
+        }
+
+        // Function to fetch data from the API
+        async function fetchData() {
+            try {
+                const response = await fetch(API_URL);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                tableData = await response.json();
+                renderTable(tableData);
+            } catch (error) {
+                console.error("Could not fetch data:", error);
+                tableBody.innerHTML = `<tr><td colspan="10" class="no-data">Failed to load data. Please try again later.</td></tr>`;
+            }
+        }
+
+        // Initial fetch and render when the page loads
+        document.addEventListener('DOMContentLoaded', fetchData);
+    </script>
+</body>
+</html>

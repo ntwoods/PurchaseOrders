@@ -437,6 +437,7 @@
             init() {
                 this.setupNotifications();
                 this.loadOrders();
+		this.startCountdownTimer();		    		    
                 this.startAutoRefresh();
                 this.setupEventListeners();
             }
@@ -447,8 +448,51 @@
                     this.requestNotificationPermission();
                 });
             }
+	updateCountdown() {
+	    this.orders.forEach(order => {
+		const countdownElement = document.getElementById(`countdown-${order.timestamp}`);
+		if (countdownElement) {
+		    const deadline = this.calculateDeadline(order.timestamp);
+		    const now = new Date();
+		    const timeLeft = deadline.getTime() - now.getTime();
+	
+		    if (timeLeft <= 0) {
+			countdownElement.textContent = 'Deadline Passed!';
+			countdownElement.style.color = '#dc3545'; // Red color for passed deadline
+		    } else {
+			const days = Math.floor(timeLeft / (1000 * 60 * 60 * 24));
+			const hours = Math.floor((timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+			const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+			const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
+	
+			countdownElement.textContent = `⏳ Deadline: ${days}d ${hours}h ${minutes}m ${seconds}s`;
+			countdownElement.style.color = '#e65100'; // Orange color for active countdown
+		    }
+		}
+	    });
+	}		
 
-            async setupNotifications() {
+		startCountdownTimer() {
+		    if (this.countdownInterval) {
+		        clearInterval(this.countdownInterval);
+		    }
+		    this.countdownInterval = setInterval(() => {
+		        this.updateCountdown();
+		    }, 1000); // Update every second
+		}
+		
+		calculateDeadline(timestamp) {
+		    const date = new Date(timestamp);
+		    date.setDate(date.getDate() + 1); // Next day
+		    date.setHours(18, 0, 0, 0); // 6:00 PM
+		
+		    // If deadline is Sunday, shift to Monday 6:00 PM
+		    if (date.getDay() === 0) { // Sunday is 0
+		        date.setDate(date.getDate() + 1);
+		    }
+		    return date;
+		}
+		async setupNotifications() {
                 if ('Notification' in window) {
                     if (Notification.permission === 'granted') {
                         this.notificationPermission = true;
@@ -491,6 +535,7 @@
                         this.previousOrderCount = newOrderCount;
                         this.orders = result.data;
                         this.renderOrders();
+			this.startCountdownTimer();			    
 		            if (typeof setReadOnlyMode === "function") {
 		                  setReadOnlyMode();
 		                }			    
@@ -519,9 +564,10 @@
                     <div class="order-card">
                         <div class="order-header">
                             <div class="requester-name">👤 ${order.supplierName}</div><div class="po-number">${order.purchaseOrderNumber}</div>
-                            <div class="timestamp">
-                                🕒 Sent to Supplier: ${this.formatDate(order.timestamp)}
-                            </div>
+			<div class="timestamp">
+			    🕒 Sent to Supplier: ${this.formatDate(order.timestamp)}
+			</div>
+			<div class="countdown-timer" id="countdown-${order.timestamp}"></div>
                         </div>
                         
                         <div class="order-actions">

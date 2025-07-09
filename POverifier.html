@@ -669,6 +669,55 @@
             }
         }
 
+	// Add this function definition to your script
+	function showToast(message, type = 'info') {
+	    let toastDiv = document.getElementById('toast-notification');
+	    if (!toastDiv) {
+	        toastDiv = document.createElement('div');
+	        toastDiv.id = 'toast-notification';
+	        toastDiv.style.cssText = `
+	            position: fixed;
+	            bottom: 20px;
+	            left: 50%;
+	            transform: translateX(-50%);
+	            background-color: #333;
+	            color: white;
+	            padding: 10px 20px;
+	            border-radius: 5px;
+	            font-size: 14px;
+	            z-index: 1000;
+	            opacity: 0;
+	            transition: opacity 0.3s ease-in-out;
+	            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+	            min-width: 250px;
+	            text-align: center;
+	        `;
+	        document.body.appendChild(toastDiv);
+	    }
+	
+	    toastDiv.textContent = message;
+	    toastDiv.style.backgroundColor = ''; // Reset
+	    if (type === 'success') {
+	        toastDiv.style.backgroundColor = '#4CAF50'; // Green
+	    } else if (type === 'error') {
+	        toastDiv.style.backgroundColor = '#f44336'; // Red
+	    } else if (type === 'warning') {
+	        toastDiv.style.backgroundColor = '#ff9800'; // Orange
+	    }
+	
+	    toastDiv.style.opacity = '1';
+	
+	    // Hide after 3 seconds
+	    setTimeout(() => {
+	        toastDiv.style.opacity = '0';
+	        setTimeout(() => {
+	            if(toastDiv.parentNode) { // Check if it's still in the DOM before removing
+	                toastDiv.parentNode.removeChild(toastDiv);
+	            }
+	        }, 300); // Allow transition to complete before removing
+	    }, 3000);
+	}
+	    
         function showLoading() {
             document.getElementById('loading').style.display = 'block';
             document.getElementById('requests-container').style.display = 'none';

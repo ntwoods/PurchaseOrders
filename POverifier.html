@@ -877,73 +877,96 @@ async function checkMissingSuppliers(googleSheetURL) {
         throw new Error('Unable to check supplier information. Please ensure the Google Sheet is publicly accessible.');
     }
 }
-	function openSpecEditorModal(requestData) {
-	            const specEditorModal = document.getElementById('specEditorModal');
-	            if (!specEditorModal) {
-	                console.error("Specification Editor Modal not found in HTML!");
-	                showToast("Error: Spec editor not found. Please contact support.", "error");
-	                return;
+	async function openSpecEditorModal(requestData) {
+	    const specEditorModal = document.getElementById('specEditorModal');
+	    if (!specEditorModal) {
+	        console.error("Specification Editor Modal not found in HTML!");
+	        showToast("Error: Spec editor not found. Please contact support.", "error");
+	        return;
+	    }
+	
+	    document.getElementById('specEditorTimestamp').textContent = new Date(requestData.timestamp).toLocaleString();
+	    document.getElementById('specEditorRequester').textContent = requestData.requesterName;
+	    document.getElementById('specEditorSourceUrlDisplay').innerHTML = `<a href="${requestData.sourceUrl}" target="_blank">📊 View Source PO</a>`;
+	
+	    categoriesWithSpecs = [];
+	    currentCategoryIndex = 0;
+	    temporaryEditedSpecs = {};
+	
+	    // Set initial loading states for UI elements
+	    document.getElementById('currentCategoryTitle').textContent = 'Loading...';
+	    document.getElementById('specsTextarea').value = 'Loading specifications...';
+	    document.getElementById('specsTextarea').disabled = true;
+	    document.getElementById('saveSpecsAndConfirmBtn').disabled = true;
+	    document.getElementById('prevCategoryBtn').disabled = true;
+	    document.getElementById('nextCategoryBtn').disabled = true;
+	
+	    // Construct URL with query parameters for GET request
+	    const params = new URLSearchParams();
+	    params.append('action', 'getSpecificationsForAllCategories');
+	    params.append('sourceUrl', requestData.sourceUrl);
+	
+	    // Ensure API_URL is defined globally or passed into this function's scope.
+	    // Example: const API_URL = 'YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL';
+	    const fetchUrl = `${API_URL}?${params.toString()}`; // Append parameters directly to URL
+	
+	    try {
+	        const response = await fetch(fetchUrl, {
+	            method: 'GET' // GET requests do not have a body
+	            // Remove 'body: params' as GET method does not support it
+	        });
+	
+	        if (!response.ok) {
+	            // If the HTTP response status is not 2xx, throw an error
+	            const errorText = await response.text(); // Get raw response text for debugging
+	            throw new Error(`HTTP error! status: ${response.status}. Response: ${errorText}`);
+	        }
+	
+	        const specsResult = await response.json(); // Parse the JSON response
+	
+	        if (specsResult && typeof specsResult === 'object') {
+	            categoriesWithSpecs = Object.keys(specsResult).map(category => ({
+	                category: category,
+	                // Ensure specifications are always an array, even if the backend sends a single string or null
+	                // This makes the client-side handling more robust
+	                specifications: Array.isArray(specsResult[category]) ? specsResult[category] : [String(specsResult[category])]
+	            }));
+	
+	            if (categoriesWithSpecs.length > 0) {
+	                displayCurrentCategorySpecs(); // This function should be defined elsewhere to handle UI updates
+	                document.getElementById('specsTextarea').disabled = false;
+	                document.getElementById('saveSpecsAndConfirmBtn').disabled = false;
+	                // Enable/disable navigation buttons based on categoriesWithSpecs.length
+	                document.getElementById('prevCategoryBtn').disabled = currentCategoryIndex === 0;
+	                document.getElementById('nextCategoryBtn').disabled = currentCategoryIndex === categoriesWithSpecs.length - 1;
+	            } else {
+	                document.getElementById('currentCategoryTitle').textContent = 'No Categories Found';
+	                document.getElementById('specsTextarea').value = 'No specifications found for this PO.';
+	                document.getElementById('specsTextarea').disabled = true;
+	                document.getElementById('saveSpecsAndConfirmBtn').disabled = true;
+	                document.getElementById('prevCategoryBtn').disabled = true;
+	                document.getElementById('nextCategoryBtn').disabled = true;
+	                showToast("No specifications found for this purchase order.", "info");
 	            }
+	        } else {
+	            // Handle cases where response is not a valid object (e.g., null, array, or non-object)
+	            console.error("Invalid specs result from backend:", specsResult);
+	            showToast("Error loading specs: Invalid data format received from server.", "error");
+	            document.getElementById('specsTextarea').value = 'Error loading specifications: Invalid data.';
+	        }
+	    } catch (error) {
+	        console.error("Failed to fetch specifications:", error);
+	        showToast("Error loading specifications: " + error.message, "error");
+	        document.getElementById('specsTextarea').value = 'Error loading specifications: ' + error.message;
+	        // Ensure all UI elements are disabled on error
+	        document.getElementById('specsTextarea').disabled = true;
+	        document.getElementById('saveSpecsAndConfirmBtn').disabled = true;
+	        document.getElementById('prevCategoryBtn').disabled = true;
+	        document.getElementById('nextCategoryBtn').disabled = true;
+	    }
 	
-	            document.getElementById('specEditorTimestamp').textContent = new Date(requestData.timestamp).toLocaleString();
-	            document.getElementById('specEditorRequester').textContent = requestData.requesterName;
-	            document.getElementById('specEditorSourceUrlDisplay').innerHTML = `<a href="${requestData.sourceUrl}" target="_blank">📊 View Source PO</a>`;
-	
-	            categoriesWithSpecs = [];
-	            currentCategoryIndex = 0;
-	            temporaryEditedSpecs = {};
-	
-	            document.getElementById('currentCategoryTitle').textContent = 'Loading...';
-	            document.getElementById('specsTextarea').value = 'Loading specifications...';
-	            document.getElementById('specsTextarea').disabled = true;
-	            document.getElementById('saveSpecsAndConfirmBtn').disabled = true;
-	            document.getElementById('prevCategoryBtn').disabled = true;
-	            document.getElementById('nextCategoryBtn').disabled = true;
-	
-	            // --- NEW: Use fetch to call backend API ---
-	            const params = new URLSearchParams();
-	            params.append('action', 'getSpecificationsForAllCategories'); // New parameter for backend routing
-	            params.append('sourceUrl', requestData.sourceUrl);
-	
-	            fetch(API_URL, {
-	                method: 'GET', // Use POST as your API_URL handles doPost
-	                body: params // Send parameters as URL-encoded form data
-	            })
-	            .then(response => {
-	                return response.json();
-	            })
-	            .then(specsResult => {
-	                if (specsResult && typeof specsResult === 'object') {
-	                    categoriesWithSpecs = Object.keys(specsResult).map(category => ({
-	                        category: category,
-	                        specifications: specsResult[category]
-	                    }));
-
-	                    if (categoriesWithSpecs.length > 0) {
-	                        displayCurrentCategorySpecs();
-	                        document.getElementById('specsTextarea').disabled = false;
-	                        document.getElementById('saveSpecsAndConfirmBtn').disabled = false;
-	                    } else {
-	                        document.getElementById('currentCategoryTitle').textContent = 'No Categories Found';
-	                        document.getElementById('specsTextarea').value = 'No specifications found for this PO.';
-	                        document.getElementById('specsTextarea').disabled = true;
-	                        document.getElementById('saveSpecsAndConfirmBtn').disabled = true;
-	                    }
-	                } else {
-	                    console.error("Invalid specs result from backend:", specsResult);
-	                    showToast("Error loading specs: Invalid data format.", "error");
-	                    document.getElementById('specsTextarea').value = 'Error loading specifications.';
-	                }
-	            })
-	            .catch(error => {
-	                console.error("Failed to fetch specifications:", error);
-	                showToast("Error loading specifications: " + error.message, "error");
-	                document.getElementById('specsTextarea').value = 'Error loading specifications: ' + error.message;
-	            });
-	            // --- END NEW fetch call ---
-	
-	            specEditorModal.style.display = 'flex';
-	        }	    
+	    specEditorModal.style.display = 'flex'; // Display the modal after attempt to fetch
+	}
 	// Add this new function to your existing JavaScript in POverifier (1).html
 	function handleProceedAnyway() {
 	    // Make sure you close the missing supplier modal here

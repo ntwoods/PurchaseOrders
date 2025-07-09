@@ -906,8 +906,7 @@ async function checkMissingSuppliers(googleSheetURL) {
 	            params.append('sourceUrl', requestData.sourceUrl);
 	
 	            fetch(API_URL, {
-	                method: 'POST', // Use POST as your API_URL handles doPost
-	                mode: 'no-cors', // Use POST as your API_URL handles doPost			    
+	                method: 'GET', // Use POST as your API_URL handles doPost
 	                body: params // Send parameters as URL-encoded form data
 	            })
 	            .then(response => {

@@ -1172,8 +1172,8 @@ async function checkMissingSuppliers(googleSheetURL) {
 function displayCurrentCategorySpecs() {
     if (categoriesWithSpecs.length === 0) {
         document.getElementById('currentCategoryTitle').textContent = 'No Categories Found';
-        document.getElementById('specEditorTextarea').value = '';
-        document.getElementById('specEditorTextarea').disabled = true;
+        document.getElementById('specsTextarea').value = ''; // FIX: Changed from 'specEditorTextarea'
+        document.getElementById('specsTextarea').disabled = true; // FIX: Changed from 'specEditorTextarea'
         document.getElementById('prevCategoryBtn').disabled = true;
         document.getElementById('nextCategoryBtn').disabled = true;
         document.getElementById('saveSpecsAndConfirmBtn').disabled = true;
@@ -1188,12 +1188,11 @@ function displayCurrentCategorySpecs() {
         ? temporaryEditedSpecs[currentCategory.category]
         : currentCategory.specifications.join('\n'); // Join array into a single string for textarea
 
-    document.getElementById('specEditorTextarea').value = specsToDisplay;
+    document.getElementById('specsTextarea').value = specsToDisplay; // FIX: Changed from 'specEditorTextarea'
 
     document.getElementById('prevCategoryBtn').disabled = currentCategoryIndex === 0;
     document.getElementById('nextCategoryBtn').disabled = currentCategoryIndex === categoriesWithSpecs.length - 1;
 }
-
 
 // Add this function definition
 function closeMissingSupplierModal() {

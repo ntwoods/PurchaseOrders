@@ -1129,6 +1129,15 @@ function displayCurrentCategorySpecs() {
     document.getElementById('nextCategoryBtn').disabled = currentCategoryIndex === categoriesWithSpecs.length - 1;
 }
 
+
+// Add this function definition
+function closeMissingSupplierModal() {
+    const missingSupplierModal = document.getElementById('missingSupplierModal');
+    if (missingSupplierModal) {
+        missingSupplierModal.style.display = 'none';
+    }
+}	    
+	    
 function closeSpecEditorModal() {
     document.getElementById('specEditorModal').style.display = 'none';
     currentRequestDataForSpecs = null;

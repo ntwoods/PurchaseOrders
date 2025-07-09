@@ -471,7 +471,7 @@
             <h3>Mark as Complete?</h3>
             <p>Are you sure you want to mark this request as done? This action cannot be undone.</p>
             <div class="modal-actions">
-                <button class="btn btn-success" onclick="confirmMarkDone()">Yes, Mark Done</button>
+                <button class="btn btn-success" onclick="proceedToMarkDone()">Yes, Mark Done</button>
                 <button class="btn" onclick="closeModal()" style="background: #90caf9; color: white;">Cancel</button>
             </div>
         </div>
@@ -647,6 +647,17 @@
             });
         }
 
+	function getUniqueCategoriesFromOrders() {
+	  // Extract unique categories from the already-parsed CSV data
+	  // You probably already have `orderData` or similar structure
+	  const categories = new Set();
+	  allOrders.forEach(order => {
+	    if (order.category) categories.add(order.category);
+	  });
+	  return Array.from(categories);
+	}
+
+	    
         function createRequestCard(request, index) {
             const card = document.createElement('div');
             card.className = 'request-card';
@@ -817,7 +828,7 @@ async function checkMissingSuppliers(googleSheetURL) {
 	            <p style="margin-top: 15px;">Please update the Google Sheet with supplier names. Or proceed anyway if intentional.</p>
 	            <div class="modal-actions">
 	                <a href="${request.googleSheetURL}" target="_blank" class="btn btn-primary">📊 Open Sheet</a>
-	                <button class="btn btn-success" onclick="confirmMarkDone()">Proceed Anyway</button>
+	                <button class="btn btn-success" onclick="proceedToMarkDone()">Proceed Anyway</button>
 	                <button class="btn" onclick="closeModal()" style="background: #90caf9; color: white;">Cancel</button>
 	            </div>
 	        `;
@@ -841,7 +852,7 @@ async function checkMissingSuppliers(googleSheetURL) {
 	            <p>All orders have supplier information. Are you sure you want to mark this request as done? This action cannot be undone.</p>
 	            ${completedSection}
 	            <div class="modal-actions">
-	                <button class="btn btn-success" onclick="confirmMarkDone()">
+	                <button class="btn btn-success" onclick="proceedToMarkDone()">
 	                    Yes, Mark Done
 	                </button>
 	                <button class="btn" onclick="closeModal()" style="background: #90caf9; color: white;">

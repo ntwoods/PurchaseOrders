@@ -592,15 +592,17 @@
     </div>
 
 
-    <script>
-        const API_URL = 'https://script.google.com/macros/s/AKfycbxS8EpiDM_ldbXj9pk5JM8MR49RJdQUuL4MlKc0TCf2v8OkW3aNZtqJ8gUI8zHo2Vb2/exec';
-        const API_URL2 = 'https://script.google.com/macros/s/AKfycbxS8EpiDM_ldbXj9pk5JM8MR49RJdQUuL4MlKc0TCf2v8OkW3aNZtqJ8gUI8zHo2Vb2/exec';
-	let currentRequestDataForSpecs = null; // To store the request details for which specs are being edited
-	let categoriesWithSpecs = []; // Array of { category: '...', specifications: ['spec1', 'spec2'] }
-	let currentCategoryIndex = 0;
-	let temporaryEditedSpecs = {}; // Object to store { category: 'edited spec string' }	    
-        let currentRequestIndex = null;
-        let requestsData = [];
+<script>
+    const API_URL = 'https://script.google.com/macros/s/AKfycbxS8EpiDM_ldbXj9pk5JM8MR49RJdQUuL4MlKc0TCf2v8OkW3aNZtqJ8gUI8zHo2Vb2/exec';
+    const API_URL2 = 'https://script.google.com/macros/s/AKfycbxS8EpiDM_ldbXj9pk5JM8MR49RJdQUuL4MlKc0TCf2v8OkW3aNZtqJ8gUI8zHo2Vb2/exec';
+
+    // Ensure these are at the top, globally accessible
+    let currentRequestDataForSpecs = null; // <-- This one was missing or misplaced
+    let requestsData = [];
+    let categoriesWithSpecs = [];
+    let currentCategoryIndex = 0;
+    let temporaryEditedSpecs = {};
+    let currentRequestIndex = null; // Used by confirmMarkDone
         // countdownIntervals removed as countdown functionality is removed
 
         // Load requests on page load

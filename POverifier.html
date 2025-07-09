@@ -454,6 +454,17 @@
   <button onclick="submitCustomOrder()">Submit</button>
 </div>
 
+<!-- ✅ 1. Add this inside <body> near other modals -->
+<div id="specEditorModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:1000; overflow:auto;">
+  <div style="background:#fff; padding:20px; margin:5% auto; width:90%; max-width:800px; border-radius:10px;">
+    <h2>🛠️ Customize Specifications for this PO</h2>
+    <div id="specEditorContent"></div>
+    <br>
+    <button onclick="submitSpecs()">✅ Proceed with These Specifications</button>
+    <button onclick="closeSpecModal()">❌ Cancel</button>
+  </div>
+</div>	
+
 
     <div id="confirmModal" class="modal">
         <div class="modal-content">
@@ -501,7 +512,61 @@
             currentRequestIndex = null;
         }
 
-        async function submitCustomOrder() {
+	let originalSpecsMap = {};   // category -> original
+	let customSpecsMap = {};     // category -> edited
+	
+	function openSpecEditor(categories) {
+	  // 1. Reset state
+	  document.getElementById("specEditorContent").innerHTML = "";
+	  originalSpecsMap = {}; customSpecsMap = {};
+	
+	  // 2. Load each spec from sheet API
+	  Promise.all(categories.map(cat => fetchSpecForCategory(cat))).then(() => {
+	    // 3. Build editable UI
+	    categories.forEach(category => {
+	      const container = document.createElement("div");
+	      container.style.marginBottom = "25px";
+	      container.innerHTML = `
+	        <h3>${category}</h3>
+	        <textarea id="spec_${category}" rows="5" style="width:100%">${customSpecsMap[category]}</textarea><br>
+	        <button onclick="resetSpec('${category}')">🔄 Reset</button>
+	        <hr>`;
+	      document.getElementById("specEditorContent").appendChild(container);
+	    });
+	    document.getElementById("specEditorModal").style.display = "block";
+	  });
+	}
+	
+	function fetchSpecForCategory(category) {
+	  return fetch(`https://script.google.com/macros/s/YOUR_SPEC_FETCH_SCRIPT_ID/exec?category=${encodeURIComponent(category)}`)
+	    .then(res => res.json())
+	    .then(data => {
+	      const specText = data.specs.join("\n");
+	      originalSpecsMap[category] = specText;
+	      customSpecsMap[category] = specText;
+	    });
+	}
+	
+	function resetSpec(category) {
+	  document.getElementById(`spec_${category}`).value = originalSpecsMap[category];
+	}
+	
+	function closeSpecModal() {
+	  document.getElementById("specEditorModal").style.display = "none";
+	}
+	
+	function submitSpecs() {
+	  const finalSpecs = {};
+	  for (const category in customSpecsMap) {
+	    const text = document.getElementById(`spec_${category}`).value.trim();
+	    if (text) finalSpecs[category] = text;
+	  }
+	  closeSpecModal();
+	  triggerMarkDone(finalSpecs);  // 🔁 pass to original markDone logic
+	}
+
+	    
+	    async function submitCustomOrder() {
             const requester = document.getElementById("requesterName").value.trim();
             const notes = document.getElementById("notes").value.trim();
 
@@ -885,6 +950,34 @@ async function checkMissingSuppliers(googleSheetURL) {
             }
         }
 
+// 🔁 Replace your markDone trigger with this
+function proceedToMarkDone() {
+  const categories = getUniqueCategoriesFromOrders(); // Extract from parsed CSV
+  if (categories.length > 0) {
+    openSpecEditor(categories);
+  } else {
+    triggerMarkDone({});
+  }
+}
+
+function triggerMarkDone(customSpecs) {
+  fetch(API_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      action: 'markDone',
+      timestamp: selectedTimestamp,
+      requesterName: selectedRequester,
+      customSpecs: customSpecs
+    })
+  })
+  .then(response => response.json())
+  .then(data => {
+    alert('PO generated successfully!');
+    location.reload();
+  })
+  .catch(err => alert('Error generating PO: ' + err));
+}	    
         function showSuccessMessage(message) {
             const successDiv = document.createElement('div');
             successDiv.style.cssText = `

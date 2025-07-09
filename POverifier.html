@@ -957,6 +957,7 @@ async function checkMissingSuppliers(googleSheetURL) {
 	    if (currentRequestDataForSpecs) {
 	        // Now, open the specification editor modal with the stored request data
 	        openSpecEditorModal(currentRequestDataForSpecs);
+		closeMissingSupplierModal();
 	    } else {
 	        console.error("Error: currentRequestDataForSpecs is not defined. Cannot open spec editor.");
 	        showToast("Error processing request. Please refresh and try again.", "error");

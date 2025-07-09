@@ -912,41 +912,80 @@ async function checkMissingSuppliers(googleSheetURL) {
 	    // --- Fetch specifications from the backend ---
 	    // This calls your Google Apps Script backend. You MUST have a function
 	    // named 'getSpecificationsForAllCategories' in your .gs script (e.g., verifyPO.txt).
-	    google.script.run
-	        .withSuccessHandler(function(specsResult) {
-	            if (specsResult && typeof specsResult === 'object') {
-	                // Convert the object from backend into the expected array format for frontend
-	                // Assuming specsResult is { category1: [spec1, spec2], category2: [spec3] }
-	                categoriesWithSpecs = Object.keys(specsResult).map(category => ({
-	                    category: category,
-	                    specifications: specsResult[category]
-	                }));
-	
-	                if (categoriesWithSpecs.length > 0) {
-	                    displayCurrentCategorySpecs(); // Display the first category
-	                    document.getElementById('specsTextarea').disabled = false;
-	                    document.getElementById('saveSpecsAndConfirmBtn').disabled = false;
-	                } else {
-	                    document.getElementById('currentCategoryTitle').textContent = 'No Categories Found';
-	                    document.getElementById('specsTextarea').value = 'No specifications found for this PO.';
-	                    document.getElementById('specsTextarea').disabled = true;
-	                    document.getElementById('saveSpecsAndConfirmBtn').disabled = true;
-	                }
-	            } else {
-	                console.error("Invalid specs result from backend:", specsResult);
-	                showToast("Error loading specs: Invalid data.", "error");
-	                document.getElementById('specsTextarea').value = 'Error loading specifications.';
+		
+	function openSpecEditorModal(requestData) {
+	            const specEditorModal = document.getElementById('specEditorModal');
+	            if (!specEditorModal) {
+	                console.error("Specification Editor Modal not found in HTML!");
+	                showToast("Error: Spec editor not found. Please contact support.", "error");
+	                return;
 	            }
-	        })
-	        .withFailureHandler(function(error) {
-	            console.error("Failed to fetch specifications:", error);
-	            showToast("Error loading specifications: " + error.message, "error");
-	            document.getElementById('specsTextarea').value = 'Error loading specifications: ' + error.message;
-	        })
-	        .getSpecificationsForAllCategories(requestData.sourceUrl); // Backend function name
 	
-	    specEditorModal.style.display = 'flex'; // Show the modal
-	}	    
+	            document.getElementById('specEditorTimestamp').textContent = new Date(requestData.timestamp).toLocaleString();
+	            document.getElementById('specEditorRequester').textContent = requestData.requesterName;
+	            document.getElementById('specEditorSourceUrlDisplay').innerHTML = `<a href="${requestData.sourceUrl}" target="_blank">📊 View Source PO</a>`;
+	
+	            categoriesWithSpecs = [];
+	            currentCategoryIndex = 0;
+	            temporaryEditedSpecs = {};
+	
+	            document.getElementById('currentCategoryTitle').textContent = 'Loading...';
+	            document.getElementById('specsTextarea').value = 'Loading specifications...';
+	            document.getElementById('specsTextarea').disabled = true;
+	            document.getElementById('saveSpecsAndConfirmBtn').disabled = true;
+	            document.getElementById('prevCategoryBtn').disabled = true;
+	            document.getElementById('nextCategoryBtn').disabled = true;
+	
+	            // --- NEW: Use fetch to call backend API ---
+	            const params = new URLSearchParams();
+	            params.append('action', 'getSpecificationsForAllCategories'); // New parameter for backend routing
+	            params.append('sourceUrl', requestData.sourceUrl);
+	
+	            fetch(API_URL, {
+	                method: 'POST', // Use POST as your API_URL handles doPost
+	                body: params // Send parameters as URL-encoded form data
+	            })
+	            .then(response => {
+	                if (!response.ok) {
+	                    throw new Error(`HTTP error! status: ${response.status}`);
+	                }
+	                return response.json();
+	            })
+	            .then(specsResult => {
+	                if (specsResult.error) { // Check if the backend returned an error
+	                    throw new Error(specsResult.error);
+	                }
+	                if (specsResult && typeof specsResult === 'object') {
+	                    categoriesWithSpecs = Object.keys(specsResult).map(category => ({
+	                        category: category,
+	                        specifications: specsResult[category]
+	                    }));
+	
+	                    if (categoriesWithSpecs.length > 0) {
+	                        displayCurrentCategorySpecs();
+	                        document.getElementById('specsTextarea').disabled = false;
+	                        document.getElementById('saveSpecsAndConfirmBtn').disabled = false;
+	                    } else {
+	                        document.getElementById('currentCategoryTitle').textContent = 'No Categories Found';
+	                        document.getElementById('specsTextarea').value = 'No specifications found for this PO.';
+	                        document.getElementById('specsTextarea').disabled = true;
+	                        document.getElementById('saveSpecsAndConfirmBtn').disabled = true;
+	                    }
+	                } else {
+	                    console.error("Invalid specs result from backend:", specsResult);
+	                    showToast("Error loading specs: Invalid data format.", "error");
+	                    document.getElementById('specsTextarea').value = 'Error loading specifications.';
+	                }
+	            })
+	            .catch(error => {
+	                console.error("Failed to fetch specifications:", error);
+	                showToast("Error loading specifications: " + error.message, "error");
+	                document.getElementById('specsTextarea').value = 'Error loading specifications: ' + error.message;
+	            });
+	            // --- END NEW fetch call ---
+	
+	            specEditorModal.style.display = 'flex';
+	        }	    
 	// Add this new function to your existing JavaScript in POverifier (1).html
 	function handleProceedAnyway() {
 	    // Make sure you close the missing supplier modal here

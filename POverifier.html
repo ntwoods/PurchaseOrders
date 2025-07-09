@@ -877,42 +877,6 @@ async function checkMissingSuppliers(googleSheetURL) {
         throw new Error('Unable to check supplier information. Please ensure the Google Sheet is publicly accessible.');
     }
 }
-
-	// Add this function to your script. Make sure your HTML has an element with id="specEditorModal"
-	// and elements like "specEditorTimestamp", "specEditorRequester", "specEditorSourceUrlDisplay",
-	// "currentCategoryTitle", "specsTextarea", "saveSpecsAndConfirmBtn", "prevCategoryBtn", "nextCategoryBtn".
-	function openSpecEditorModal(requestData) {
-	    const specEditorModal = document.getElementById('specEditorModal');
-	    if (!specEditorModal) {
-	        console.error("Specification Editor Modal not found in HTML!");
-	        showToast("Error: Spec editor not found. Please contact support.", "error");
-	        return;
-	    }
-	
-	    // Store request data for use when saving specs (already handled globally by markAsDone)
-	    // currentRequestDataForSpecs = requestData; // No need to re-assign if already done in markAsDone
-	
-	    // Display request details in the modal header
-	    document.getElementById('specEditorTimestamp').textContent = new Date(requestData.timestamp).toLocaleString();
-	    document.getElementById('specEditorRequester').textContent = requestData.requesterName;
-	    document.getElementById('specEditorSourceUrlDisplay').innerHTML = `<a href="${requestData.sourceUrl}" target="_blank">📊 View Source PO</a>`;
-	
-	    // Reset for new request
-	    categoriesWithSpecs = []; // Global variable, defined at the top of your script
-	    currentCategoryIndex = 0; // Global variable
-	    temporaryEditedSpecs = {}; // Global variable
-	
-	    // Show loading state for specs
-	    document.getElementById('specsTextarea').value = 'Loading specifications...';
-	    document.getElementById('specsTextarea').disabled = true;
-	    document.getElementById('saveSpecsAndConfirmBtn').disabled = true;
-	    document.getElementById('prevCategoryBtn').disabled = true;
-	    document.getElementById('nextCategoryBtn').disabled = true;
-	
-	    // --- Fetch specifications from the backend ---
-	    // This calls your Google Apps Script backend. You MUST have a function
-	    // named 'getSpecificationsForAllCategories' in your .gs script (e.g., verifyPO.txt).
-		
 	function openSpecEditorModal(requestData) {
 	            const specEditorModal = document.getElementById('specEditorModal');
 	            if (!specEditorModal) {

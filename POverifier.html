@@ -1204,7 +1204,6 @@ async function confirmMarkDone() {
     if (!currentRequestDataForSpecs || !currentRequestDataForSpecs.timestamp || !currentRequestDataForSpecs.requesterName) {
         console.error("Error: currentRequestDataForSpecs is missing or incomplete.", currentRequestDataForSpecs);
         showToast("Error: Missing purchase order details. Cannot submit.", "error");
-        // Ensure modal is closed or user can react
         closeModal();
         return; // Prevent submission if critical data is missing
     }
@@ -1271,7 +1270,11 @@ async function confirmMarkDone() {
         closeModal(); // Ensure loading modal closes even if fetch fails
         showToast("Error submitting PO: " + error.message, "error");
     }
+    
+    // REMOVED: The problematic recursive call that was causing duplicates
+    // No need to call confirmMarkDone again - the function is already complete
 }
+	
 function displayCurrentCategorySpecs() {
     if (categoriesWithSpecs.length === 0) {
         document.getElementById('currentCategoryTitle').textContent = 'No Categories Found';
@@ -1336,25 +1339,27 @@ document.getElementById('nextCategoryBtn').addEventListener('click', () => {
     }
 });
 
-	document.getElementById('saveSpecsAndConfirmBtn').addEventListener('click', () => {
-	    // Save the last category's edits
-	    if (categoriesWithSpecs.length > 0) {
-	        const currentCategory = categoriesWithSpecs[currentCategoryIndex];
-	        // Corrected line: Use 'specsTextarea' instead of 'specEditorTextarea'
-		temporaryEditedSpecs[currentCategory.category] = document.getElementById('specsTextarea').value;
-	    }
+document.getElementById('saveSpecsAndConfirmBtn').addEventListener('click', () => {
+    // Save the last category's edits
+    if (categoriesWithSpecs.length > 0) {
+        const currentCategory = categoriesWithSpecs[currentCategoryIndex];
+        // Save current textarea content to temporaryEditedSpecs
+        temporaryEditedSpecs[currentCategory.category] = document.getElementById('specsTextarea').value;
+    }
+
+    // Now call confirmMarkDone WITHOUT passing parameters
+    // The function will use the global temporaryEditedSpecs variable
+    if (currentRequestDataForSpecs) { 
+        confirmMarkDone(); // ← FIXED: No parameters, no recursion
+    } else {
+        console.error("No request data to confirm. currentRequestDataForSpecs is null.");
+        showToast("Error: No active request to mark done.", "error");
+    }
+    
+    // Close the spec editor modal
+    closeSpecEditorModal();
+});
 	
-	    // Now call confirmMarkDone, passing the temporary specs
-	    // The confirmMarkDone function uses currentRequestIndex which was set by the initial markAsDone call
-	    if (currentRequestDataForSpecs) { // Ensure currentRequestDataForSpecs is set
-	        confirmMarkDone(temporaryEditedSpecs); // <-- Corrected call to confirmMarkDone
-	    } else {
-	        console.error("No request data to confirm. currentRequestDataForSpecs is null.");
-	        showToast("Error: No active request to mark done.", "error");
-	    }
-	    // Assuming closeSpecEditorModal is defined elsewhere
-	    closeSpecEditorModal();
-	});
 	function showSuccessMessage(message) {
             const successDiv = document.createElement('div');
             successDiv.style.cssText = `

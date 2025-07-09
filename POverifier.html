@@ -823,6 +823,82 @@ async function checkMissingSuppliers(googleSheetURL) {
     }
 }
 
+// Add this function to your script. Make sure your HTML has an element with id="specEditorModal"
+// and elements like "specEditorTimestamp", "specEditorRequester", "specEditorSourceUrlDisplay",
+// "currentCategoryTitle", "specsTextarea", "saveSpecsAndConfirmBtn", "prevCategoryBtn", "nextCategoryBtn".
+function openSpecEditorModal(requestData) {
+    const specEditorModal = document.getElementById('specEditorModal');
+    if (!specEditorModal) {
+        console.error("Specification Editor Modal not found in HTML!");
+        return;
+    }
+
+    // Store request data for use when saving specs
+    currentRequestDataForSpecs = requestData; // Already globally declared [cite: 1]
+
+    // Display request details in the modal header
+    document.getElementById('specEditorTimestamp').textContent = new Date(requestData.timestamp).toLocaleString();
+    document.getElementById('specEditorRequester').textContent = requestData.requesterName;
+    document.getElementById('specEditorSourceUrlDisplay').innerHTML = `<a href="${requestData.sourceUrl}" target="_blank">📊 View Source PO</a>`;
+
+    // Reset for new request
+    categoriesWithSpecs = []; // Global variable [cite: 2]
+    currentCategoryIndex = 0; // Global variable [cite: 3]
+    temporaryEditedSpecs = {}; // Global variable [cite: 4]
+
+    // --- Fetch specifications from the backend ---
+    // You will need a backend function (e.g., getSpecificationsForAllCategories)
+    // that takes the sourceUrl and returns the categories with their existing specs.
+    // For example: google.script.run.withSuccessHandler(function(specs) { ... }).getSpecificationsForAllCategories(requestData.sourceUrl);
+    // This is a placeholder for your actual backend call
+    document.getElementById('specEditorTextarea').value = 'Loading specifications...';
+    document.getElementById('specEditorTextarea').disabled = true;
+    document.getElementById('saveSpecsAndConfirmBtn').disabled = true;
+    document.getElementById('prevCategoryBtn').disabled = true;
+    document.getElementById('nextCategoryBtn').disabled = true;
+
+
+    // Placeholder for the actual fetch from backend
+    // You'll need to implement a backend function (e.g., getSpecificationsForAllCategories)
+    // which fetches specs from your main specification sheet based on categories present in sourceUrl
+    // For now, let's simulate:
+    // You need to replace this with a call to your Google Apps Script backend
+    // For example:
+    google.script.run
+        .withSuccessHandler(function(specsResult) {
+            if (specsResult && typeof specsResult === 'object') {
+                // Convert the object from backend into the expected array format for frontend
+                // assuming specsResult is { category1: [spec1, spec2], category2: [spec3] }
+                categoriesWithSpecs = Object.keys(specsResult).map(category => ({
+                    category: category,
+                    specifications: specsResult[category]
+                }));
+
+                if (categoriesWithSpecs.length > 0) {
+                    displayCurrentCategorySpecs(); // Display the first category
+                    document.getElementById('specEditorTextarea').disabled = false;
+                    document.getElementById('saveSpecsAndConfirmBtn').disabled = false;
+                } else {
+                    document.getElementById('currentCategoryTitle').textContent = 'No Categories Found';
+                    document.getElementById('specsTextarea').value = 'No specifications found for this PO.';
+                    document.getElementById('specsTextarea').disabled = true;
+                    document.getElementById('saveSpecsAndConfirmBtn').disabled = true;
+                }
+            } else {
+                console.error("Invalid specs result from backend:", specsResult);
+                document.getElementById('specsTextarea').value = 'Error loading specifications.';
+            }
+        })
+        .withFailureHandler(function(error) {
+            console.error("Failed to fetch specifications:", error);
+            document.getElementById('specsTextarea').value = 'Error loading specifications: ' + error.message;
+        })
+        .getSpecificationsForAllCategories(requestData.sourceUrl); // Backend function name
+
+
+    specEditorModal.style.display = 'flex'; // Show the modal
+}
+	    
 	// Add this new function to your existing JavaScript in POverifier (1).html
 	function handleProceedAnyway() {
 	    // Make sure you close the missing supplier modal here
@@ -892,35 +968,34 @@ async function checkMissingSuppliers(googleSheetURL) {
 	                <button class="btn" onclick="closeModal()" style="background: #90caf9; color: white;">Cancel</button>
 	            </div>
 	        `;
-	    } else {
-	        let completedSection = '';
-	        if (completedOrders.length > 0) {
-	            completedSection = `
-	                <div style="margin-top: 15px;">
-	                    <h4 style="color: #27ae60; margin-bottom: 10px;">✅ All Orders with Suppliers (${completedOrders.length})</h4>
-	                    <div style="max-height: 250px; overflow-y: auto; text-align: left; font-size: 0.85rem; background: #f8f9fa; padding: 10px; border-radius: 5px;">
-	                        <ul style="margin: 0; padding-left: 20px;">
-	                        ${completedOrders.map(o => `<li style="margin-bottom: 3px;">${o}</li>`).join('')}
-	                        </ul>
-	                    </div>
-	                </div>
-	            `;
-	        }
-	        
-	        modalContent.innerHTML = `
-	            <h3>✅ Ready to Complete</h3>
-	            <p>All orders have supplier information. Are you sure you want to mark this request as done? This action cannot be undone.</p>
-	            ${completedSection}
-	            <div class="modal-actions">
-	                <button class="btn btn-success" onclick="confirmMarkDone()">
-	                    Yes, Mark Done
-	                </button>
-	                <button class="btn" onclick="closeModal()" style="background: #90caf9; color: white;">
-	                    Cancel
-	                </button>
-	            </div>
-	        `;
-	    }
+		// ... inside markAsDone(index) ...
+		} else { // This else branch is when there are NO missing suppliers
+		    let completedSection = '';
+		    if (completedOrders.length > 0) {
+		        completedSection = `
+		            <div style="margin-top: 15px;">
+		                <h4 style="color: #27ae60; margin-bottom: 10px;">✅ All Orders with Suppliers (${completedOrders.length})</h4>
+		                <div style="max-height: 250px; overflow-y: auto; text-align: left; font-size: 0.85rem; background: #f8f9fa; padding: 10px; border-radius: 5px;">
+		                    <ul style="margin: 0; padding-left: 20px;">
+		                    ${completedOrders.map(o => `<li style="margin-bottom: 3px;">${o}</li>`).join('')}
+		                    </ul>
+		                </div>
+		            </div>
+		        `;
+		    }
+		
+		    // Set currentRequestDataForSpecs here explicitly before calling openSpecEditorModal
+		    // This is important because this path bypasses handleProceedAnyway where it's set.
+		    currentRequestDataForSpecs = {
+		        timestamp: request.timestamp,
+		        requesterName: request.requesterName,
+		        sourceUrl: request.googleSheetURL
+		    };
+		
+		    // Close the current modal and then open the spec editor
+		    closeModal(); // Close the initial "checking supplier" modal (confirmModal)
+		    openSpecEditorModal(currentRequestDataForSpecs); // Directly open spec editor
+		}
 	});
 }
 
@@ -1085,19 +1160,23 @@ document.getElementById('nextCategoryBtn').addEventListener('click', () => {
     }
 });
 
-document.getElementById('saveSpecsAndConfirmBtn').addEventListener('click', () => {
-    // Save the last category's edits
-    if (categoriesWithSpecs.length > 0) {
-        const currentCategory = categoriesWithSpecs[currentCategoryIndex];
-        temporaryEditedSpecs[currentCategory.category] = document.getElementById('specEditorTextarea').value;
-    }
-    
-    // Now call the original markAsDone function, passing the temporary specs
-    if (currentRequestDataForSpecs) {
-        markAsDone(currentRequestDataForSpecs.timestamp, currentRequestDataForSpecs.requesterName, temporaryEditedSpecs);
-    }
-    closeSpecEditorModal();
-});
+	document.getElementById('saveSpecsAndConfirmBtn').addEventListener('click', () => {
+	    // Save the last category's edits
+	    if (categoriesWithSpecs.length > 0) {
+	        const currentCategory = categoriesWithSpecs[currentCategoryIndex];
+	        temporaryEditedSpecs[currentCategory.category] = document.getElementById('specEditorTextarea').value;
+	    }
+	
+	    // Now call confirmMarkDone, passing the temporary specs
+	    // The confirmMarkDone function uses currentRequestIndex which was set by the initial markAsDone call
+	    if (currentRequestDataForSpecs) { // Ensure currentRequestDataForSpecs is set
+	        confirmMarkDone(temporaryEditedSpecs); // <-- Corrected call to confirmMarkDone
+	    } else {
+	        console.error("No request data to confirm. currentRequestDataForSpecs is null.");
+	        showToast("Error: No active request to mark done.", "error");
+	    }
+	    closeSpecEditorModal();
+	});
 	    function showSuccessMessage(message) {
             const successDiv = document.createElement('div');
             successDiv.style.cssText = `

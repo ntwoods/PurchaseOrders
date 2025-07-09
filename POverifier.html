@@ -1271,7 +1271,7 @@ document.getElementById('nextCategoryBtn').addEventListener('click', () => {
 	    if (categoriesWithSpecs.length > 0) {
 	        const currentCategory = categoriesWithSpecs[currentCategoryIndex];
 	        // Corrected line: Use 'specsTextarea' instead of 'specEditorTextarea'
-	        temporaryEditedSpecs[currentCategory.category] = document.getElementById('specsTextarea').value;
+		temporaryEditedSpecs[currentCategory.category] = document.getElementById('specsTextarea').value;
 	    }
 	
 	    // Now call confirmMarkDone, passing the temporary specs

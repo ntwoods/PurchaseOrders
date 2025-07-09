@@ -907,24 +907,19 @@ async function checkMissingSuppliers(googleSheetURL) {
 	
 	            fetch(API_URL, {
 	                method: 'POST', // Use POST as your API_URL handles doPost
+	                mode: 'no-cors', // Use POST as your API_URL handles doPost			    
 	                body: params // Send parameters as URL-encoded form data
 	            })
 	            .then(response => {
-	                if (!response.ok) {
-	                    throw new Error(`HTTP error! status: ${response.status}`);
-	                }
 	                return response.json();
 	            })
 	            .then(specsResult => {
-	                if (specsResult.error) { // Check if the backend returned an error
-	                    throw new Error(specsResult.error);
-	                }
 	                if (specsResult && typeof specsResult === 'object') {
 	                    categoriesWithSpecs = Object.keys(specsResult).map(category => ({
 	                        category: category,
 	                        specifications: specsResult[category]
 	                    }));
-	
+
 	                    if (categoriesWithSpecs.length > 0) {
 	                        displayCurrentCategorySpecs();
 	                        document.getElementById('specsTextarea').disabled = false;

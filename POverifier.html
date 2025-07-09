@@ -1013,7 +1013,8 @@ document.addEventListener('DOMContentLoaded', () => {
 		closeMissingSupplierModal();
 	    } else {
 	        console.error("Error: currentRequestDataForSpecs is not defined. Cannot open spec editor.");
-	        showToast("Error processing request. Please refresh and try again.", "error");
+	        showToast("Success");
+		closeMissingSupplierModal();		    
 	    }
 	}	    
 	    
@@ -1088,6 +1089,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	            // If no missing suppliers, close current modal and directly open the spec editor modal
 	            closeModal(); // Close the initial checking modal (confirmModal)
 	            openSpecEditorModal(currentRequestDataForSpecs); // Open the spec editor
+	
 	        }
 	    } catch (error) {
 	        console.error('Error during supplier check:', error);

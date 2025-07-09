@@ -1270,7 +1270,8 @@ document.getElementById('nextCategoryBtn').addEventListener('click', () => {
 	    // Save the last category's edits
 	    if (categoriesWithSpecs.length > 0) {
 	        const currentCategory = categoriesWithSpecs[currentCategoryIndex];
-	        temporaryEditedSpecs[currentCategory.category] = document.getElementById('specEditorTextarea').value;
+	        // Corrected line: Use 'specsTextarea' instead of 'specEditorTextarea'
+	        temporaryEditedSpecs[currentCategory.category] = document.getElementById('specsTextarea').value;
 	    }
 	
 	    // Now call confirmMarkDone, passing the temporary specs
@@ -1281,9 +1282,10 @@ document.getElementById('nextCategoryBtn').addEventListener('click', () => {
 	        console.error("No request data to confirm. currentRequestDataForSpecs is null.");
 	        showToast("Error: No active request to mark done.", "error");
 	    }
+	    // Assuming closeSpecEditorModal is defined elsewhere
 	    closeSpecEditorModal();
 	});
-	    function showSuccessMessage(message) {
+	function showSuccessMessage(message) {
             const successDiv = document.createElement('div');
             successDiv.style.cssText = `
                 position: fixed;

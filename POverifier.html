@@ -877,6 +877,37 @@ async function checkMissingSuppliers(googleSheetURL) {
         throw new Error('Unable to check supplier information. Please ensure the Google Sheet is publicly accessible.');
     }
 }
+
+document.addEventListener('DOMContentLoaded', () => {
+    // Add event listener for the "Next" button
+    const nextBtn = document.getElementById('nextCategoryBtn');
+    if (nextBtn) {
+        nextBtn.addEventListener('click', () => {
+            // Check if there are more categories to display
+            if (currentCategoryIndex < categoriesWithSpecs.length - 1) {
+                currentCategoryIndex++; // Move to the next category
+                displayCurrentCategorySpecs(); // Update the modal content
+            }
+        });
+    } else {
+        console.error("Next Category Button not found!");
+    }
+
+    // Add event listener for the "Previous" button
+    const prevBtn = document.getElementById('prevCategoryBtn');
+    if (prevBtn) {
+        prevBtn.addEventListener('click', () => {
+            // Check if there are previous categories to display
+            if (currentCategoryIndex > 0) {
+                currentCategoryIndex--; // Move to the previous category
+                displayCurrentCategorySpecs(); // Update the modal content
+            }
+        });
+    } else {
+        console.error("Previous Category Button not found!");
+    }
+});	
+	
 	async function openSpecEditorModal(requestData) {
 	    const specEditorModal = document.getElementById('specEditorModal');
 	    if (!specEditorModal) {

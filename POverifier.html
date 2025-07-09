@@ -933,43 +933,31 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });	
 	
-	async function openSpecEditorModal(requestData) {
-	    const specEditorModal = document.getElementById('specEditorModal');
-	    if (!specEditorModal) {
-	        console.error("Specification Editor Modal not found in HTML!");
-	        showToast("Error: Spec editor not found. Please contact support.", "error");
-	        return;
-	    }
-	
-	    document.getElementById('specEditorTimestamp').textContent = new Date(requestData.timestamp).toLocaleString();
-	    document.getElementById('specEditorRequester').textContent = requestData.requesterName;
-	    document.getElementById('specEditorSourceUrlDisplay').innerHTML = `<a href="${requestData.sourceUrl}" target="_blank">📊 View Source PO</a>`;
-	
-    if (filteredCategoriesWithSpecs) {
-        categoriesWithSpecs = filteredCategoriesWithSpecs;
-        // No need to fetch again, just process the provided data
-        if (categoriesWithSpecs.length > 0) {
-            displayCurrentCategorySpecs();
-            document.getElementById('specsTextarea').disabled = false;
-            document.getElementById('saveSpecsAndConfirmBtn').disabled = false;
-            document.getElementById('prevCategoryBtn').disabled = currentCategoryIndex === 0;
-            document.getElementById('nextCategoryBtn').disabled = currentCategoryIndex === categoriesWithSpecs.length - 1;
-        } else {
-            document.getElementById('currentCategoryTitle').textContent = 'No Categories with Suppliers Found';
-            document.getElementById('specsTextarea').value = 'No specifications available for categories with suppliers.';
-            document.getElementById('specsTextarea').disabled = true;
-            document.getElementById('saveSpecsAndConfirmBtn').disabled = true;
-            document.getElementById('prevCategoryBtn').disabled = true;
-            document.getElementById('nextCategoryBtn').disabled = true;
-            showToast("No specifications found for categories with suppliers for this purchase order.", "info");
-        }
-    } else {
-        // This block remains for cases where openSpecEditorModal might be called directly
-        // without pre-filtering (e.g., if you later add a button to view ALL specs).
-        // For your current use case, the 'else' block should ideally not be reached
-        // if 'markAsDone' always passes the filtered data.
+async function openSpecEditorModal(requestData, filteredCategoriesWithSpecs = null) {
+    // Ensure categoriesWithSpecs is always initialized as an array
+    categoriesWithSpecs = []; // Important: Initialize globally or within this function if not global
 
-        // Set initial loading states
+    // Set timestamp and requester name based on the current request
+    currentRequestTimestamp = requestData.timestamp;
+    currentRequesterName = requestData.requesterName;
+    currentSourceUrl = requestData.sourceUrl;
+
+    // Check if filtered categories are provided and are a valid non-empty array
+    if (Array.isArray(filteredCategoriesWithSpecs) && filteredCategoriesWithSpecs.length > 0) {
+        categoriesWithSpecs = filteredCategoriesWithSpecs;
+        currentCategoryIndex = 0; // Reset index to the first category
+
+        // Display the first filtered category's specs
+        displayCurrentCategorySpecs();
+        document.getElementById('specsTextarea').disabled = false;
+        document.getElementById('saveSpecsAndConfirmBtn').disabled = false;
+        // Enable/disable navigation buttons based on current categoriesWithSpecs
+        document.getElementById('prevCategoryBtn').disabled = currentCategoryIndex === 0;
+        document.getElementById('nextCategoryBtn').disabled = categoriesWithSpecs.length === 1 || currentCategoryIndex === categoriesWithSpecs.length - 1;
+        showToast(`Displaying ${categoriesWithSpecs.length} categories with suppliers.`, "info");
+
+    } else {
+        // If no valid filtered categories, proceed to fetch all categories (as a fallback or default behavior)
         document.getElementById('currentCategoryTitle').textContent = 'Loading...';
         document.getElementById('specsTextarea').value = 'Loading specifications...';
         document.getElementById('specsTextarea').disabled = true;
@@ -991,18 +979,19 @@ document.addEventListener('DOMContentLoaded', () => {
             const specsResult = await response.json();
 
             if (specsResult && typeof specsResult === 'object') {
-                // This is where you would traditionally filter the specs if they weren't pre-filtered
                 categoriesWithSpecs = Object.keys(specsResult).map(category => ({
                     category: category,
                     specifications: Array.isArray(specsResult[category]) ? specsResult[category] : [String(specsResult[category])]
                 }));
+                currentCategoryIndex = 0; // Reset index for all categories
 
                 if (categoriesWithSpecs.length > 0) {
                     displayCurrentCategorySpecs();
                     document.getElementById('specsTextarea').disabled = false;
                     document.getElementById('saveSpecsAndConfirmBtn').disabled = false;
                     document.getElementById('prevCategoryBtn').disabled = currentCategoryIndex === 0;
-                    document.getElementById('nextCategoryBtn').disabled = currentCategoryIndex === categoriesWithSpecs.length - 1;
+                    document.getElementById('nextCategoryBtn').disabled = categoriesWithSpecs.length === 1 || currentCategoryIndex === categoriesWithSpecs.length - 1;
+                    showToast(`Loaded all ${categoriesWithSpecs.length} categories.`, "info");
                 } else {
                     document.getElementById('currentCategoryTitle').textContent = 'No Categories Found';
                     document.getElementById('specsTextarea').value = 'No specifications found for this PO.';
@@ -1030,21 +1019,30 @@ document.addEventListener('DOMContentLoaded', () => {
     specEditorModal.style.display = 'flex';
 }
 	// Add this new function to your existing JavaScript in POverifier (1).html
-	function handleProceedAnyway(index) {
-	    closeModal(); // This will close the confirmModal
-	
-	    if (currentRequestDataForSpecs) {
-	        // Retrieve filteredSpecsForEditor from sessionStorage
-	        const filteredSpecsForEditor = JSON.parse(sessionStorage.getItem('filteredSpecsForEditor'));
-	        sessionStorage.removeItem('filteredSpecsForEditor'); // Clean up
-	
-	        openSpecEditorModal(currentRequestDataForSpecs, filteredSpecsForEditor);
-	    } else {
-	        console.error("Error: currentRequestDataForSpecs is not defined. Cannot open spec editor.");
-	        showToast("Error opening spec editor. Please refresh.", "error");
-	    }
-	}
-	    
+function handleProceedAnyway(index) {
+    closeModal(); // This will close the confirmModal
+
+    if (currentRequestDataForSpecs) {
+        const storedSpecs = sessionStorage.getItem('filteredSpecsForEditor');
+        let filteredSpecsForEditor = null;
+        if (storedSpecs) {
+            try {
+                filteredSpecsForEditor = JSON.parse(storedSpecs);
+            } catch (e) {
+                console.error("Error parsing filteredSpecsForEditor from sessionStorage:", e);
+                showToast("Error: Could not retrieve saved specifications.", "error");
+            }
+        }
+        sessionStorage.removeItem('filteredSpecsForEditor'); // Clean up sessionStorage after use
+
+        // Pass the potentially null/empty filteredSpecsForEditor,
+        // openSpecEditorModal will handle it
+        openSpecEditorModal(currentRequestDataForSpecs, filteredSpecsForEditor);
+    } else {
+        console.error("Error: currentRequestDataForSpecs is not defined. Cannot open spec editor.");
+        showToast("Error opening spec editor. Please refresh.", "error");
+    }
+}	    
 async function markAsDone(index) {
     if (!requestsData || index === undefined || requestsData[index] === undefined) {
         console.error("Request data not found for index:", index);

@@ -1247,7 +1247,7 @@ function closeSpecEditorModal() {
 document.getElementById('prevCategoryBtn').addEventListener('click', () => {
     // Save current edits before moving
     const currentCategory = categoriesWithSpecs[currentCategoryIndex];
-    temporaryEditedSpecs[currentCategory.category] = document.getElementById('specEditorTextarea').value;
+	temporaryEditedSpecs[currentCategory.category] = document.getElementById('specsTextarea').value;
 
     if (currentCategoryIndex > 0) {
         currentCategoryIndex--;
@@ -1258,7 +1258,7 @@ document.getElementById('prevCategoryBtn').addEventListener('click', () => {
 document.getElementById('nextCategoryBtn').addEventListener('click', () => {
     // Save current edits before moving
     const currentCategory = categoriesWithSpecs[currentCategoryIndex];
-    temporaryEditedSpecs[currentCategory.category] = document.getElementById('specEditorTextarea').value;
+	temporaryEditedSpecs[currentCategory.category] = document.getElementById('specsTextarea').value;
 
     if (currentCategoryIndex < categoriesWithSpecs.length - 1) {
         currentCategoryIndex++;

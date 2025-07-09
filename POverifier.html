@@ -597,9 +597,8 @@
 
 
 <script>
-    const API_URL = 'https://script.google.com/macros/s/AKfycbxnXt8Ti_RvyfVMRFGbZ-qCUAK-FhmRlN0-B1CDxdKGcVizExq6-MSNMHNCQIDekiiL/exec';
-    const API_URL2 = 'https://script.google.com/macros/s/AKfycbxnXt8Ti_RvyfVMRFGbZ-qCUAK-FhmRlN0-B1CDxdKGcVizExq6-MSNMHNCQIDekiiL/exec';
-
+// Global variable to store edited specifications before final submission
+let temporaryEditedSpecs = {};
     // Ensure these are at the top, globally accessible
     let currentRequestDataForSpecs = null;
     let requestsData = [];
@@ -607,6 +606,11 @@
     let currentCategoryIndex = 0;
     let temporaryEditedSpecs = {};
     let currentRequestIndex = null; // Used by confirmMarkDone
+
+// ... (other helper functions like showToast, closeModal, loadRequests, displayCurrentCategorySpecs)	
+    const API_URL = 'https://script.google.com/macros/s/AKfycbxnXt8Ti_RvyfVMRFGbZ-qCUAK-FhmRlN0-B1CDxdKGcVizExq6-MSNMHNCQIDekiiL/exec';
+    const API_URL2 = 'https://script.google.com/macros/s/AKfycbxnXt8Ti_RvyfVMRFGbZ-qCUAK-FhmRlN0-B1CDxdKGcVizExq6-MSNMHNCQIDekiiL/exec';
+
         // countdownIntervals removed as countdown functionality is removed
 
         // Load requests on page load
@@ -1179,60 +1183,96 @@ async function markAsDone(index) {
             }
         }
 
-// Locate this function in your POverifier.html
-	async function confirmMarkDone(temporarySpecs = {}) { // <--- MODIFICATION 1: Add temporarySpecs parameter
-	    if (currentRequestIndex === null) return;
-	    
-	    const modal = document.getElementById('confirmModal');
-	    const button = modal.querySelector('.btn-success');
-	    const originalText = button.innerHTML;
-	    
-	    // Show loading state
-	    button.innerHTML = '⏳ Processing...';
-	    button.disabled = true;
-	    
-	    try {
-	        const request = requestsData[currentRequestIndex];
-	        
-	        // <--- MODIFICATION 2: Change body to use FormData for easier handling
-	        //      and to include temporarySpecs
-	        const formData = new FormData();
-	        formData.append('timestamp', request.timestamp);
-	        formData.append('requesterName', request.requesterName);
-	        formData.append('action', 'markDone');
-	        formData.append('temporarySpecs', JSON.stringify(temporarySpecs)); // Add temporary specs here
-	
-	        const response = await fetch(API_URL2, { // Make sure API_URL2 is correctly defined
-	            method: 'POST',
-	            body: formData // Use formData instead of application/x-www-form-urlencoded string
-	        });
-	        
-	        const result = await response.json();
-	        
-	        if (result.success) {
-	            // clearInterval for countdown removed
-	            requestsData.splice(currentRequestIndex, 1);
-	            loadRequests();
-	            displayRequests(requestsData); // Re-display updated list
-	            closeModal(); // Close the confirmation modal
-	
-	            showSuccessMessage('Request marked as complete!');
-	            if (result.pdfResults && result.pdfResults.length > 0) {
-	                showToast(`Generated ${result.pdfGeneratedCount} PO PDF(s)!`, 'info');
-	                // You can add logic here to display PDF links if desired
-	            }
-	        } else {
-	            throw new Error(result.error || 'Failed to mark request as done');
-	        }
-	    } catch (error) {
-	        console.error('Error marking request as done:', error);
-	        alert('Failed to mark request as done. Please try again.');
-	    } finally {
-	        button.innerHTML = originalText;
-	        button.disabled = false;
-	    }
-	}
+async function confirmMarkDone() {
+    console.log("confirmMarkDone called.");
 
+    // 1. Save the currently displayed category's specs into temporaryEditedSpecs
+    const specsTextarea = document.getElementById('specsTextarea');
+    const currentCategory = categoriesWithSpecs[currentCategoryIndex];
+
+    if (specsTextarea && currentCategory && currentCategory.category) {
+        temporaryEditedSpecs[currentCategory.category] = specsTextarea.value.split('\n').filter(line => line.trim() !== '');
+        console.log(`Saved specs for category '${currentCategory.category}':`, temporaryEditedSpecs[currentCategory.category]);
+    } else {
+        console.error("Error: Specs textarea or current category is undefined or missing category name for saving.");
+        showToast("Error: Cannot save current specifications. Please try again.", "error");
+        return; // Stop execution if essential elements are missing
+    }
+
+    console.log("Final temporaryEditedSpecs object before sending:", temporaryEditedSpecs);
+
+    // 2. Validate essential request data
+    if (!currentRequestDataForSpecs || !currentRequestDataForSpecs.timestamp || !currentRequestDataForSpecs.requesterName) {
+        console.error("Error: currentRequestDataForSpecs is missing or incomplete.", currentRequestDataForSpecs);
+        showToast("Error: Missing purchase order details. Cannot submit.", "error");
+        // Ensure modal is closed or user can react
+        closeModal();
+        return; // Prevent submission if critical data is missing
+    }
+
+    // 3. Provide user feedback during submission
+    document.getElementById('specEditorModal').style.display = 'none'; // Close the editor modal immediately
+    document.getElementById('confirmModal').style.display = 'flex'; // Show a loading modal
+    const confirmModalContent = document.getElementById('confirmModal').querySelector('.modal-content');
+    confirmModalContent.innerHTML = `
+        <div class="loader" style="width: 40px; height: 40px; margin: 20px auto;"></div>
+        <h3>Submitting PO Request...</h3>
+        <p>Please wait, this may take a moment.</p>
+    `;
+
+    try {
+        // 4. Prepare the payload for the backend
+        const payload = {
+            action: 'markDone',
+            timestamp: currentRequestDataForSpecs.timestamp,
+            requesterName: currentRequestDataForSpecs.requesterName,
+            // Stringify the entire temporaryEditedSpecs object to send it as a single JSON string
+            temporarySpecs: JSON.stringify(temporaryEditedSpecs)
+        };
+
+        // Convert payload to URL-encoded format for Google Apps Script's e.parameter
+        const formData = new URLSearchParams();
+        for (const key in payload) {
+            formData.append(key, payload[key]);
+        }
+
+        console.log("Sending payload to backend:", payload);
+        console.log("Sending formData (URL-encoded string):", formData.toString());
+
+        // 5. Send the POST request to Google Apps Script
+        const response = await fetch(API_URL2, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded' // Essential for e.parameter on Apps Script side
+            },
+            body: formData.toString()
+        });
+
+        // 6. Handle the response
+        if (!response.ok) {
+            const errorText = await response.text(); // Get raw error response for debugging
+            throw new Error(`HTTP error! status: ${response.status}. Response: ${errorText}`);
+        }
+
+        const result = await response.json(); // Parse the JSON response from Apps Script
+        console.log("Server response received:", result);
+
+        closeModal(); // Close the loading modal once response is received
+
+        if (result.success) {
+            showToast("Purchase Order marked as done successfully!", "success");
+            loadRequests(); // Refresh the main list of POs
+            temporaryEditedSpecs = {}; // Clear temporary specs after successful submission
+        } else {
+            // Display error message from the backend if success is false
+            showToast(`Failed to mark PO as done: ${result.error || 'Unknown server error'}`, "error");
+        }
+    } catch (error) {
+        console.error("Error during PO confirmation submission:", error);
+        closeModal(); // Ensure loading modal closes even if fetch fails
+        showToast("Error submitting PO: " + error.message, "error");
+    }
+}
 function displayCurrentCategorySpecs() {
     if (categoriesWithSpecs.length === 0) {
         document.getElementById('currentCategoryTitle').textContent = 'No Categories Found';

@@ -1081,8 +1081,6 @@ async function checkMissingSuppliers(googleSheetURL) {
 	        showToast(`Error checking suppliers: ${error.message}`, "error");
 	        closeModal(); // Ensure modal is closed on error
 	    }
-	    // You likely had confirmModal.style.display = 'flex'; here before. Remove it.
-	    // closeModal(); // If you had an immediate close modal, remove it.
 	}
 
         function markAsCancel(index) {

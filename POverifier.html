@@ -1022,30 +1022,29 @@ async function openSpecEditorModal(requestData, filteredCategoriesWithSpecs = nu
     specEditorModal.style.display = 'flex';
 }
 	// Add this new function to your existing JavaScript in POverifier (1).html
-function handleProceedAnyway(index) {
-    closeModal(); // This will close the confirmModal
-
-    if (currentRequestDataForSpecs) {
-        const storedSpecs = sessionStorage.getItem('filteredSpecsForEditor');
-        let filteredSpecsForEditor = null;
-        if (storedSpecs) {
-            try {
-                filteredSpecsForEditor = JSON.parse(storedSpecs);
-            } catch (e) {
-                console.error("Error parsing filteredSpecsForEditor from sessionStorage:", e);
-                showToast("Error: Could not retrieve saved specifications.", "error");
-            }
-        }
-        sessionStorage.removeItem('filteredSpecsForEditor'); // Clean up sessionStorage after use
-
-        // Pass the potentially null/empty filteredSpecsForEditor,
-        // openSpecEditorModal will handle it
-        openSpecEditorModal(currentRequestDataForSpecs, filteredSpecsForEditor);
-    } else {
-        console.error("Error: currentRequestDataForSpecs is not defined. Cannot open spec editor.");
-        showToast("Error opening spec editor. Please refresh.", "error");
-    }
-}	    
+	function handleProceedAnyway(index) {
+	    closeModal(); // Close the confirm modal
+	
+	    if (currentRequestDataForSpecs) {
+	        const storedSpecs = sessionStorage.getItem('filteredSpecsForEditor');
+	        let filteredSpecsForEditor = null;
+	
+	        if (storedSpecs) {
+	            try {
+	                filteredSpecsForEditor = JSON.parse(storedSpecs);
+	            } catch (e) {
+	                console.error("Error parsing filteredSpecsForEditor:", e);
+	                showToast("Error: Could not parse specifications.", "error");
+	            }
+	        }
+	
+	        // ✅ Pass the filtered specs (only categories with suppliers)
+	        openSpecEditorModal(currentRequestDataForSpecs, filteredSpecsForEditor);
+	    } else {
+	        showToast("Error: Missing PO request data. Please refresh.", "error");
+	    }
+	}
+	
 async function markAsDone(index) {
     if (!requestsData || index === undefined || requestsData[index] === undefined) {
         console.error("Request data not found for index:", index);

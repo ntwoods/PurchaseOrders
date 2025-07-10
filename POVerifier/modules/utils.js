@@ -51,7 +51,7 @@ function createRequestCard(request, index) {
     <div class="requester">${request.requesterName}</div>
     <div class="actions">
       <a href="${request.googleSheetURL}" target="_blank" class="btn btn-primary">📊 View Sheet</a>
-      <button class="btn btn-success">✅ Mark Done</button>
+      <button class="btn btn-success" data-index="${index}" onclick="window.handleMarkDone(this)">✅ Mark Done</button>
       <button class="btn btn-primary" style="background: linear-gradient(135deg, #f44336 0%, #e57373 100%);">❌ Cancel</button>
     </div>
   `;

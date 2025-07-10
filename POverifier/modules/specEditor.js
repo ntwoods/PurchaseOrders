@@ -4,69 +4,49 @@ let temporaryEditedSpecs = {};
 
 export function bindSpecEditorNavigation({
   categoriesWithSpecs,
-  currentRequestDataForSpecs,
   temporaryEditedSpecs,
-  confirmMarkDone
+  setCurrentCategoryIndex
 }) {
-  let currentCategoryIndex = 0;
+  let currentIndex = 0;
+  setCurrentCategoryIndex(currentIndex); // set initial index
 
-  const saveBtn = document.getElementById('saveSpecsAndConfirmBtn');
   const textarea = document.getElementById('specsTextarea');
+  const categoryTitle = document.getElementById('specCategoryTitle');
 
-  saveBtn?.addEventListener('click', () => {
-    // ✅ Save the current textarea content
-    if (categoriesWithSpecs.length > 0) {
-      const currentCategory = categoriesWithSpecs[currentCategoryIndex];
-      temporaryEditedSpecs[currentCategory.category] = textarea.value;
+  const renderCategory = () => {
+    const cat = categoriesWithSpecs[currentIndex];
+    const saved = temporaryEditedSpecs[cat.category] || '';
+    categoryTitle.textContent = cat.category;
+    textarea.value = Array.isArray(saved) ? saved.join('\n') : saved;
+    setCurrentCategoryIndex(currentIndex); // update shared index
+  };
+
+  // ✅ Handle Previous button
+  document.getElementById('prevCategoryBtn')?.addEventListener('click', () => {
+    if (currentIndex > 0) {
+      saveCurrentSpec(); // save before switching
+      currentIndex--;
+      renderCategory();
     }
+  });
 
-    // ✅ Final confirmation call
-    if (currentRequestDataForSpecs) {
-      confirmMarkDone(); // <-- must be passed from outside
-    } else {
-      console.error("No request data to confirm. currentRequestDataForSpecs is null.");
-      alert("Error: No active request to mark done.");
+  // ✅ Handle Next button
+  document.getElementById('nextCategoryBtn')?.addEventListener('click', () => {
+    if (currentIndex < categoriesWithSpecs.length - 1) {
+      saveCurrentSpec();
+      currentIndex++;
+      renderCategory();
     }
-
-    // ✅ Hide modal
-    document.getElementById('specEditorModal').style.display = 'none';
   });
 
-  const prevBtn = document.getElementById('prevCategoryBtn');
-  const nextBtn = document.getElementById('nextCategoryBtn');
-  const saveBtn = document.getElementById('saveSpecsAndConfirmBtn');
+  // ✅ Save current specs into memory
+  const saveCurrentSpec = () => {
+    const currentCategory = categoriesWithSpecs[currentIndex];
+    temporaryEditedSpecs[currentCategory.category] = textarea.value.split('\n').filter(line => line.trim() !== '');
+  };
 
-  if (prevBtn) {
-    prevBtn.addEventListener('click', () => {
-      saveCurrentSpec();
-      if (currentCategoryIndex > 0) currentCategoryIndex--;
-      displayCurrentCategorySpecs();
-    });
-  }
-
-  if (nextBtn) {
-    nextBtn.addEventListener('click', () => {
-      saveCurrentSpec();
-      if (currentCategoryIndex < categoriesWithSpecs.length - 1) currentCategoryIndex++;
-      displayCurrentCategorySpecs();
-    });
-  }
-
-  if (saveBtn) {
-    saveBtn.addEventListener('click', () => {
-      saveCurrentSpec();
-      alert("Saving final specs (you’ll later send to backend)");
-    });
-  }
-  // Cancel and Close Button Handlers
-  document.getElementById('cancelSpecEditorBtn')?.addEventListener('click', () => {
-    document.getElementById('specEditorModal').style.display = 'none';
-  });
-  
-  document.getElementById('closeSpecModalBtn')?.addEventListener('click', () => {
-    document.getElementById('specEditorModal').style.display = 'none';
-  });
-
+  // Initial render
+  renderCategory();
 }
 
 

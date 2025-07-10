@@ -51,14 +51,18 @@ export async function checkMissingSuppliers(googleSheetURL, apiUrl = API_URL) {
 
     const filteredSpecsForEditor = [];
     categoriesWithSuppliers.forEach(category => {
-      if (allSpecs[category]) {
-        filteredSpecsForEditor.push({
-          category,
-          specifications: Array.isArray(allSpecs[category])
-            ? allSpecs[category]
-            : [String(allSpecs[category])]
-        });
-      }
+    const key = Object.keys(allSpecs).find(
+      k => k.trim().toLowerCase() === category.trim().toLowerCase()
+    );
+    
+    if (key) {
+      filteredSpecsForEditor.push({
+        category,
+        specifications: Array.isArray(allSpecs[key])
+          ? allSpecs[key]
+          : [String(allSpecs[key])]
+      });
+    }
     });
 
     return { missingOrders, completedOrders, filteredSpecsForEditor };

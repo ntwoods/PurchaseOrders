@@ -34,18 +34,29 @@ window.handleMarkDone = async function (btn) {
     const { missingOrders, completedOrders, filteredSpecsForEditor } = result;
 
     if (missingOrders.length > 0) {
-      modalContent.innerHTML = `
-        <h3>⚠️ Missing Suppliers</h3>
-        <p style="color: #e74c3c;">${missingOrders.length} orders are missing suppliers:</p>
-        <ul style="text-align: left; padding-left: 20px;">
-          ${missingOrders.map(o => `<li>${o}</li>`).join('')}
-        </ul>
-        <p>You can still proceed to edit specs only for completed orders.</p>
-        <div class="modal-actions">
-          <button class="btn btn-success" onclick="window.proceedSpecEditor()">Proceed Anyway</button>
-          <button class="btn" onclick="document.getElementById('confirmModal').style.display = 'none'">Cancel</button>
-        </div>
-      `;
+    modalContent.innerHTML = `
+      <h3>⚠️ Missing Suppliers</h3>
+      <p style="color: #e74c3c;">${missingOrders.length} orders are missing suppliers:</p>
+      <ul style="text-align: left; padding-left: 20px; max-height: 150px; overflow-y: auto;">
+        ${missingOrders.map(o => `<li>${o}</li>`).join('')}
+      </ul>
+    
+      <hr style="margin: 20px 0;" />
+    
+      <h4 style="color: #4caf50;">✅ Orders Ready (Supplier Provided)</h4>
+      <p style="color: #4caf50;">${completedOrders.length} orders will proceed to spec editor:</p>
+      <ul style="text-align: left; padding-left: 20px; max-height: 150px; overflow-y: auto;">
+        ${completedOrders.map(o => `<li>${o}</li>`).join('')}
+      </ul>
+    
+      <p style="margin-top: 15px;">You can still proceed to edit specs only for completed orders.</p>
+    
+      <div class="modal-actions">
+        <button class="btn btn-success" onclick="window.proceedSpecEditor()">Proceed Anyway</button>
+        <button class="btn" onclick="document.getElementById('confirmModal').style.display = 'none'">Cancel</button>
+      </div>
+    `;
+
 
       // Save for later use
       window.__filteredSpecsForEditor = filteredSpecsForEditor;

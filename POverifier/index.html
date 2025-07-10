@@ -52,7 +52,7 @@
 
 	<div id="specEditorModal" class="modal">
 	    <div class="modal-content">
-	        <span class="close-button" onclick="closeSpecEditorModal()">&times;</span>
+		<span onclick="document.getElementById('specEditorModal').style.display = 'none'">×</span>
 	        <h2>Review and Edit Specifications</h2>
 	
 	        <div class="request-details-header" style="margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid #eee;">
@@ -68,7 +68,7 @@
 	            </div>
 	        </div>
 		<button id="saveSpecsAndConfirmBtn" class="btn btn-success">Save Specs & Confirm PO</button>
-	        <button class="btn cancel-btn" onclick="closeSpecEditorModal()">Cancel</button>
+		<button onclick="document.getElementById('specEditorModal').style.display = 'none'">Cancel</button>
 	    </div>
 	</div>
 

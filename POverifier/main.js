@@ -9,6 +9,9 @@ import { confirmMarkDone as createConfirmMarkDone } from './modules/markDone.js'
 
 // Shared state
 let currentCategoryIndex = 0;
+const setCurrentCategoryIndex = (index) => {
+  currentCategoryIndex = index;
+};
 
 // GAS endpoint
 const API_URL2 = 'https://script.google.com/macros/s/YOUR_DEPLOYED_SCRIPT_ID/exec';

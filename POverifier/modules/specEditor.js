@@ -29,6 +29,15 @@ export function bindSpecEditorNavigation() {
       alert("Saving final specs (you’ll later send to backend)");
     });
   }
+  // Cancel and Close Button Handlers
+  document.getElementById('cancelSpecEditorBtn')?.addEventListener('click', () => {
+    document.getElementById('specEditorModal').style.display = 'none';
+  });
+  
+  document.getElementById('closeSpecModalBtn')?.addEventListener('click', () => {
+    document.getElementById('specEditorModal').style.display = 'none';
+  });
+  
 }
 
 export function openSpecEditorModal(filteredSpecs) {
@@ -63,11 +72,3 @@ function saveCurrentSpec() {
 }
 
 
-// Cancel and Close Button Handlers
-document.getElementById('cancelSpecEditorBtn')?.addEventListener('click', () => {
-  document.getElementById('specEditorModal').style.display = 'none';
-});
-
-document.getElementById('closeSpecModalBtn')?.addEventListener('click', () => {
-  document.getElementById('specEditorModal').style.display = 'none';
-});

@@ -4,6 +4,15 @@ import { bindSpecEditorNavigation } from './modules/specEditor.js';
 import { confirmMarkDone } from './modules/markDone.js';
 import { checkMissingSuppliers } from './modules/api.js';
 import { openSpecEditorModal } from './modules/specEditor.js';
+import { confirmMarkDone as createConfirmMarkDone } from './modules/markDone.js';
+
+
+// Shared state
+let currentCategoryIndex = 0;
+
+// GAS endpoint
+const API_URL2 = 'https://script.google.com/macros/s/YOUR_DEPLOYED_SCRIPT_ID/exec';
+
 
 // ✅ Declare state variables (shared across logic)
 let categoriesWithSpecs = [];
@@ -13,6 +22,18 @@ let currentRequestDataForSpecs = null;
 // ✅ DOM Ready logic
 document.addEventListener('DOMContentLoaded', () => {
   loadRequests();
+  document.getElementById('saveSpecsAndConfirmBtn')?.addEventListener('click', () => {
+    const confirmMarkDone = createConfirmMarkDone({
+      categoriesWithSpecs,
+      currentCategoryIndex,
+      currentRequestDataForSpecs,
+      temporaryEditedSpecs,
+      API_URL2
+    });
+
+    confirmMarkDone(); // call the dynamically created function
+  });
+
 
   // Bind spec modal button logic
   bindSpecEditorNavigation({

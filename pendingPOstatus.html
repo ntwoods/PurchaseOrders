@@ -138,7 +138,7 @@
             }
             /* Data-title attributes for responsive view - ensure these match your TH order */
             td:nth-of-type(1):before { content: "PO Number"; }
-            td:nth-of-type(1):before { content: "Status"; }            
+            td:nth-of-type(2):before { content: "Status"; }            
             td:nth-of-type(3):before { content: "Supplier Name"; }
             td:nth-of-type(4):before { content: "Send To Supplier"; }            
             td:nth-of-type(5):before { content: "Dispatch Date"; }
@@ -183,7 +183,7 @@
             <thead>
                 <tr>
                     <th onclick="sortTable(0)">PO Number</th>
-                    <th class="button-column">Status</th> <th onclick="sortTable(1)">Supplier Name</th>
+                    <th class="button-column" onclick="sortTable(1)">Status</th>
                     <th onclick="sortTable(1)">Supplier Name</th>
                     <th onclick="sortTable(2)">Send To Supplier</th>            
                     <th onclick="sortTable(3)">Dispatch Date</th>

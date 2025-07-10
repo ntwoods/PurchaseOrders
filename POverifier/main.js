@@ -1,5 +1,15 @@
 import { loadRequests } from './modules/loadRequests.js';
 import { bindSpecEditorNavigation } from './modules/specEditor.js';
+import { bindSpecEditorNavigation } from './modules/specEditor.js';
+import { confirmMarkDone } from './modules/markDone.js'; // if separated
+
+bindSpecEditorNavigation({
+  categoriesWithSpecs,
+  currentRequestDataForSpecs,
+  temporaryEditedSpecs,
+  confirmMarkDone
+});
+
 
 document.addEventListener('DOMContentLoaded', () => {
   loadRequests();

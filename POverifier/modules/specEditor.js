@@ -2,7 +2,36 @@ let categoriesWithSpecs = [];
 let currentCategoryIndex = 0;
 let temporaryEditedSpecs = {};
 
-export function bindSpecEditorNavigation() {
+export function bindSpecEditorNavigation({
+  categoriesWithSpecs,
+  currentRequestDataForSpecs,
+  temporaryEditedSpecs,
+  confirmMarkDone
+}) {
+  let currentCategoryIndex = 0;
+
+  const saveBtn = document.getElementById('saveSpecsAndConfirmBtn');
+  const textarea = document.getElementById('specsTextarea');
+
+  saveBtn?.addEventListener('click', () => {
+    // ✅ Save the current textarea content
+    if (categoriesWithSpecs.length > 0) {
+      const currentCategory = categoriesWithSpecs[currentCategoryIndex];
+      temporaryEditedSpecs[currentCategory.category] = textarea.value;
+    }
+
+    // ✅ Final confirmation call
+    if (currentRequestDataForSpecs) {
+      confirmMarkDone(); // <-- must be passed from outside
+    } else {
+      console.error("No request data to confirm. currentRequestDataForSpecs is null.");
+      alert("Error: No active request to mark done.");
+    }
+
+    // ✅ Hide modal
+    document.getElementById('specEditorModal').style.display = 'none';
+  });
+
   const prevBtn = document.getElementById('prevCategoryBtn');
   const nextBtn = document.getElementById('nextCategoryBtn');
   const saveBtn = document.getElementById('saveSpecsAndConfirmBtn');
@@ -37,8 +66,10 @@ export function bindSpecEditorNavigation() {
   document.getElementById('closeSpecModalBtn')?.addEventListener('click', () => {
     document.getElementById('specEditorModal').style.display = 'none';
   });
-  
+
 }
+
+
 
 export function openSpecEditorModal(filteredSpecs) {
   categoriesWithSpecs = filteredSpecs;

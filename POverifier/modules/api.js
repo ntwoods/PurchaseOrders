@@ -25,9 +25,9 @@ export async function checkMissingSuppliers(googleSheetURL, apiUrl = API_URL) {
 
       if (order1?.toLowerCase().includes('order-')) {
         const info = `${order1} (${category1})`;
-        if (!supplier1 || supplier1.toLowerCase() === 'supplier name') {
-          missingOrders.push(info);
-        } else {
+      if (!supplier1 || supplier1.trim().length === 0 || supplier1.toLowerCase().includes('supplier')) {
+        missingOrders.push(info);
+      } else {
           completedOrders.push(`${info} - ${supplier1}`);
           categoriesWithSuppliers.add(category1);
         }

@@ -61,3 +61,13 @@ function saveCurrentSpec() {
     temporaryEditedSpecs[category.category] = textarea.value.split('\n').filter(line => line.trim() !== '');
   }
 }
+
+
+// Cancel and Close Button Handlers
+document.getElementById('cancelSpecEditorBtn')?.addEventListener('click', () => {
+  document.getElementById('specEditorModal').style.display = 'none';
+});
+
+document.getElementById('closeSpecModalBtn')?.addEventListener('click', () => {
+  document.getElementById('specEditorModal').style.display = 'none';
+});

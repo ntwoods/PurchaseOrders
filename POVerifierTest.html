@@ -968,80 +968,89 @@ async function openSpecEditorModal(requestData, filteredCategoriesWithSpecs = nu
     currentSourceUrl = requestData.sourceUrl;
 
     // Check if filtered categories are provided and are a valid non-empty array
-    if (Array.isArray(filteredCategoriesWithSpecs) && filteredCategoriesWithSpecs.length > 0) {
-        categoriesWithSpecs = filteredCategoriesWithSpecs;
-        currentCategoryIndex = 0; // Reset index to the first category
+    // MODIFICATION START
+    if (filteredCategoriesWithSpecs !== null) { // Check if it was explicitly provided, even if empty
+        if (Array.isArray(filteredCategoriesWithSpecs) && filteredCategoriesWithSpecs.length > 0) {
+            categoriesWithSpecs = filteredCategoriesWithSpecs; // 
+            currentCategoryIndex = 0; // Reset index to the first category
 
-        // Display the first filtered category's specs
-        displayCurrentCategorySpecs();
-        document.getElementById('specsTextarea').disabled = false;
-        document.getElementById('saveSpecsAndConfirmBtn').disabled = false;
-        // Enable/disable navigation buttons based on current categoriesWithSpecs
-        document.getElementById('prevCategoryBtn').disabled = currentCategoryIndex === 0;
-        document.getElementById('nextCategoryBtn').disabled = categoriesWithSpecs.length === 1 || currentCategoryIndex === categoriesWithSpecs.length - 1;
-        showToast(`Displaying ${categoriesWithSpecs.length} categories with suppliers.`, "info");
-
-    } else {
-        // If no valid filtered categories, proceed to fetch all categories (as a fallback or default behavior)
-        document.getElementById('currentCategoryTitle').textContent = 'Loading...';
-        document.getElementById('specsTextarea').value = 'Loading specifications...';
-        document.getElementById('specsTextarea').disabled = true;
-        document.getElementById('saveSpecsAndConfirmBtn').disabled = true;
-        document.getElementById('prevCategoryBtn').disabled = true;
-        document.getElementById('nextCategoryBtn').disabled = true;
-
-        const params = new URLSearchParams();
-        params.append('action', 'getSpecificationsForAllCategories');
-        params.append('sourceUrl', requestData.sourceUrl);
-        const fetchUrl = `${API_URL}?${params.toString()}`;
-
-        try {
-            const response = await fetch(fetchUrl, { method: 'GET' });
-            if (!response.ok) {
-                const errorText = await response.text();
-                throw new Error(`HTTP error! status: ${response.status}. Response: ${errorText}`);
-            }
-            const specsResult = await response.json();
-
-            if (specsResult && typeof specsResult === 'object') {
-                categoriesWithSpecs = Object.keys(specsResult).map(category => ({
-                    category: category,
-                    specifications: Array.isArray(specsResult[category]) ? specsResult[category] : [String(specsResult[category])]
-                }));
-                currentCategoryIndex = 0; // Reset index for all categories
-
-                if (categoriesWithSpecs.length > 0) {
-                    displayCurrentCategorySpecs();
-                    document.getElementById('specsTextarea').disabled = false;
-                    document.getElementById('saveSpecsAndConfirmBtn').disabled = false;
-                    document.getElementById('prevCategoryBtn').disabled = currentCategoryIndex === 0;
-                    document.getElementById('nextCategoryBtn').disabled = categoriesWithSpecs.length === 1 || currentCategoryIndex === categoriesWithSpecs.length - 1;
-                    showToast(`Loaded all ${categoriesWithSpecs.length} categories.`, "info");
-                } else {
-                    document.getElementById('currentCategoryTitle').textContent = 'No Categories Found';
-                    document.getElementById('specsTextarea').value = 'No specifications found for this PO.';
-                    document.getElementById('specsTextarea').disabled = true;
-                    document.getElementById('saveSpecsAndConfirmBtn').disabled = true;
-                    document.getElementById('prevCategoryBtn').disabled = true;
-                    document.getElementById('nextCategoryBtn').disabled = true;
-                    showToast("No specifications found for this purchase order.", "info");
-                }
-            } else {
-                console.error("Invalid specs result from backend:", specsResult);
-                showToast("Error loading specs: Invalid data format received from server.", "error");
-                document.getElementById('specsTextarea').value = 'Error loading specifications: Invalid data.';
-            }
-        } catch (error) {
-            console.error("Failed to fetch specifications:", error);
-            showToast("Error loading specifications: " + error.message, "error");
-            document.getElementById('specsTextarea').value = 'Error loading specifications: ' + error.message;
+            // Display the first filtered category's specs
+            displayCurrentCategorySpecs(); // [cite: 295]
+            document.getElementById('specsTextarea').disabled = false; // [cite: 295]
+            document.getElementById('saveSpecsAndConfirmBtn').disabled = false; // [cite: 295]
+            // Enable/disable navigation buttons based on current categoriesWithSpecs
+            document.getElementById('prevCategoryBtn').disabled = currentCategoryIndex === 0; // [cite: 296]
+            document.getElementById('nextCategoryBtn').disabled = categoriesWithSpecs.length === 1 || currentCategoryIndex === categoriesWithSpecs.length - 1; // [cite: 296]
+            showToast(`Displaying ${categoriesWithSpecs.length} categories with suppliers.`, "info"); // 
+        } else {
+            // If filteredCategoriesWithSpecs was provided but is empty, indicate no specs
+            document.getElementById('currentCategoryTitle').textContent = 'No Categories with Suppliers Found';
+            document.getElementById('specsTextarea').value = 'No specifications found for categories with suppliers.';
             document.getElementById('specsTextarea').disabled = true;
             document.getElementById('saveSpecsAndConfirmBtn').disabled = true;
             document.getElementById('prevCategoryBtn').disabled = true;
             document.getElementById('nextCategoryBtn').disabled = true;
+            showToast("No specifications found for categories with suppliers in this purchase order.", "info");
+        }
+    } else { // MODIFICATION END - This else block is now the true fallback
+        // If no filtered categories were provided at all, proceed to fetch all categories (as a fallback or default behavior)
+        document.getElementById('currentCategoryTitle').textContent = 'Loading...'; // [cite: 298]
+        document.getElementById('specsTextarea').value = 'Loading specifications...'; // [cite: 298]
+        document.getElementById('specsTextarea').disabled = true; // [cite: 298]
+        document.getElementById('saveSpecsAndConfirmBtn').disabled = true; // [cite: 298]
+        document.getElementById('prevCategoryBtn').disabled = true; // [cite: 298]
+        document.getElementById('nextCategoryBtn').disabled = true; // [cite: 299]
+        const params = new URLSearchParams(); // [cite: 299]
+        params.append('action', 'getSpecificationsForAllCategories'); // [cite: 299]
+        params.append('sourceUrl', requestData.sourceUrl); // [cite: 299]
+        const fetchUrl = `${API_URL}?${params.toString()}`; // [cite: 300]
+        try {
+            const response = await fetch(fetchUrl, { method: 'GET' }); // [cite: 301]
+            if (!response.ok) { // [cite: 301]
+                const errorText = await response.text(); // [cite: 302]
+                throw new Error(`HTTP error! status: ${response.status}. Response: ${errorText}`); // [cite: 302]
+            }
+            const specsResult = await response.json(); // [cite: 303]
+            if (specsResult && typeof specsResult === 'object') { // [cite: 303]
+                categoriesWithSpecs = Object.keys(specsResult).map(category => ({ // [cite: 304]
+                    category: category, // [cite: 304]
+                    specifications: Array.isArray(specsResult[category]) ? specsResult[category] : [String(specsResult[category])] // [cite: 304]
+                }));
+                currentCategoryIndex = 0; // Reset index for all categories // [cite: 304]
+
+                if (categoriesWithSpecs.length > 0) { // [cite: 305]
+                    displayCurrentCategorySpecs(); // [cite: 305]
+                    document.getElementById('specsTextarea').disabled = false; // [cite: 305]
+                    document.getElementById('saveSpecsAndConfirmBtn').disabled = false; // [cite: 305]
+                    document.getElementById('prevCategoryBtn').disabled = currentCategoryIndex === 0; // [cite: 305]
+                    document.getElementById('nextCategoryBtn').disabled = categoriesWithSpecs.length === 1 || // [cite: 306]
+                        currentCategoryIndex === categoriesWithSpecs.length - 1; // [cite: 306]
+                    showToast(`Loaded all ${categoriesWithSpecs.length} categories.`, "info"); // [cite: 307]
+                } else {
+                    document.getElementById('currentCategoryTitle').textContent = 'No Categories Found'; // [cite: 308]
+                    document.getElementById('specsTextarea').value = 'No specifications found for this PO.'; // [cite: 308]
+                    document.getElementById('specsTextarea').disabled = true; // [cite: 308]
+                    document.getElementById('saveSpecsAndConfirmBtn').disabled = true; // [cite: 308]
+                    document.getElementById('prevCategoryBtn').disabled = true; // [cite: 309]
+                    document.getElementById('nextCategoryBtn').disabled = true; // [cite: 309]
+                    showToast("No specifications found for this purchase order.", "info"); // [cite: 309]
+                }
+            } else {
+                console.error("Invalid specs result from backend:", specsResult); // [cite: 310]
+                showToast("Error loading specs: Invalid data format received from server.", "error"); // [cite: 310]
+                document.getElementById('specsTextarea').value = 'Error loading specifications: Invalid data.'; // [cite: 311]
+            }
+        } catch (error) {
+            console.error("Failed to fetch specifications:", error); // [cite: 312]
+            showToast("Error loading specifications: " + error.message, "error"); // [cite: 312]
+            document.getElementById('specsTextarea').value = 'Error loading specifications: ' + error.message; // [cite: 312]
+            document.getElementById('specsTextarea').disabled = true; // [cite: 313]
+            document.getElementById('saveSpecsAndConfirmBtn').disabled = true; // [cite: 313]
+            document.getElementById('prevCategoryBtn').disabled = true; // [cite: 313]
+            document.getElementById('nextCategoryBtn').disabled = true; // [cite: 313]
         }
     }
-    specEditorModal.style.display = 'flex';
+    specEditorModal.style.display = 'flex'; // [cite: 314]
 }
 	// Add this new function to your existing JavaScript in POverifier (1).html
 function handleProceedAnyway(index) {

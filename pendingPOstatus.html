@@ -138,16 +138,42 @@
             }
             /* Data-title attributes for responsive view - ensure these match your TH order */
             td:nth-of-type(1):before { content: "PO Number"; }
-            td:nth-of-type(2):before { content: "Supplier Name"; }
-            td:nth-of-type(3):before { content: "Send To Supplier"; }            
-            td:nth-of-type(4):before { content: "Dispatch Date"; }
-            td:nth-of-type(5):before { content: "Dispatch Follow Up Reminder"; }
-            td:nth-of-type(6):before { content: "Follow Up A Day Before"; }
-            td:nth-of-type(7):before { content: "Dispatch Details Received"; }
-            td:nth-of-type(8):before { content: "Expected Delivery Date"; }
-            td:nth-of-type(9):before { content: "Invoice URL"; }
-            td:nth-of-type(10):before { content: "Dispatch Follow Up"; }
+            td:nth-of-type(1):before { content: "Status"; }            
+            td:nth-of-type(3):before { content: "Supplier Name"; }
+            td:nth-of-type(4):before { content: "Send To Supplier"; }            
+            td:nth-of-type(5):before { content: "Dispatch Date"; }
+            td:nth-of-type(6):before { content: "Dispatch Follow Up Reminder"; }
+            td:nth-of-type(7):before { content: "Follow Up A Day Before"; }
+            td:nth-of-type(8):before { content: "Dispatch Details Received"; }
+            td:nth-of-type(9):before { content: "Expected Delivery Date"; }
+            td:nth-of-type(10):before { content: "Invoice URL"; }
+            td:nth-of-type(11):before { content: "Dispatch Follow Up"; }
         }
+        /* Add this to your <style> block */
+        .status-button {
+            background-color: #4CAF50; /* Green */
+            border: none;
+            color: white;
+            padding: 8px 12px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 14px;
+            margin: 0; /* Remove default button margin */
+            cursor: pointer;
+            border-radius: 4px;
+            transition: background-color 0.3s ease;
+        }
+        
+        .status-button:hover {
+            background-color: #45a049;
+        }
+        
+        /* Adjust column width if needed for the button column */
+        th.button-column, td.button-column {
+            min-width: 120px; /* Adjust as needed */
+            white-space: nowrap;
+        }        
     </style>
 </head>
 <body>
@@ -157,6 +183,7 @@
             <thead>
                 <tr>
                     <th onclick="sortTable(0)">PO Number</th>
+                    <th class="button-column">Status</th> <th onclick="sortTable(1)">Supplier Name</th>
                     <th onclick="sortTable(1)">Supplier Name</th>
                     <th onclick="sortTable(2)">Send To Supplier</th>            
                     <th onclick="sortTable(3)">Dispatch Date</th>
@@ -168,21 +195,23 @@
                     <th onclick="sortTable(9)">Dispatch Follow Up</th>                    
                 </tr>
             </thead>
-            <tbody>
-                <tr><td colspan="10" class="no-data">Loading data...</td></tr>
-            </tbody>
+                <tbody>
+                    <tr><td colspan="11" class="no-data">Loading data...</td></tr>
+                </tbody>
         </table>
     </div>
 
     <script>
         const API_URL = "https://script.google.com/macros/s/AKfycbyoWOwfZwFtn1MsXw4xTl95s1DXpFJPTtq_ocUCvW80_nglL7Ls-EHgcJfVvb8IlhiQ/exec";
         let tableData = []; // Store the fetched data
-
+        
         const tableBody = document.querySelector('#poTable tbody');
-
+        
         // Define the explicit order of columns based on your HTML headers
+        // Assuming your API response will now include 'statusLevel' for each item
         const columnOrder = [
             'poNumber',
+            'statusLevel', // New entry for the Status button column
             'supplierName',
             'sendToSupplier',
             'dispatchDate',
@@ -193,7 +222,7 @@
             'invoiceURL',
             'dispatchFollowUP'
         ];
-
+        
         function formatDate(isoString) {
             if (!isoString) return '';
             try {
@@ -208,44 +237,50 @@
                 return isoString; // Return original if invalid date
             }
         }
-
+        
         function renderTable(dataToRender) {
             tableBody.innerHTML = ''; // Clear existing rows
             if (dataToRender.length === 0) {
                 const noDataRow = document.createElement('tr');
-                noDataRow.innerHTML = `<td colspan="10" class="no-data">No data available.</td>`;
+                noDataRow.innerHTML = `<td colspan="11" class="no-data">No data available.</td>`; // Changed colspan
                 tableBody.appendChild(noDataRow);
                 return;
             }
-
+        
             dataToRender.forEach(item => {
                 const row = tableBody.insertRow();
-                
+        
                 // Iterate through the predefined columnOrder to ensure correct data-to-column mapping
                 columnOrder.forEach(key => {
                     const cell = row.insertCell(); // insertCell() without index adds to the end
                     let cellContent = item[key];
-
-                    // Apply special formatting for dates
-                    if (key.includes('Date') || key.includes('Reminder') || key.includes('Day')) {
+        
+                    if (key === 'statusLevel') { // This is our new "Status" column
+                        const statusURL = `https://your.base.url/status?level=${item.statusLevel}`; // Construct your URL
+                        const button = document.createElement('button');
+                        button.textContent = 'View Status';
+                        button.onclick = () => {
+                            window.location.href = statusURL;
+                        };
+                        // Optional: Add a class for styling the button
+                        button.classList.add('status-button');
+                        cell.appendChild(button);
+                    } else if (key.includes('Date') || key.includes('Reminder') || key.includes('Day')) {
                         cellContent = formatDate(cellContent);
-                    }
-
-                    // Apply classes for Dispatch Follow Up status
-                    if (key === 'dispatchFollowUP') {
-                        if (cellContent.toLowerCase() === 'delayed') {
+                        cell.textContent = cellContent;
+                    } else if (key === 'dispatchFollowUP') {
+                        if (cellContent && cellContent.toLowerCase() === 'delayed') {
                             cell.classList.add('status-delayed');
-                        } else if (cellContent.toLowerCase() === 'on time') {
+                        } else if (cellContent && cellContent.toLowerCase() === 'on time') {
                             cell.classList.add('status-on-time');
-                        } else if (cellContent.toLowerCase() === 'hold') {
+                        } else if (cellContent && cellContent.toLowerCase() === 'hold') {
                             cell.classList.add('status-hold');
                         }
-                    } else if (key === 'sendToSupplier' && cellContent.toLowerCase() === 'hold') {
+                        cell.textContent = cellContent;
+                    } else if (key === 'sendToSupplier' && cellContent && cellContent.toLowerCase() === 'hold') {
                          cell.classList.add('status-hold');
-                    }
-
-                    // Make invoiceURL clickable
-                    if (key === 'invoiceURL' && cellContent) {
+                         cell.textContent = cellContent;
+                    } else if (key === 'invoiceURL' && cellContent) {
                         cell.innerHTML = `<a href="${cellContent}" target="_blank">View Invoice</a>`;
                     } else {
                         cell.textContent = cellContent;
@@ -253,45 +288,62 @@
                 });
             });
         }
-
+        
         let sortDirection = {}; // To keep track of sort direction for each column
-
+        
         function sortTable(columnIndex) {
+            // IMPORTANT: The sortable columns are now shifted by one due to the new "Status" column.
+            // If you want the "Status" column to be sortable, you'd need to define how to sort it.
+            // For simplicity, let's assume 'statusLevel' itself is sortable if present in data.
+            // If it's just a button and not based on sortable data, you might exclude it from sortTable.
+        
+            // Adjust columnIndex for actual data key if button column is not sortable
+            let actualDataColumnIndex = columnIndex;
+            if (columnIndex >= 1) { // If it's the Supplier Name column or later
+                actualDataColumnIndex -= 1; // Subtract 1 because 'statusLevel' is not directly sortable by its content here.
+            }
+        
+        
             const isAscending = sortDirection[columnIndex] === 'asc';
             sortDirection[columnIndex] = isAscending ? 'desc' : 'asc';
-
+        
             const sortedData = [...tableData].sort((a, b) => {
                 // Get the correct key name based on the column index in columnOrder
-                const sortKey = columnOrder[columnIndex]; 
+                const sortKey = columnOrder[columnIndex]; // Use the original columnIndex for columnOrder
+        
+                // Special handling if the 'statusLevel' column is clicked for sorting, but you don't have
+                // a direct sortable value. You might choose to do nothing, or sort by a related field.
+                if (sortKey === 'statusLevel') {
+                    return 0; // Or implement custom sorting logic if 'statusLevel' corresponds to a value
+                }
+        
+        
                 const aValue = a[sortKey];
                 const bValue = b[sortKey];
-
+        
                 if (typeof aValue === 'string' && typeof bValue === 'string') {
-                    // Handle date string sorting for date columns
                     if (sortKey.includes('Date') || sortKey.includes('Reminder') || sortKey.includes('Day')) {
                         const dateA = new Date(aValue);
                         const dateB = new Date(bValue);
-                        if (isNaN(dateA.getTime()) && isNaN(dateB.getTime())) return 0; // Both invalid dates
-                        if (isNaN(dateA.getTime())) return isAscending ? 1 : -1; // Invalid date goes last
-                        if (isNaN(dateB.getTime())) return isAscending ? -1 : 1; // Invalid date goes last
+                        if (isNaN(dateA.getTime()) && isNaN(dateB.getTime())) return 0;
+                        if (isNaN(dateA.getTime())) return isAscending ? 1 : -1;
+                        if (isNaN(dateB.getTime())) return isAscending ? -1 : 1;
                         return isAscending ? dateA.getTime() - dateB.getTime() : dateB.getTime() - dateA.getTime();
                     }
-                    // For other strings, use localeCompare
                     return isAscending ? aValue.localeCompare(bValue) : bValue.localeCompare(aValue);
                 }
                 if (typeof aValue === 'number' && typeof bValue === 'number') {
                     return isAscending ? aValue - bValue : bValue - aValue;
                 }
-                // Handle empty strings/nulls for sorting
                 if (!aValue && !bValue) return 0;
                 if (!aValue) return isAscending ? 1 : -1;
                 if (!bValue) return isAscending ? -1 : 1;
-
+        
                 return isAscending ? (aValue > bValue ? 1 : -1) : (aValue < bValue ? 1 : -1);
             });
             renderTable(sortedData);
         }
-
+        
         // Function to fetch data from the API
         async function fetchData() {
             try {
@@ -300,13 +352,20 @@
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
                 tableData = await response.json();
+                // Assuming your fetched data now includes a 'statusLevel' for each item
+                // If not, you might need to add it here based on some other logic
+                // For example:
+                tableData = tableData.map(item => ({
+                    ...item,
+                    statusLevel: item.poNumber // Or derive from other data, e.g., item.someStatusValue
+                }));
                 renderTable(tableData);
             } catch (error) {
                 console.error("Could not fetch data:", error);
-                tableBody.innerHTML = `<tr><td colspan="10" class="no-data">Failed to load data. Please try again later.</td></tr>`;
+                tableBody.innerHTML = `<tr><td colspan="11" class="no-data">Failed to load data. Please try again later.</td></tr>`; // Changed colspan
             }
         }
-
+        
         // Initial fetch and render when the page loads
         document.addEventListener('DOMContentLoaded', fetchData);
     </script>

@@ -208,10 +208,10 @@
         const tableBody = document.querySelector('#poTable tbody');
         
         // Define the explicit order of columns based on your HTML headers
-        // Assuming your API response will now include 'statusLevel' for each item
+        // 'level' is now expected directly from your backend data as the URL
         const columnOrder = [
             'poNumber',
-            'statusLevel', // New entry for the Status button column
+            'level', // This will now hold the direct URL for the Status button
             'supplierName',
             'sendToSupplier',
             'dispatchDate',
@@ -242,7 +242,7 @@
             tableBody.innerHTML = ''; // Clear existing rows
             if (dataToRender.length === 0) {
                 const noDataRow = document.createElement('tr');
-                noDataRow.innerHTML = `<td colspan="11" class="no-data">No data available.</td>`; // Changed colspan
+                noDataRow.innerHTML = `<td colspan="11" class="no-data">No data available.</td>`; // Changed colspan to 11
                 tableBody.appendChild(noDataRow);
                 return;
             }
@@ -255,16 +255,22 @@
                     const cell = row.insertCell(); // insertCell() without index adds to the end
                     let cellContent = item[key];
         
-                    if (key === 'statusLevel') { // This is our new "Status" column
-                        const statusURL = `https://your.base.url/status?level=${item.statusLevel}`; // Construct your URL
-                        const button = document.createElement('button');
-                        button.textContent = 'View Status';
-                        button.onclick = () => {
-                            window.location.href = statusURL;
-                        };
-                        // Optional: Add a class for styling the button
-                        button.classList.add('status-button');
-                        cell.appendChild(button);
+                    if (key === 'level') { // This is our new "Status" column, now using the 'level' URL directly
+                        const statusURL = item.level; // Directly use the 'level' value as the URL
+                        
+                        // Check if the URL exists and is valid before creating the button
+                        if (statusURL && typeof statusURL === 'string' && statusURL.startsWith('http')) {
+                            const button = document.createElement('button');
+                            button.textContent = 'View Status';
+                            button.onclick = () => {
+                                window.open(statusURL, '_blank'); // Open in a new tab
+                            };
+                            // Optional: Add a class for styling the button
+                            button.classList.add('status-button');
+                            cell.appendChild(button);
+                        } else {
+                            cell.textContent = 'N/A'; // Or some other indicator if URL is missing/invalid
+                        }
                     } else if (key.includes('Date') || key.includes('Reminder') || key.includes('Day')) {
                         cellContent = formatDate(cellContent);
                         cell.textContent = cellContent;
@@ -292,32 +298,17 @@
         let sortDirection = {}; // To keep track of sort direction for each column
         
         function sortTable(columnIndex) {
-            // IMPORTANT: The sortable columns are now shifted by one due to the new "Status" column.
-            // If you want the "Status" column to be sortable, you'd need to define how to sort it.
-            // For simplicity, let's assume 'statusLevel' itself is sortable if present in data.
-            // If it's just a button and not based on sortable data, you might exclude it from sortTable.
-        
-            // Adjust columnIndex for actual data key if button column is not sortable
-            let actualDataColumnIndex = columnIndex;
-            if (columnIndex >= 1) { // If it's the Supplier Name column or later
-                actualDataColumnIndex -= 1; // Subtract 1 because 'statusLevel' is not directly sortable by its content here.
+            // If the 'level' column is clicked (columnIndex 1), we typically don't sort by the URL itself.
+            // You can choose to skip sorting for this column or define a custom logic if needed.
+            if (columnOrder[columnIndex] === 'level') {
+                return; // Do nothing if the 'Status' button column is clicked for sorting
             }
-        
         
             const isAscending = sortDirection[columnIndex] === 'asc';
             sortDirection[columnIndex] = isAscending ? 'desc' : 'asc';
         
             const sortedData = [...tableData].sort((a, b) => {
-                // Get the correct key name based on the column index in columnOrder
-                const sortKey = columnOrder[columnIndex]; // Use the original columnIndex for columnOrder
-        
-                // Special handling if the 'statusLevel' column is clicked for sorting, but you don't have
-                // a direct sortable value. You might choose to do nothing, or sort by a related field.
-                if (sortKey === 'statusLevel') {
-                    return 0; // Or implement custom sorting logic if 'statusLevel' corresponds to a value
-                }
-        
-        
+                const sortKey = columnOrder[columnIndex];
                 const aValue = a[sortKey];
                 const bValue = b[sortKey];
         
@@ -352,17 +343,32 @@
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
                 tableData = await response.json();
-                // Assuming your fetched data now includes a 'statusLevel' for each item
-                // If not, you might need to add it here based on some other logic
-                // For example:
-                tableData = tableData.map(item => ({
-                    ...item,
-                    statusLevel: item.poNumber // Or derive from other data, e.g., item.someStatusValue
-                }));
+                // Assuming your backend data already provides 'level' as the direct URL
+                // Example if your data is structured as an array of arrays and 'level' is at index 36
+                // If your API returns objects with named properties, you won't need this mapping if 'level' is already a property.
+                // For example, if your API returns [{ poNumber: 'PO123', level: 'http://example.com/status/123', ... }]
+                // Then, the following map function is NOT needed.
+                // However, if your API returns an array of arrays like [['PO123', ..., 'http://example.com/status/123', ...]],
+                // then you would need to map it to objects:
+                // tableData = tableData.map(row => ({
+                //     poNumber: row[0],
+                //     level: row[36], // Assuming 'level' (the URL) is at index 36 in your backend array row
+                //     supplierName: row[1], // Adjust other indices as per your actual backend data structure
+                //     sendToSupplier: row[2],
+                //     dispatchDate: row[3],
+                //     dispatchFollowUPReminder: row[4],
+                //     followUPADaybefore: row[5],
+                //     dispatchDetailsReceived: row[6],
+                //     expectedDeliveryDate: row[7],
+                //     invoiceURL: row[8],
+                //     dispatchFollowUP: row[9]
+                // }));
+                // Ensure that the keys in columnOrder match the property names in your `item` objects.
+        
                 renderTable(tableData);
             } catch (error) {
                 console.error("Could not fetch data:", error);
-                tableBody.innerHTML = `<tr><td colspan="11" class="no-data">Failed to load data. Please try again later.</td></tr>`; // Changed colspan
+                tableBody.innerHTML = `<tr><td colspan="11" class="no-data">Failed to load data. Please try again later.</td></tr>`; // Changed colspan to 11
             }
         }
         

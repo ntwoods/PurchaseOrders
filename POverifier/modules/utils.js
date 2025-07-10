@@ -58,3 +58,15 @@ function createRequestCard(request, index) {
 
   return card;
 }
+
+
+export function showToast(message, type = 'info') {
+  alert(message); // Or your styled toast/snackbar logic
+}
+
+export function closeModal() {
+  const modal = document.getElementById('confirmModal');
+  if (modal) {
+    modal.style.display = 'none';
+  }
+}

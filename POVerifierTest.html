@@ -812,3 +812,625 @@ let temporaryEditedSpecs = {};
             
             return card;
         }
+
+
+        function showError(message) {
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('requests-container').style.display = 'none';
+            document.getElementById('empty-state').style.display = 'none';
+            document.getElementById('error-state').style.display = 'block';
+            document.getElementById('error-message').textContent = message;
+        }
+
+        // Function to check Google Sheets for missing supplier names
+async function checkMissingSuppliers(googleSheetURL) {
+    try {
+        let csvUrl = googleSheetURL;
+        if (googleSheetURL.includes('/edit')) {
+            const sheetId = googleSheetURL.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
+            if (sheetId) {
+                csvUrl = `https://docs.google.com/spreadsheets/d/${sheetId[1]}/export?format=csv`;
+            }
+        }
+
+        const response = await fetch(csvUrl);
+        if (!response.ok) {
+            throw new Error('Unable to access the Google Sheet');
+        }
+
+        const csvText = await response.text();
+        const rows = csvText.split('\n').map(row => {
+            const cells = [];
+            let currentCell = '';
+            let inQuotes = false;
+
+            for (let i = 0; i < row.length; i++) {
+                const char = row[i];
+                if (char === '"' && !inQuotes) {
+                    inQuotes = true;
+                } else if (char === '"' && inQuotes) {
+                    inQuotes = false;
+                } else if (char === ',' && !inQuotes) {
+                    cells.push(currentCell.trim());
+                    currentCell = '';
+                } else {
+                    currentCell += char;
+                }
+            }
+            cells.push(currentCell.trim());
+            return cells;
+        });
+
+        let missingOrders = [];
+        let completedOrders = [];
+        let categoriesWithSuppliers = new Set(); // To store unique categories with suppliers
+
+        // Column A-C block (Order-1, Order-3, ...)
+        for (let i = 0; i < rows.length; i++) {
+            const orderCell = rows[i][0] || '';
+            if (orderCell.toLowerCase().includes('order-')) {
+                const categoryCell = rows[i][1] || '';
+                const supplierCell = rows[i][2] || '';
+                const orderInfo = `${orderCell} (${categoryCell})`;
+
+                if (!supplierCell || supplierCell.toLowerCase() === 'supplier name') {
+                    missingOrders.push(orderInfo);
+                } else {
+                    completedOrders.push(`${orderInfo} - ${supplierCell}`);
+                    if (categoryCell) {
+                        categoriesWithSuppliers.add(categoryCell.trim());
+                    }
+                }
+            }
+        }
+
+        // Column F-H block (Order-2, Order-4, ...)
+        for (let i = 0; i < rows.length; i++) {
+            const orderCell = rows[i][5] || '';
+            if (orderCell.toLowerCase().includes('order-')) {
+                const categoryCell = rows[i][6] || '';
+                const supplierCell = rows[i][7] || '';
+                const orderInfo = `${orderCell} (${categoryCell})`;
+
+                if (!supplierCell || supplierCell.toLowerCase() === 'supplier name') {
+                    missingOrders.push(orderInfo);
+                } else {
+                    completedOrders.push(`${orderInfo} - ${supplierCell}`);
+                    if (categoryCell) {
+                        categoriesWithSuppliers.add(categoryCell.trim());
+                    }
+                }
+            }
+        }
+
+        // Now, fetch all specifications from the backend, then filter based on categoriesWithSuppliers
+        const allSpecsResponse = await fetch(`${API_URL}?action=getSpecificationsForAllCategories&sourceUrl=${encodeURIComponent(googleSheetURL)}`);
+        if (!allSpecsResponse.ok) {
+            const errorText = await allSpecsResponse.text();
+            throw new Error(`HTTP error! status: ${allSpecsResponse.status}. Response: ${errorText}`);
+        }
+        const allSpecs = await allSpecsResponse.json();
+
+        let filteredSpecsForEditor = [];
+        if (allSpecs && typeof allSpecs === 'object') {
+            for (const category of categoriesWithSuppliers) {
+                if (allSpecs[category]) {
+                    filteredSpecsForEditor.push({
+                        category: category,
+                        specifications: Array.isArray(allSpecs[category]) ? allSpecs[category] : [String(allSpecs[category])]
+                    });
+                }
+            }
+        }
+        return { missingOrders, completedOrders, filteredSpecsForEditor };
+    } catch (error) {
+        console.error('Error checking suppliers:', error);
+        throw new Error('Unable to check supplier information. Please ensure the Google Sheet is publicly accessible.');
+    }
+}
+document.addEventListener('DOMContentLoaded', () => {
+    // Add event listener for the "Next" button
+    const nextBtn = document.getElementById('nextCategoryBtn');
+    if (nextBtn) {
+        nextBtn.addEventListener('click', () => {
+            // Check if there are more categories to display
+            if (currentCategoryIndex < categoriesWithSpecs.length - 1) {
+                currentCategoryIndex++; // Move to the next category
+                displayCurrentCategorySpecs(); // Update the modal content
+            }
+        });
+    } else {
+        console.error("Next Category Button not found!");
+    }
+
+    // Add event listener for the "Previous" button
+    const prevBtn = document.getElementById('prevCategoryBtn');
+    if (prevBtn) {
+        prevBtn.addEventListener('click', () => {
+            // Check if there are previous categories to display
+            if (currentCategoryIndex > 0) {
+                currentCategoryIndex--; // Move to the previous category
+                displayCurrentCategorySpecs(); // Update the modal content
+            }
+        });
+    } else {
+        console.error("Previous Category Button not found!");
+    }
+});	
+	
+async function openSpecEditorModal(requestData, filteredCategoriesWithSpecs = null) {
+    // Ensure categoriesWithSpecs is always initialized as an array
+    categoriesWithSpecs = []; // Important: Initialize globally or within this function if not global
+
+    // Set timestamp and requester name based on the current request
+    currentRequestTimestamp = requestData.timestamp;
+    currentRequesterName = requestData.requesterName;
+    currentSourceUrl = requestData.sourceUrl;
+
+    // Check if filtered categories are provided and are a valid non-empty array
+    if (Array.isArray(filteredCategoriesWithSpecs) && filteredCategoriesWithSpecs.length > 0) {
+        categoriesWithSpecs = filteredCategoriesWithSpecs;
+        currentCategoryIndex = 0; // Reset index to the first category
+
+        // Display the first filtered category's specs
+        displayCurrentCategorySpecs();
+        document.getElementById('specsTextarea').disabled = false;
+        document.getElementById('saveSpecsAndConfirmBtn').disabled = false;
+        // Enable/disable navigation buttons based on current categoriesWithSpecs
+        document.getElementById('prevCategoryBtn').disabled = currentCategoryIndex === 0;
+        document.getElementById('nextCategoryBtn').disabled = categoriesWithSpecs.length === 1 || currentCategoryIndex === categoriesWithSpecs.length - 1;
+        showToast(`Displaying ${categoriesWithSpecs.length} categories with suppliers.`, "info");
+
+    } else {
+        // If no valid filtered categories, proceed to fetch all categories (as a fallback or default behavior)
+        document.getElementById('currentCategoryTitle').textContent = 'Loading...';
+        document.getElementById('specsTextarea').value = 'Loading specifications...';
+        document.getElementById('specsTextarea').disabled = true;
+        document.getElementById('saveSpecsAndConfirmBtn').disabled = true;
+        document.getElementById('prevCategoryBtn').disabled = true;
+        document.getElementById('nextCategoryBtn').disabled = true;
+
+        const params = new URLSearchParams();
+        params.append('action', 'getSpecificationsForAllCategories');
+        params.append('sourceUrl', requestData.sourceUrl);
+        const fetchUrl = `${API_URL}?${params.toString()}`;
+
+        try {
+            const response = await fetch(fetchUrl, { method: 'GET' });
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(`HTTP error! status: ${response.status}. Response: ${errorText}`);
+            }
+            const specsResult = await response.json();
+
+            if (specsResult && typeof specsResult === 'object') {
+                categoriesWithSpecs = Object.keys(specsResult).map(category => ({
+                    category: category,
+                    specifications: Array.isArray(specsResult[category]) ? specsResult[category] : [String(specsResult[category])]
+                }));
+                currentCategoryIndex = 0; // Reset index for all categories
+
+                if (categoriesWithSpecs.length > 0) {
+                    displayCurrentCategorySpecs();
+                    document.getElementById('specsTextarea').disabled = false;
+                    document.getElementById('saveSpecsAndConfirmBtn').disabled = false;
+                    document.getElementById('prevCategoryBtn').disabled = currentCategoryIndex === 0;
+                    document.getElementById('nextCategoryBtn').disabled = categoriesWithSpecs.length === 1 || currentCategoryIndex === categoriesWithSpecs.length - 1;
+                    showToast(`Loaded all ${categoriesWithSpecs.length} categories.`, "info");
+                } else {
+                    document.getElementById('currentCategoryTitle').textContent = 'No Categories Found';
+                    document.getElementById('specsTextarea').value = 'No specifications found for this PO.';
+                    document.getElementById('specsTextarea').disabled = true;
+                    document.getElementById('saveSpecsAndConfirmBtn').disabled = true;
+                    document.getElementById('prevCategoryBtn').disabled = true;
+                    document.getElementById('nextCategoryBtn').disabled = true;
+                    showToast("No specifications found for this purchase order.", "info");
+                }
+            } else {
+                console.error("Invalid specs result from backend:", specsResult);
+                showToast("Error loading specs: Invalid data format received from server.", "error");
+                document.getElementById('specsTextarea').value = 'Error loading specifications: Invalid data.';
+            }
+        } catch (error) {
+            console.error("Failed to fetch specifications:", error);
+            showToast("Error loading specifications: " + error.message, "error");
+            document.getElementById('specsTextarea').value = 'Error loading specifications: ' + error.message;
+            document.getElementById('specsTextarea').disabled = true;
+            document.getElementById('saveSpecsAndConfirmBtn').disabled = true;
+            document.getElementById('prevCategoryBtn').disabled = true;
+            document.getElementById('nextCategoryBtn').disabled = true;
+        }
+    }
+    specEditorModal.style.display = 'flex';
+}
+	// Add this new function to your existing JavaScript in POverifier (1).html
+function handleProceedAnyway(index) {
+    closeModal(); // This will close the confirmModal
+
+    if (currentRequestDataForSpecs) {
+        const storedSpecs = sessionStorage.getItem('filteredSpecsForEditor');
+        let filteredSpecsForEditor = null;
+        if (storedSpecs) {
+            try {
+                filteredSpecsForEditor = JSON.parse(storedSpecs);
+            } catch (e) {
+                console.error("Error parsing filteredSpecsForEditor from sessionStorage:", e);
+                showToast("Error: Could not retrieve saved specifications.", "error");
+            }
+        }
+        sessionStorage.removeItem('filteredSpecsForEditor'); // Clean up sessionStorage after use
+
+        // Pass the potentially null/empty filteredSpecsForEditor,
+        // openSpecEditorModal will handle it
+        openSpecEditorModal(currentRequestDataForSpecs, filteredSpecsForEditor);
+    } else {
+        console.error("Error: currentRequestDataForSpecs is not defined. Cannot open spec editor.");
+        showToast("Error opening spec editor. Please refresh.", "error");
+    }
+}	    
+async function markAsDone(index) {
+    if (!requestsData || index === undefined || requestsData[index] === undefined) {
+        console.error("Request data not found for index:", index);
+        showToast("Error: Request details missing. Please refresh.", "error");
+        return;
+    }
+
+    currentRequestIndex = index;
+    const request = requestsData[index];
+
+    const modal = document.getElementById('confirmModal');
+    const modalContent = modal.querySelector('.modal-content');
+    modalContent.innerHTML = `
+        <div class="loader" style="width: 40px; height: 40px; margin: 20px auto;"></div>
+        <h3>Checking Supplier Information...</h3>
+        <p>Please wait while we verify the purchase order details.</p>
+    `;
+    modal.style.display = 'block';
+
+    try {
+        const result = await checkMissingSuppliers(request.googleSheetURL);
+        const { missingOrders, completedOrders, filteredSpecsForEditor } = result; // Get the new data
+
+        currentRequestDataForSpecs = {
+            timestamp: request.timestamp,
+            requesterName: request.requesterName,
+            sourceUrl: request.googleSheetURL
+        };
+
+        if (Array.isArray(missingOrders) && missingOrders.length > 0) {
+	            // Display missing supplier information
+	            let completedSection = '';
+	            if (completedOrders.length > 0) {
+	                completedSection = `
+	                    <div style="margin-top: 20px;">
+	                        <h4 style="color: #27ae60; margin-bottom: 10px;">✅ Orders with Suppliers (${completedOrders.length})</h4>
+	                        <div style="max-height: 150px; overflow-y: auto; text-align: left; font-size: 0.85rem; background: #f8f9fa; padding: 10px; border-radius: 5px;">
+	                            <ul style="margin: 0; padding-left: 20px;">
+	                            ${completedOrders.map(o => `<li style="margin-bottom: 3px;">${o}</li>`).join('')}
+	                            </ul>
+	                        </div>
+	                    </div>
+	                `;
+	            }
+
+            modalContent.innerHTML = `
+                <h3>⚠️ Missing Supplier Information</h3>
+                <div>
+                    <h4 style="color: #e74c3c; margin-bottom: 10px;">❌ Missing Suppliers (${missingOrders.length})</h4>
+                    <div style="max-height: 200px; overflow-y: auto; text-align: left; font-size: 0.9rem; background: #fff5f5; padding: 10px; border-radius: 5px; border: 1px solid #e74c3c;">
+                        <ul style="margin: 0; padding-left: 20px;">
+                        ${missingOrders.map(o => `<li style="margin-bottom: 3px;">${o}</li>`).join('')}
+                        </ul>
+                    </div>
+                </div>
+                ${completedOrders.length > 0 ? `
+                    <div style="margin-top: 20px;">
+                        <h4 style="color: #27ae60; margin-bottom: 10px;">✅ Orders with Suppliers (${completedOrders.length})</h4>
+                        <div style="max-height: 150px; overflow-y: auto; text-align: left; font-size: 0.85rem; background: #f8f9fa; padding: 10px; border-radius: 5px;">
+                            <ul style="margin: 0; padding-left: 20px;">
+                            ${completedOrders.map(o => `<li style="margin-bottom: 3px;">${o}</li>`).join('')}
+                            </ul>
+                        </div>
+                    </div>
+                ` : ''}
+                <p style="margin-top: 15px;">Please update the Google Sheet with supplier names. Or proceed anyway if intentional.</p>
+                <div class="modal-actions">
+                    <a href="${request.googleSheetURL}" target="_blank" class="btn btn-primary">📊 Open Sheet</a>
+                    <button class="btn btn-success" onclick="handleProceedAnyway(${index})">Proceed Anyway</button>
+                    <button class="btn" onclick="closeModal()" style="background: #90caf9; color: white;">Cancel</button>
+                </div>
+            `;
+            // Add this line to store filteredSpecsForEditor for when "Proceed Anyway" is clicked
+            // This makes it accessible to handleProceedAnyway
+            sessionStorage.setItem('filteredSpecsForEditor', JSON.stringify(filteredSpecsForEditor));
+        } else {
+            closeModal();
+            // Pass the filtered data directly
+            openSpecEditorModal(currentRequestDataForSpecs, filteredSpecsForEditor);
+        }
+    } catch (error) {
+        console.error('Error during supplier check:', error);
+        showToast(`Error checking suppliers: ${error.message}`, "error");
+        closeModal();
+    }
+}
+        function markAsCancel(index) {
+            currentRequestIndex = index;
+            document.getElementById('confirmCancelModal').style.display = 'block';
+        }
+
+        async function confirmMarkCancel() {
+            if (currentRequestIndex === null) return;
+
+            const modal = document.getElementById('confirmCancelModal');
+            const button = modal.querySelector('.btn-success');
+            const originalText = button.innerHTML;
+
+            // Show loading state
+            button.innerHTML = '⏳ Processing...';
+            button.disabled = true;
+
+            try {
+                const request = requestsData[currentRequestIndex];
+
+                const response = await fetch(API_URL2, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: `timestamp=${encodeURIComponent(request.timestamp)}&requesterName=${encodeURIComponent(request.requesterName)}&action=markCancel`
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    // clearInterval for countdown removed
+                    requestsData.splice(currentRequestIndex, 1);
+                    // countdownIntervals.splice(currentRequestIndex, 1); // Removed
+                    displayRequests(requestsData);
+                    // updateStats(); // Removed
+                    closeModal();
+
+                    showSuccessMessage('Request marked as cancelled!');
+                } else {
+                    throw new Error(result.error || 'Failed to mark request as cancelled');
+                }
+            } catch (error) {
+                console.error('Error marking request as cancelled:', error);
+                alert('Failed to mark request as cancelled. Please try again.');
+            } finally {
+                button.innerHTML = originalText;
+                button.disabled = false;
+            }
+        }
+
+async function confirmMarkDone() {
+    console.log("confirmMarkDone called.");
+
+    // 1. Save the currently displayed category's specs into temporaryEditedSpecs
+    const specsTextarea = document.getElementById('specsTextarea');
+    const currentCategory = categoriesWithSpecs[currentCategoryIndex];
+
+    if (specsTextarea && currentCategory && currentCategory.category) {
+        temporaryEditedSpecs[currentCategory.category] = specsTextarea.value.split('\n').filter(line => line.trim() !== '');
+        console.log(`Saved specs for category '${currentCategory.category}':`, temporaryEditedSpecs[currentCategory.category]);
+    } else {
+        console.error("Error: Specs textarea or current category is undefined or missing category name for saving.");
+        showToast("Error: Cannot save current specifications. Please try again.", "error");
+        return; // Stop execution if essential elements are missing
+    }
+
+    console.log("Final temporaryEditedSpecs object before sending:", temporaryEditedSpecs);
+
+    // 2. Validate essential request data
+    if (!currentRequestDataForSpecs || !currentRequestDataForSpecs.timestamp || !currentRequestDataForSpecs.requesterName) {
+        console.error("Error: currentRequestDataForSpecs is missing or incomplete.", currentRequestDataForSpecs);
+        showToast("Error: Missing purchase order details. Cannot submit.", "error");
+        closeModal();
+        return; // Prevent submission if critical data is missing
+    }
+
+    // 3. Provide user feedback during submission
+    document.getElementById('specEditorModal').style.display = 'none'; // Close the editor modal immediately
+    document.getElementById('confirmModal').style.display = 'flex'; // Show a loading modal
+    const confirmModalContent = document.getElementById('confirmModal').querySelector('.modal-content');
+    confirmModalContent.innerHTML = `
+        <div class="loader" style="width: 40px; height: 40px; margin: 20px auto;"></div>
+        <h3>Submitting PO Request...</h3>
+        <p>Please wait, this may take a moment.</p>
+    `;
+
+    try {
+        // 4. Prepare the payload for the backend
+        const payload = {
+            action: 'markDone',
+            timestamp: currentRequestDataForSpecs.timestamp,
+            requesterName: currentRequestDataForSpecs.requesterName,
+            // Stringify the entire temporaryEditedSpecs object to send it as a single JSON string
+            temporarySpecs: JSON.stringify(temporaryEditedSpecs)
+        };
+
+        // Convert payload to URL-encoded format for Google Apps Script's e.parameter
+        const formData = new URLSearchParams();
+        for (const key in payload) {
+            formData.append(key, payload[key]);
+        }
+
+        console.log("Sending payload to backend:", payload);
+        console.log("Sending formData (URL-encoded string):", formData.toString());
+
+        // 5. Send the POST request to Google Apps Script
+        const response = await fetch(API_URL2, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded' // Essential for e.parameter on Apps Script side
+            },
+            body: formData.toString()
+        });
+
+        // 6. Handle the response
+        if (!response.ok) {
+            const errorText = await response.text(); // Get raw error response for debugging
+            throw new Error(`HTTP error! status: ${response.status}. Response: ${errorText}`);
+        }
+
+        const result = await response.json(); // Parse the JSON response from Apps Script
+        console.log("Server response received:", result);
+
+        closeModal(); // Close the loading modal once response is received
+
+        if (result.success) {
+            showToast("Purchase Order marked as done successfully!", "success");
+            loadRequests(); // Refresh the main list of POs
+            temporaryEditedSpecs = {}; // Clear temporary specs after successful submission
+        } else {
+            // Display error message from the backend if success is false
+            showToast(`Failed to mark PO as done: ${result.error || 'Unknown server error'}`, "error");
+        }
+    } catch (error) {
+        console.error("Error during PO confirmation submission:", error);
+        closeModal(); // Ensure loading modal closes even if fetch fails
+        showToast("Error submitting PO: " + error.message, "error");
+    }
+    
+    // REMOVED: The problematic recursive call that was causing duplicates
+    // No need to call confirmMarkDone again - the function is already complete
+}
+	
+function displayCurrentCategorySpecs() {
+    if (categoriesWithSpecs.length === 0) {
+        document.getElementById('currentCategoryTitle').textContent = 'No Categories Found';
+        document.getElementById('specsTextarea').value = ''; // FIX: Changed from 'specEditorTextarea'
+        document.getElementById('specsTextarea').disabled = true; // FIX: Changed from 'specEditorTextarea'
+        document.getElementById('prevCategoryBtn').disabled = true;
+        document.getElementById('nextCategoryBtn').disabled = true;
+        document.getElementById('saveSpecsAndConfirmBtn').disabled = true;
+        return;
+    }
+
+    const currentCategory = categoriesWithSpecs[currentCategoryIndex];
+    document.getElementById('currentCategoryTitle').textContent = `Category: ${currentCategory.category}`;
+
+    // Use temporaryEditedSpecs if available, otherwise use original specs
+    const specsToDisplay = temporaryEditedSpecs[currentCategory.category] !== undefined
+        ? temporaryEditedSpecs[currentCategory.category]
+        : currentCategory.specifications.join('\n'); // Join array into a single string for textarea
+
+    document.getElementById('specsTextarea').value = specsToDisplay; // FIX: Changed from 'specEditorTextarea'
+
+    document.getElementById('prevCategoryBtn').disabled = currentCategoryIndex === 0;
+    document.getElementById('nextCategoryBtn').disabled = currentCategoryIndex === categoriesWithSpecs.length - 1;
+}
+
+// Add this function definition
+function closeMissingSupplierModal() {
+    const missingSupplierModal = document.getElementById('missingSupplierModal');
+    if (missingSupplierModal) {
+        missingSupplierModal.style.display = 'none';
+    }
+}	    
+	    
+function closeSpecEditorModal() {
+    document.getElementById('specEditorModal').style.display = 'none';
+    currentRequestDataForSpecs = null;
+    categoriesWithSpecs = [];
+    currentCategoryIndex = 0;
+    temporaryEditedSpecs = {};
+}
+
+
+document.getElementById('prevCategoryBtn').addEventListener('click', () => {
+    // Save current edits before moving
+    const currentCategory = categoriesWithSpecs[currentCategoryIndex];
+	temporaryEditedSpecs[currentCategory.category] = document.getElementById('specsTextarea').value;
+
+    if (currentCategoryIndex > 0) {
+        currentCategoryIndex--;
+        displayCurrentCategorySpecs();
+    }
+});
+
+document.getElementById('nextCategoryBtn').addEventListener('click', () => {
+    // Save current edits before moving
+    const currentCategory = categoriesWithSpecs[currentCategoryIndex];
+	temporaryEditedSpecs[currentCategory.category] = document.getElementById('specsTextarea').value;
+
+    if (currentCategoryIndex < categoriesWithSpecs.length - 1) {
+        currentCategoryIndex++;
+        displayCurrentCategorySpecs();
+    }
+});
+
+document.getElementById('saveSpecsAndConfirmBtn').addEventListener('click', () => {
+    // Save the last category's edits
+    if (categoriesWithSpecs.length > 0) {
+        const currentCategory = categoriesWithSpecs[currentCategoryIndex];
+        // Save current textarea content to temporaryEditedSpecs
+        temporaryEditedSpecs[currentCategory.category] = document.getElementById('specsTextarea').value;
+    }
+
+    // Now call confirmMarkDone WITHOUT passing parameters
+    // The function will use the global temporaryEditedSpecs variable
+    if (currentRequestDataForSpecs) { 
+        confirmMarkDone(); // ← FIXED: No parameters, no recursion
+    } else {
+        console.error("No request data to confirm. currentRequestDataForSpecs is null.");
+        showToast("Error: No active request to mark done.", "error");
+    }
+    
+    // Close the spec editor modal
+    closeSpecEditorModal();
+});
+	
+	function showSuccessMessage(message) {
+            const successDiv = document.createElement('div');
+            successDiv.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: linear-gradient(135deg, #4caf50 0%, #81c784 100%); /* Kept green for success */
+                color: white;
+                padding: 15px 25px;
+                border-radius: 10px;
+                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+                z-index: 1001;
+                animation: slideInRight 0.3s ease;
+            `;
+            successDiv.textContent = message;
+            document.body.appendChild(successDiv);
+            
+            setTimeout(() => {
+                successDiv.remove();
+            }, 3000);
+        }
+
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const modal = document.getElementById('confirmModal');
+	        const modal1 = document.getElementById('confirmCancelModal');
+            const modal2 = document.getElementById('customOrderModal');
+            if (event.target === modal || event.target === modal1 || event.target === modal2) {
+                closeModal();
+            }
+        }
+
+        // Cleanup intervals when page is unloaded - removed as countdown intervals are no longer used
+        // window.addEventListener('beforeunload', () => {
+        //     countdownIntervals.forEach(interval => {
+        //         if (interval) clearInterval(interval);
+        //     });
+        // });
+
+        // Add CSS animation for success message
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes slideInRight {
+                from { transform: translateX(100%); opacity: 0; }
+                to { transform: translateX(0); opacity: 1; }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+    <script src="https://ntwoods.github.io/ordertodispatch/js/viewOnly.js"></script>	
+</body>
+</html>	

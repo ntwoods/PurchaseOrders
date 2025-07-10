@@ -24,7 +24,17 @@ let currentRequestDataForSpecs = null;
 
 // ✅ DOM Ready logic
 document.addEventListener('DOMContentLoaded', () => {
+  // Load initial PO request cards
   loadRequests();
+
+  // Set up spec editor navigation logic
+  bindSpecEditorNavigation({
+    categoriesWithSpecs,
+    temporaryEditedSpecs,
+    setCurrentCategoryIndex
+  });
+
+  // Wire up Save Specs & Confirm PO button
   document.getElementById('saveSpecsAndConfirmBtn')?.addEventListener('click', () => {
     const confirmMarkDone = createConfirmMarkDone({
       categoriesWithSpecs,
@@ -34,16 +44,7 @@ document.addEventListener('DOMContentLoaded', () => {
       API_URL2
     });
 
-    confirmMarkDone(); // call the dynamically created function
-  });
-
-
-  // Bind spec modal button logic
-  bindSpecEditorNavigation({
-    categoriesWithSpecs,
-    temporaryEditedSpecs,
-    currentRequestDataForSpecs,
-    confirmMarkDone
+    confirmMarkDone(); // run it
   });
 });
 

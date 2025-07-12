@@ -1,80 +1,53 @@
+// Removed bindSpecEditorNavigation as its logic is now primarily handled by displayCurrentCategorySpecs
+// and direct event listeners in main.js
 let categoriesWithSpecs = [];
 let currentCategoryIndex = 0;
-let temporaryEditedSpecs = {};
+let temporaryEditedSpecs = {}; // Stores changes before final submission
 
-export function bindSpecEditorNavigation({
-  categoriesWithSpecs,
-  temporaryEditedSpecs,
-  setCurrentCategoryIndex
-}) {
-  let currentIndex = 0;
-  setCurrentCategoryIndex(currentIndex); // set initial index
-
-  const textarea = document.getElementById('specsTextarea');
-  const categoryTitle = document.getElementById('specCategoryTitle');
-
-  const renderCategory = () => {
-    const cat = categoriesWithSpecs[currentIndex];
-    const saved = temporaryEditedSpecs[cat.category] || '';
-    categoryTitle.textContent = cat.category;
-    textarea.value = Array.isArray(saved) ? saved.join('\n') : saved;
-    setCurrentCategoryIndex(currentIndex); // update shared index
-  };
-
-  // ✅ Handle Previous button
-  document.getElementById('prevCategoryBtn')?.addEventListener('click', () => {
-    if (currentIndex > 0) {
-      saveCurrentSpec(); // save before switching
-      currentIndex--;
-      renderCategory();
-    }
-  });
-
-  // ✅ Handle Next button
-  document.getElementById('nextCategoryBtn')?.addEventListener('click', () => {
-    if (currentIndex < categoriesWithSpecs.length - 1) {
-      saveCurrentSpec();
-      currentIndex++;
-      renderCategory();
-    }
-  });
-
-  // ✅ Save current specs into memory
-  const saveCurrentSpec = () => {
-    const currentCategory = categoriesWithSpecs[currentIndex];
-    temporaryEditedSpecs[currentCategory.category] = textarea.value.split('\n').filter(line => line.trim() !== '');
-  };
-
-  // Initial render
-  renderCategory();
-}
-
-
-
-export function openSpecEditorModal(filteredSpecs) {
+export function openSpecEditorModal(filteredSpecs, requestData) {
   categoriesWithSpecs = filteredSpecs;
-  currentCategoryIndex = 0;
-  temporaryEditedSpecs = {};
+  currentCategoryIndex = 0; // Reset index when opening modal
+  temporaryEditedSpecs = {}; // Clear previous edits
+
+  // Populate request details in the modal header
+  document.getElementById('specEditorTimestamp').textContent = new Date(requestData.timestamp).toLocaleString();
+  document.getElementById('specEditorRequester').textContent = requestData.requesterName;
+  const sourceUrlDisplay = document.getElementById('specEditorSourceUrlDisplay');
+  sourceUrlDisplay.innerHTML = `<a href="${requestData.googleSheetURL}" target="_blank" style="color:#2196f3; text-decoration:none;">🔗 View Source Sheet</a>`;
+
   displayCurrentCategorySpecs();
   document.getElementById('specEditorModal').style.display = 'flex';
 }
 
-function displayCurrentCategorySpecs() {
+export function displayCurrentCategorySpecs() {
   const title = document.getElementById('currentCategoryTitle');
   const textarea = document.getElementById('specsTextarea');
+  const prevBtn = document.getElementById('prevCategoryBtn');
+  const nextBtn = document.getElementById('nextCategoryBtn');
+
   const category = categoriesWithSpecs[currentCategoryIndex];
 
-  if (!category) return;
+  if (!category) {
+    title.textContent = 'No Categories';
+    textarea.value = '';
+    textarea.disabled = true;
+    prevBtn.disabled = true;
+    nextBtn.disabled = true;
+    return;
+  }
 
   title.textContent = `Category: ${category.category}`;
-  textarea.value = category.specifications.join('\n');
+  
+  // Load existing temporary edits or original specifications
+  const specsToDisplay = temporaryEditedSpecs[category.category] || category.specifications;
+  textarea.value = Array.isArray(specsToDisplay) ? specsToDisplay.join('\n') : String(specsToDisplay);
   textarea.disabled = false;
 
-  document.getElementById('prevCategoryBtn').disabled = currentCategoryIndex === 0;
-  document.getElementById('nextCategoryBtn').disabled = currentCategoryIndex === categoriesWithSpecs.length - 1;
+  prevBtn.disabled = currentCategoryIndex === 0;
+  nextBtn.disabled = currentCategoryIndex === categoriesWithSpecs.length - 1;
 }
 
-function saveCurrentSpec() {
+export function saveCurrentSpec() {
   const category = categoriesWithSpecs[currentCategoryIndex];
   const textarea = document.getElementById('specsTextarea');
   if (category && textarea) {
@@ -82,4 +55,26 @@ function saveCurrentSpec() {
   }
 }
 
+export function navigateCategory(direction) {
+  saveCurrentSpec(); // Always save before navigating
 
+  if (direction === 'next' && currentCategoryIndex < categoriesWithSpecs.length - 1) {
+    currentCategoryIndex++;
+  } else if (direction === 'prev' && currentCategoryIndex > 0) {
+    currentCategoryIndex--;
+  }
+  displayCurrentCategorySpecs();
+}
+
+// Export shared state for main.js to access
+export function getCategoriesWithSpecs() {
+    return categoriesWithSpecs;
+}
+
+export function getTemporaryEditedSpecs() {
+    return temporaryEditedSpecs;
+}
+
+export function getCurrentCategoryIndex() {
+    return currentCategoryIndex;
+}

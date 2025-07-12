@@ -65,24 +65,24 @@ export async function checkMissingSuppliers(googleSheetURL) {
         throw new Error(`Failed to fetch specifications: ${specsResp.statusText}`);
     }
     const allSpecs = await specsResp.json();
-
-    const filteredSpecsForEditor = [];
-    categoriesWithSuppliers.forEach(category => {
-        const key = Object.keys(allSpecs).find(
-            k => k.trim().toLowerCase() === category.trim().toLowerCase()
-        );
-        
-        if (key) {
-            filteredSpecsForEditor.push({
-                category,
-                specifications: Array.isArray(allSpecs[key])
-                    ? allSpecs[key]
-                    : [String(allSpecs[key])]
-            });
-        }
-    });
-
-    return { missingOrders, completedOrders, filteredSpecsForEditor };
+  
+  // In api.js, inside checkMissingSuppliers:
+  const filteredSpecsForEditor = [];
+  categoriesWithSuppliers.forEach(category => {
+      const key = Object.keys(allSpecs).find(
+          k => k.trim().toLowerCase() === category.trim().toLowerCase()
+      );
+  
+      if (key) {
+          filteredSpecsForEditor.push({
+              category,
+              specifications: Array.isArray(allSpecs[key])
+                  ? allSpecs[key]
+                  : [String(allSpecs[key])]
+          });
+      }
+  });
+  return { missingOrders, completedOrders, filteredSpecsForEditor };
   } catch (e) {
     console.error('Error checking suppliers:', e);
     throw new Error('Unable to check suppliers. Make sure the sheet is public and accessible.');

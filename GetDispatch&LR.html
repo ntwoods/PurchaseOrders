@@ -225,25 +225,28 @@
         }
 	.crm-remark-block {
 	  font-size: 13px;
-	  line-height: 1.4;
 	  color: #333;
-	  margin-bottom: 6px;
-	  word-wrap: break-word;
-	  white-space: pre-wrap; /* preserves line breaks */
+	  line-height: 1.5;
+	  margin-bottom: 4px;
+	  display: flex;
+	  flex-wrap: wrap;
+	  align-items: flex-start;
+	  gap: 4px;
+	  word-break: break-word;
 	}
 	
 	.crm-request-label {
 	  font-weight: 600;
-	  display: block;
-	  margin-bottom: 2px;
 	  color: #222;
+	  white-space: nowrap;
 	}
 	
 	.crm-request-value {
 	  font-weight: 400;
-	  display: block;
-	  padding-left: 18px; /* aligns with icon for nice indentation */
 	  color: #444;
+	  flex: 1 1 auto;
+	  min-width: 0;
+	  word-wrap: break-word;
 	}
 
         .order-timestamp {
@@ -298,7 +301,7 @@
             display: flex;
             flex-direction: column;
             gap: 3px;
-            margin-bottom: 6px;
+            margin-bottom: 4px;
         }
 
         .form-item label {

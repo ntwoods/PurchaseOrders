@@ -37,6 +37,32 @@
       box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
     }
 
+	.crm-remark-block {
+	  font-size: 13px;
+	  color: #333;
+	  line-height: 1.5;
+	  margin-bottom: 4px;
+	  display: flex;
+	  flex-wrap: wrap;
+	  align-items: flex-start;
+	  gap: 4px;
+	  word-break: break-word;
+	}
+	
+	.crm-request-label {
+	  font-weight: 600;
+	  color: #222;
+	  white-space: nowrap;
+	}
+	
+	.crm-request-value {
+	  font-weight: 400;
+	  color: #444;
+	  flex: 1 1 auto;
+	  min-width: 0;
+	  word-wrap: break-word;
+	}
+	  
     .header-section h1 {
       font-size: 2.5em;
       font-weight: 700;
@@ -538,7 +564,20 @@ function formatDate(dateStr) {
         
         <div class="order-details">
 	<strong>Expected Delivery:</strong> ${formatDate(order.expectedDeliveryDate)}
+	${order.crmRemark ? `
+	  <div class="crm-remark-block">
+	    <span class="crm-request-label">💬 CRM Remark:</span>
+	    <span class="crm-request-value">${order.crmRemark}</span>
+	  </div>
+	` : ''}
+	${order.responseRemark ? `
+	  <div class="crm-remark-block">
+	    <span class="crm-request-label">📝 Purchase Remark:</span>
+	    <span class="crm-request-value">${order.responseRemark}</span>
+	  </div>
+	` : ''}
         </div>
+	
         
         <div class="button-grid">
           <a href="${order.poURL}" target="_blank" class="btn-custom btn-view">

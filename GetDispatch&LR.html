@@ -646,6 +646,14 @@
                         <a href="${order.orderSheet}" target="_blank" class="show-po-btn">
                             📋 G-Sheet
                         </a>
+			${order.crmRemark ? `
+                            <span>💬 CRM Remark:</span>
+                            <span>${order.crmRemark}</span>
+                        ` : ''}
+                        ${order.responseRemark ? `
+                            <span>📝 Purchase Remark:</span>
+                            <span>${order.responseRemark}</span>
+                        ` : ''} 
                         <div class="editable">
 			<div class="form-item">
                             <label for="remark${index}">

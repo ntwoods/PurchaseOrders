@@ -47,13 +47,19 @@ export function displayCurrentCategorySpecs() {
   nextBtn.disabled = currentCategoryIndex === categoriesWithSpecs.length - 1;
 }
 
-export function saveCurrentSpec() {
-  const category = categoriesWithSpecs[currentCategoryIndex];
-  const textarea = document.getElementById('specsTextarea');
-  if (category && textarea) {
-    temporaryEditedSpecs[category.category] = textarea.value.split('\n').filter(line => line.trim() !== '');
+  // In modules/specEditor.js
+  export function saveCurrentSpec() {
+      const category = categoriesWithSpecs[currentCategoryIndex];
+      const textarea = document.getElementById('specsTextarea');
+      if (category && textarea) {
+          // Ensure this line correctly captures the textarea's current value
+          // and filters out empty lines.
+          temporaryEditedSpecs[category.category] = textarea.value.split('\n').filter(line => line.trim() !== '');
+          console.log(`[saveCurrentSpec] Saved specs for category "${category.category}":`, temporaryEditedSpecs[category.category]); // Add this log
+      } else {
+          console.warn("[saveCurrentSpec] Could not save current spec: category or textarea missing.");
+      }
   }
-}
 
 export function navigateCategory(direction) {
   saveCurrentSpec(); // Always save before navigating

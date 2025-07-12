@@ -20,16 +20,17 @@ export function displayRequests(requests) {
 
   loading.style.display = 'none';
 
-  if (requests.length === 0) {
+  if (!requests || requests.length === 0) {
     emptyState.style.display = 'block';
     container.style.display = 'none';
     return;
   }
 
   container.style.display = 'grid';
-  container.innerHTML = '';
+  container.innerHTML = ''; // Clear previous requests
 
   requests.forEach((request, index) => {
+    // Attach full request object as data attribute or to global handler
     const card = createRequestCard(request, index);
     container.appendChild(card);
   });
@@ -38,6 +39,12 @@ export function displayRequests(requests) {
 function createRequestCard(request, index) {
   const card = document.createElement('div');
   card.className = 'request-card';
+  
+  // Store relevant data on the card for event delegation
+  card.dataset.index = index; // Keep index for array lookup if needed
+  card.dataset.timestamp = request.timestamp; // Crucial for Mark Done/Cancel
+  card.dataset.requesterName = request.requesterName;
+  card.dataset.googleSheetURL = request.googleSheetURL;
 
   const timestamp = new Date(request.timestamp);
   const formattedDate = timestamp.toLocaleDateString();
@@ -51,8 +58,8 @@ function createRequestCard(request, index) {
     <div class="requester">${request.requesterName}</div>
     <div class="actions">
       <a href="${request.googleSheetURL}" target="_blank" class="btn btn-primary">📊 View Sheet</a>
-      <button class="btn btn-success" data-index="${index}" onclick="window.handleMarkDone(this)">✅ Mark Done</button>
-      <button class="btn btn-primary" style="background: linear-gradient(135deg, #f44336 0%, #e57373 100%);">❌ Cancel</button>
+      <button class="btn btn-success mark-done-btn" data-timestamp="${request.timestamp}" data-requester="${request.requesterName}" data-sheet-url="${request.googleSheetURL}">✅ Mark Done</button>
+      <button class="btn btn-primary cancel-btn" style="background: linear-gradient(135deg, #f44336 0%, #e57373 100%);" data-timestamp="${request.timestamp}" data-requester="${request.requesterName}">❌ Cancel</button>
     </div>
   `;
 
@@ -61,11 +68,13 @@ function createRequestCard(request, index) {
 
 
 export function showToast(message, type = 'info') {
-  alert(message); // Or your styled toast/snackbar logic
+  // A more sophisticated toast notification could be implemented here
+  // For now, using alert as per original implementation
+  alert(message);
 }
 
-export function closeModal() {
-  const modal = document.getElementById('confirmModal');
+export function closeModal(modalId) {
+  const modal = document.getElementById(modalId);
   if (modal) {
     modal.style.display = 'none';
   }

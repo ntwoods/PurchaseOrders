@@ -534,6 +534,18 @@
                             <span class="detail-label">⏰ Confirmed On:</span>
                             <span class="detail-value">${formatDateTimeForDisplay(parseDate(order.dispatchDateTimeStamp))}</span>
                         </div>
+                        ${order.crmRemark ? `
+                        <div class="detail-row">
+                            <span class="detail-label">💬 CRM Remark:</span>
+                            <span class="detail-value">${order.crmRemark}</span>
+                        </div>
+                        ` : ''}
+                        ${order.responseRemark ? `
+                        <div class="detail-row">
+                            <span class="detail-label">📝 Purchase Remark:</span>
+                            <span class="detail-value">${order.responseRemark}</span>
+                        </div>
+                        ` : ''}                         
                         ${order.deadline ? `
                         <div class="detail-row">
                             <span class="detail-label">🎯 Follow Up Deadline:</span>

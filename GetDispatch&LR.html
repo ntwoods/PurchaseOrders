@@ -223,6 +223,28 @@
             text-overflow: ellipsis;
             letter-spacing: -0.02em;
         }
+	.crm-remark-block {
+	  font-size: 13px;
+	  line-height: 1.4;
+	  color: #333;
+	  margin-bottom: 6px;
+	  word-wrap: break-word;
+	  white-space: pre-wrap; /* preserves line breaks */
+	}
+	
+	.crm-request-label {
+	  font-weight: 600;
+	  display: block;
+	  margin-bottom: 2px;
+	  color: #222;
+	}
+	
+	.crm-request-value {
+	  font-weight: 400;
+	  display: block;
+	  padding-left: 18px; /* aligns with icon for nice indentation */
+	  color: #444;
+	}
 
         .order-timestamp {
             color: #64748b;
@@ -647,13 +669,18 @@
                             📋 G-Sheet
                         </a>
 			${order.crmRemark ? `
-                            <span>💬 CRM Remark:</span>
-                            <span>${order.crmRemark}</span>
-                        ` : ''}
-                        ${order.responseRemark ? `
-                            <span>📝 Purchase Remark:</span>
-                            <span>${order.responseRemark}</span>
-                        ` : ''} 
+			  <div class="crm-remark-block">
+			    <span class="crm-request-label">💬 CRM Remark:</span>
+			    <span class="crm-request-value">${order.crmRemark}</span>
+			  </div>
+			` : ''}
+			${order.responseRemark ? `
+			  <div class="crm-remark-block">
+			    <span class="crm-request-label">📝 Purchase Remark:</span>
+			    <span class="crm-request-value">${order.responseRemark}</span>
+			  </div>
+			` : ''}
+
                         <div class="editable">
 			<div class="form-item">
                             <label for="remark${index}">

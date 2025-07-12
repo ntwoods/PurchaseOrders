@@ -564,6 +564,7 @@ function formatDate(dateStr) {
         
         <div class="order-details">
 	<strong>Expected Delivery:</strong> ${formatDate(order.expectedDeliveryDate)}
+        </div>
 	${order.crmRemark ? `
 	  <div class="crm-remark-block">
 	    <span class="crm-request-label">💬 CRM Remark:</span>
@@ -575,10 +576,7 @@ function formatDate(dateStr) {
 	    <span class="crm-request-label">📝 Purchase Remark:</span>
 	    <span class="crm-request-value">${order.responseRemark}</span>
 	  </div>
-	` : ''}
-        </div>
-	
-        
+	` : ''}	       
         <div class="button-grid">
           <a href="${order.poURL}" target="_blank" class="btn-custom btn-view">
             <i class="fas fa-eye"></i> View PO

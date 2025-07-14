@@ -631,6 +631,29 @@
             });
         }
 
+        // Helper function to parse ISO 8601 string explicitly
+        function parseIsoDateTime(isoString) {
+            if (!isoString) return null;
+            // Example: 2025-07-14T08:37:24.000Z
+            const parts = isoString.match(/(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.(\d{3}))?Z/);
+            if (!parts) return null;
+
+            const [, year, month, day, hours, minutes, seconds, milliseconds] = parts;
+            // Date constructor expects month to be 0-indexed (0-11)
+            // It will handle the 'Z' (UTC) if we use Date.UTC() or directly construct from UTC values
+            // Using setUTCFullYear etc. on a new Date() to ensure UTC interpretation
+            const date = new Date();
+            date.setUTCFullYear(parseInt(year));
+            date.setUTCMonth(parseInt(month) - 1);
+            date.setUTCDate(parseInt(day));
+            date.setUTCHours(parseInt(hours));
+            date.setUTCMinutes(parseInt(minutes));
+            date.setUTCSeconds(parseInt(seconds));
+            date.setUTCMilliseconds(parseInt(milliseconds || '0')); // Handle missing milliseconds
+
+            return date;
+        }
+
         // Create request card (priority tags removed)
         function createRequestCard(request, index) {
             const card = document.createElement('div');
@@ -649,14 +672,23 @@
             let poReceivedTimestamp = null;
 
             if (request.poReceived) {
-                // Directly create a Date object from the ISO 8601 string
-                const parsedDate = new Date(request.poReceived); 
-                if (!isNaN(parsedDate)) { // Check if parsing was successful
+                // Use the new explicit parsing function for ISO 8601
+                const parsedDate = parseIsoDateTime(request.poReceived); 
+                if (parsedDate && !isNaN(parsedDate)) { // Check if parsing was successful
                     poReceivedTimestamp = parsedDate.getTime();
                     // Display in Indian Standard Time (IST)
                     poReceivedDisplay = parsedDate.toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' });
                 } else {
-                    console.warn('Could not parse poReceived:', request.poReceived);
+                    console.warn('Could not parse poReceived (ISO format):', request.poReceived);
+                    // Fallback to native Date constructor if explicit parsing fails, just in case
+                    const fallbackDate = new Date(request.poReceived);
+                    if (!isNaN(fallbackDate)) {
+                        poReceivedTimestamp = fallbackDate.getTime();
+                        poReceivedDisplay = fallbackDate.toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' });
+                        console.warn('Used native Date constructor as fallback for poReceived:', request.poReceived);
+                    } else {
+                         console.error('Both explicit and native Date parsing failed for poReceived:', request.poReceived);
+                    }
                 }
             }
 

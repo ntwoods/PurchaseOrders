@@ -631,16 +631,6 @@
             });
         }
 
-        // Helper function to parse DD/MM/YYYY HH:MM:SS to a Date object
-        function parseDateTime(dtString) {
-            if (!dtString) return null;
-            const parts = dtString.match(/(\d{2})\/(\d{2})\/(\d{4}) (\d{2}):(\d{2}):(\d{2})/);
-            if (!parts) return null;
-            const [, day, month, year, hours, minutes, seconds] = parts;
-            // Note: Month is 0-indexed in JavaScript Date constructor
-            return new Date(year, month - 1, day, hours, minutes, seconds);
-        }
-
         // Create request card (priority tags removed)
         function createRequestCard(request, index) {
             const card = document.createElement('div');
@@ -659,10 +649,11 @@
             let poReceivedTimestamp = null;
 
             if (request.poReceived) {
-                const parsedDate = parseDateTime(request.poReceived);
-                if (parsedDate && !isNaN(parsedDate)) { // Check if parsing was successful
+                // Directly create a Date object from the ISO 8601 string
+                const parsedDate = new Date(request.poReceived); 
+                if (!isNaN(parsedDate)) { // Check if parsing was successful
                     poReceivedTimestamp = parsedDate.getTime();
-                    // Display in Indian Standard Time (IST) if you know the server time is IST or want to convert it
+                    // Display in Indian Standard Time (IST)
                     poReceivedDisplay = parsedDate.toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' });
                 } else {
                     console.warn('Could not parse poReceived:', request.poReceived);

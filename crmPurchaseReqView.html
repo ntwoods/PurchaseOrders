@@ -517,7 +517,7 @@
         const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycby7Iwfzy98sI8UFYs6lCZZF_ESoaTzFd3UWwZJWepffBD6rueQ9TdzgLq7oE98npIwpdQ/exec';
         // IMPORTANT: Replace this with your actual Google Sheet URL for PO numbers
         // Ensure this sheet is published to the web for the Google Visualization API to access it.
-        const GOOGLE_SHEET_PO_URL = 'https://docs.google.com/spreadsheets/d/1MPBE5EED1iN8np3oVqcn3VSAYl7M-OUXaLj9_YJogh0/gviz/tq?tqx=out:json&sheet=Requests&range=AA:AA';
+        const GOOGLE_SHEET_PO_URL = 'https://docs.google.com/spreadsheets/d/1MPBE5EED1iN8np3oVqcn3VSAYl7M-OUXaLj9_YJogh0/gviz/tq?tqx=out:json&sheet=Requests&range=U:AL';
 
 
         // Initialize the application
@@ -560,7 +560,6 @@
             }
         }
 
-        // Fetch PO numbers from Google Sheet using Google Visualization API
         async function fetchPoNumbers() {
             try {
                 const response = await fetch(GOOGLE_SHEET_PO_URL);
@@ -568,25 +567,23 @@
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
                 const text = await response.text();
-                // Extract JSON part from the response
                 const jsonText = text.substring(text.indexOf('{'), text.lastIndexOf('}') + 1);
                 const data = JSON.parse(jsonText);
-
-                // Assuming the first row is a header, slice the array from index 1
+        
+                // Extract PO numbers only when column U is blank
                 poNumbers = data.table.rows
-                    .slice(1) // Start from the second row to skip header
-                    .map(row => row.c[0]?.v)
+                    .slice(1) // skip header
+                    .filter(row => !row.c[0]?.v) // U is blank (row.c[0])
+                    .map(row => row.c[17]?.v) // AL column (row.c[17])
                     .filter(value => value !== undefined && value !== null)
-                    .map(String); // Ensure all PO numbers are strings
-
-                // Get unique PO numbers and sort them
+                    .map(String);
+        
                 poNumbers = [...new Set(poNumbers)].sort();
-                filteredPoNumbers = [...poNumbers]; // Initialize filtered list
+                filteredPoNumbers = [...poNumbers];
                 populateSearchResults();
             } catch (error) {
                 console.error('Error fetching PO numbers:', error);
                 showToast('Error loading PO numbers. Fallback used.', 'error');
-                // Fallback PO numbers if fetching fails for development/testing
                 poNumbers = ['PO-2024-001-Fallback', 'PO-2024-002-Fallback', 'PO-2024-003-Fallback'];
                 poNumbers = [...new Set(poNumbers)].sort();
                 filteredPoNumbers = [...poNumbers];

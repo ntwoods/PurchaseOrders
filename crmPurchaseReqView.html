@@ -419,6 +419,12 @@
         .toast.error {
             background-color: rgba(229, 57, 53, 0.9); /* Red for errors */
         }
+        
+        /* New: Overdue text style */
+        .overdue-text {
+            color: #e53935; /* Red color */
+            font-weight: 600;
+        }
 
         /* Media Queries */
         @media (max-width: 768px) {
@@ -515,6 +521,7 @@
         let filteredPoNumbers = [];
         let selectedRequest = null;
         let selectedPoNo = ''; // To store the selected PO number from searchable dropdown
+        let countdownIntervals = {}; // Store intervals to clear them
 
         // API URLs
         // IMPORTANT: Replace this with your actual Google Apps Script Web App URL
@@ -541,6 +548,12 @@
             loading.style.display = 'block';
             container.style.display = 'none';
             emptyState.style.display = 'none';
+
+            // Clear existing countdown intervals before re-rendering
+            for (const key in countdownIntervals) {
+                clearInterval(countdownIntervals[key]);
+            }
+            countdownIntervals = {};
 
             try {
                 const response = await fetch(`${GAS_WEB_APP_URL}?action=getRequests`);
@@ -663,14 +676,69 @@
                         <span class="field-label">CRM:</span>
                         <div class="field-value">${crmValue}</div>
                     </div>
+                    ${request.poReceived ? `
+                        <div class="field-group">
+                            <span class="field-label">PO Received:</span>
+                            <div class="field-value">${new Date(request.poReceived).toLocaleString()}</div>
+                        </div>
+                        <div class="field-group">
+                            <span class="field-label">Deadline:</span>
+                            <div class="field-value" id="countdown-${index}"></div>
+                        </div>
+                    ` : ''}
                 </div>
                 <button class="action-button" onclick="openModal(${index})">
                     Mark Response
                 </button>
             `;
             
+            // Start countdown if poReceived exists
+            if (request.poReceived) {
+                // Ensure poReceived is treated as a number (timestamp)
+                startCountdown(Number(request.poReceived), `countdown-${index}`);
+            }
+
             return card;
         }
+
+        // New function: Start the countdown timer
+        function startCountdown(poReceivedTimestamp, elementId) {
+            const deadline = poReceivedTimestamp + (24 * 60 * 60 * 1000); // 24 hours in milliseconds
+            const countdownElement = document.getElementById(elementId);
+
+            if (!countdownElement) return; // Exit if element not found
+
+            // Clear any existing interval for this element to prevent multiple timers
+            if (countdownIntervals[elementId]) {
+                clearInterval(countdownIntervals[elementId]);
+            }
+
+            const interval = setInterval(() => {
+                const now = new Date().getTime();
+                const timeRemaining = deadline - now;
+
+                if (timeRemaining <= 0) {
+                    clearInterval(interval);
+                    countdownElement.innerHTML = '<span class="overdue-text">Overdue</span>';
+                    // Optionally, add a class to the parent card to highlight overdue
+                    countdownElement.closest('.request-card')?.classList.add('highlighted'); // Example
+                } else {
+                    const days = Math.floor(timeRemaining / (1000 * 60 * 60 * 24));
+                    const hours = Math.floor((timeRemaining % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                    const minutes = Math.floor((timeRemaining % (1000 * 60 * 60)) / (1000 * 60));
+                    const seconds = Math.floor((timeRemaining % (1000 * 60)) / 1000);
+
+                    countdownElement.textContent = 
+                        `${days > 0 ? days + 'd ' : ''}` + 
+                        `${hours.toString().padStart(2, '0')}h ` + 
+                        `${minutes.toString().padStart(2, '0')}m ` + 
+                        `${seconds.toString().padStart(2, '0')}s`;
+                }
+            }, 1000); // Update every second
+
+            countdownIntervals[elementId] = interval; // Store the interval ID
+        }
+
 
         // Open modal
         function openModal(index) {

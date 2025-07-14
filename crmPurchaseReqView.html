@@ -584,24 +584,26 @@
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
                 const text = await response.text();
+                // Google Visualization API response is not pure JSON, it's wrapped
                 const jsonText = text.substring(text.indexOf('{'), text.lastIndexOf('}') + 1);
                 const data = JSON.parse(jsonText);
         
-                // Extract PO numbers only when column U is blank
+                // Extract PO numbers only when column U (index 0) is blank/null
+                // and then get value from AL column (index 17)
                 poNumbers = data.table.rows
-                    .slice(1) // skip header
-                    .filter(row => !row.c[0]?.v) // U is blank (row.c[0])
-                    .map(row => row.c[17]?.v) // AL column (row.c[17])
-                    .filter(value => value !== undefined && value !== null)
-                    .map(String);
+                    .filter(row => row.c[0] === null || row.c[0].v === null || row.c[0].v === '') // Filter for blank U
+                    .map(row => row.c[17]?.v) // Get value from AL
+                    .filter(value => value !== undefined && value !== null && value !== '') // Remove undefined/null/empty
+                    .map(String); // Ensure values are strings for consistency
         
-                poNumbers = [...new Set(poNumbers)].sort();
+                poNumbers = [...new Set(poNumbers)].sort(); // Remove duplicates and sort
                 filteredPoNumbers = [...poNumbers];
                 populateSearchResults();
             } catch (error) {
                 console.error('Error fetching PO numbers:', error);
                 showToast('Error loading PO numbers. Fallback used.', 'error');
-                poNumbers = ['PO-2024-001-Fallback', 'PO-2024-002-Fallback', 'PO-2024-003-Fallback'];
+                // Fallback PO numbers in case of API issues
+                poNumbers = ['PO-2024-001-Fallback', 'PO-2024-002-Fallback', 'PO-2024-003-Fallback', 'PO-2024-004-Fallback'];
                 poNumbers = [...new Set(poNumbers)].sort();
                 filteredPoNumbers = [...poNumbers];
                 populateSearchResults();
@@ -633,28 +635,36 @@
 
         // Helper function to parse ISO 8601 string explicitly
         function parseIsoDateTime(isoString) {
-            if (!isoString) return null;
-            // Example: 2025-07-14T08:37:24.000Z
+            if (!isoString || typeof isoString !== 'string') return null;
+            // Example: 2025-07-14T08:37:24.000Z or 2025-07-14T08:37:24Z
             const parts = isoString.match(/(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.(\d{3}))?Z/);
-            if (!parts) return null;
+            if (!parts) {
+                // If direct regex fails, try native Date constructor as a last resort,
+                // it might handle some variations or invalid parts gracefully
+                const nativeDate = new Date(isoString);
+                if (!isNaN(nativeDate.getTime())) {
+                    return nativeDate;
+                }
+                return null; // Still couldn't parse
+            }
 
             const [, year, month, day, hours, minutes, seconds, milliseconds] = parts;
-            // Date constructor expects month to be 0-indexed (0-11)
-            // It will handle the 'Z' (UTC) if we use Date.UTC() or directly construct from UTC values
-            // Using setUTCFullYear etc. on a new Date() to ensure UTC interpretation
-            const date = new Date();
-            date.setUTCFullYear(parseInt(year));
-            date.setUTCMonth(parseInt(month) - 1);
-            date.setUTCDate(parseInt(day));
-            date.setUTCHours(parseInt(hours));
-            date.setUTCMinutes(parseInt(minutes));
-            date.setUTCSeconds(parseInt(seconds));
-            date.setUTCMilliseconds(parseInt(milliseconds || '0')); // Handle missing milliseconds
+            
+            // Create a Date object in UTC
+            const date = new Date(Date.UTC(
+                parseInt(year),
+                parseInt(month) - 1, // Month is 0-indexed
+                parseInt(day),
+                parseInt(hours),
+                parseInt(minutes),
+                parseInt(seconds),
+                parseInt(milliseconds || '0') // Handle missing milliseconds part
+            ));
 
             return date;
         }
 
-        // Create request card (priority tags removed)
+        // Create request card
         function createRequestCard(request, index) {
             const card = document.createElement('div');
             card.className = 'request-card';
@@ -662,7 +672,6 @@
                 card.classList.add('highlighted');
             }
             
-            // Format CRM value if it looks like a URL
             let crmValue = request.crm || 'N/A';
             if (crmValue !== 'N/A' && (crmValue.startsWith('http://') || crmValue.startsWith('https://'))) {
                 crmValue = `<a href="${crmValue}" target="_blank" style="color: var(--color-primary); text-decoration: none;">View CRM</a>`;
@@ -670,28 +679,34 @@
 
             let poReceivedDisplay = 'N/A';
             let poReceivedTimestamp = null;
+            let deadlineHtml = ''; // Initialize deadline HTML as empty
 
             if (request.poReceived) {
-                // Use the new explicit parsing function for ISO 8601
                 const parsedDate = parseIsoDateTime(request.poReceived); 
-                if (parsedDate && !isNaN(parsedDate)) { // Check if parsing was successful
+                if (parsedDate && !isNaN(parsedDate.getTime())) {
                     poReceivedTimestamp = parsedDate.getTime();
                     // Display in Indian Standard Time (IST)
-                    poReceivedDisplay = parsedDate.toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' });
+                    poReceivedDisplay = parsedDate.toLocaleString('en-IN', { 
+                        timeZone: 'Asia/Kolkata',
+                        year: 'numeric',
+                        month: '2-digit',
+                        day: '2-digit',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        second: '2-digit',
+                        hour12: true // For AM/PM
+                    });
+                    // Placeholder for countdown
+                    deadlineHtml = `
+                        <div class="field-group">
+                            <span class="field-label">Deadline:</span>
+                            <div class="field-value" id="countdown-${request.id}"></div>
+                        </div>
+                    `;
                 } else {
-                    console.warn('Could not parse poReceived (ISO format):', request.poReceived);
-                    // Fallback to native Date constructor if explicit parsing fails, just in case
-                    const fallbackDate = new Date(request.poReceived);
-                    if (!isNaN(fallbackDate)) {
-                        poReceivedTimestamp = fallbackDate.getTime();
-                        poReceivedDisplay = fallbackDate.toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' });
-                        console.warn('Used native Date constructor as fallback for poReceived:', request.poReceived);
-                    } else {
-                         console.error('Both explicit and native Date parsing failed for poReceived:', request.poReceived);
-                    }
+                    console.warn('Could not parse poReceived:', request.poReceived, 'Falling back to N/A.');
                 }
             }
-
 
             card.innerHTML = `
                 <div class="card-content">
@@ -729,31 +744,32 @@
                             <span class="field-label">PO Received:</span>
                             <div class="field-value">${poReceivedDisplay}</div>
                         </div>
-                        <div class="field-group">
-                            <span class="field-label">Deadline:</span>
-                            <div class="field-value" id="countdown-${index}"></div>
-                        </div>
+                        ${deadlineHtml}
                     ` : ''}
                 </div>
-                <button class="action-button" onclick="openModal(${index})">
+                <button class="action-button" onclick="openModal('${request.id}')">
                     Mark Response
                 </button>
             `;
             
-            // Start countdown if poReceivedTimestamp is valid
+            // Start countdown only if poReceivedTimestamp is valid
             if (poReceivedTimestamp) {
-                startCountdown(poReceivedTimestamp, `countdown-${index}`);
+                // Use request.id for unique element ID for countdown
+                startCountdown(poReceivedTimestamp, `countdown-${request.id}`, card);
             }
 
             return card;
         }
 
-        // New function: Start the countdown timer
-        function startCountdown(poReceivedTimestamp, elementId) {
+        // Function to start the countdown timer
+        function startCountdown(poReceivedTimestamp, elementId, cardElement) {
             const deadline = poReceivedTimestamp + (24 * 60 * 60 * 1000); // 24 hours in milliseconds
             const countdownElement = document.getElementById(elementId);
 
-            if (!countdownElement) return; // Exit if element not found
+            if (!countdownElement) {
+                console.warn(`Countdown element with ID ${elementId} not found.`);
+                return; // Exit if element not found
+            }
 
             // Clear any existing interval for this element to prevent multiple timers
             if (countdownIntervals[elementId]) {
@@ -767,30 +783,46 @@
                 if (timeRemaining <= 0) {
                     clearInterval(interval);
                     countdownElement.innerHTML = '<span class="overdue-text">Overdue</span>';
-                    // Optionally, add a class to the parent card to highlight overdue
-                    countdownElement.closest('.request-card')?.classList.add('highlighted'); // Example
+                    // Add highlight to the card if overdue
+                    if (cardElement) {
+                        cardElement.classList.add('overdue-card-highlight'); // Use a distinct class for overdue highlight
+                    }
                 } else {
                     const days = Math.floor(timeRemaining / (1000 * 60 * 60 * 24));
                     const hours = Math.floor((timeRemaining % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
                     const minutes = Math.floor((timeRemaining % (1000 * 60 * 60)) / (1000 * 60));
                     const seconds = Math.floor((timeRemaining % (1000 * 60)) / 1000);
 
-                    countdownElement.textContent = 
+                    // Optional: Apply color based on time remaining for better visual cues
+                    let countdownClass = '';
+                    if (timeRemaining < 1 * 60 * 60 * 1000) { // Less than 1 hour
+                        countdownClass = 'text-red-400'; // Define this in your CSS
+                    } else if (timeRemaining < 4 * 60 * 60 * 1000) { // Less than 4 hours
+                        countdownClass = 'text-yellow-400'; // Define this in your CSS
+                    }
+
+                    countdownElement.innerHTML = `<span class="${countdownClass}">` +
                         `${days > 0 ? days + 'd ' : ''}` + 
                         `${hours.toString().padStart(2, '0')}h ` + 
                         `${minutes.toString().padStart(2, '0')}m ` + 
-                        `${seconds.toString().padStart(2, '0')}s`;
+                        `${seconds.toString().padStart(2, '0')}s` +
+                        `</span>`;
                 }
             }, 1000); // Update every second
 
             countdownIntervals[elementId] = interval; // Store the interval ID
         }
 
-
         // Open modal
-        function openModal(index) {
-            // Store the full request object including its timestamp
-            selectedRequest = { ...requests[index], index }; 
+        function openModal(requestId) {
+            // Find the request object by id
+            selectedRequest = requests.find(req => req.id === requestId);
+            if (!selectedRequest) {
+                console.error("Could not find request with ID:", requestId);
+                showToast("Error opening response form. Request not found.", "error");
+                return;
+            }
+
             document.getElementById('modal-overlay').style.display = 'block';
             document.body.style.overflow = 'hidden';
             
@@ -954,10 +986,7 @@
 
             const submissionData = {
                 action: 'submitResponse',
-                // Send the original timestamp received for the request
-                // assuming 'timestamp' is a property of the request object
-                id: selectedRequest.id, 
-                // Include details for updating Requests sheet column AH
+                id: selectedRequest.id, // Use the actual ID from the selected request
                 dealer: selectedRequest.dealer, 
                 product: selectedRequest.product,
                 qty: selectedRequest.qty,
@@ -974,15 +1003,20 @@
                 console.log('Submitting:', submissionData);
                 const response = await fetch(GAS_WEB_APP_URL, {
                     method: 'POST',
-                    mode: 'no-cors',                    
+                    mode: 'no-cors', // Required for Google Apps Script Web Apps when not in same origin
                     headers: {
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify(submissionData)
                 });
-                    showToast('Response submitted successfully!', 'success');
-                    closeModal();
-                    fetchRequests(); // Re-fetch requests to update the dashboard
+                // For 'no-cors' mode, response.ok will always be false and status 0.
+                // You'll need to rely on the Apps Script's success/failure from its side.
+                // If your Apps Script is configured to respond with specific JSON and CORS is handled,
+                // you can change mode to 'cors' and check response.ok.
+                
+                showToast('Response submitted successfully!', 'success');
+                closeModal();
+                fetchRequests(); // Re-fetch requests to update the dashboard
             } catch (error) {
                 console.error('Error submitting response:', error);
                 showToast('Error submitting response. Please try again.', 'error');

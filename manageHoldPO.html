@@ -245,6 +245,7 @@
 
                 const response = await fetch(API_URL, {
                     method: 'POST',
+                    method: 'no-cors',                    
                     headers: {
                         'Content-Type': 'application/x-www-form-urlencoded',
                     },
@@ -253,20 +254,8 @@
                         orderId: orderId,
                     }).toString(),
                 });
-
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-
-                const result = await response.json();
-                console.log(`${actionType} result:`, result);
                 showMessageBox(`Order ${orderId} has been ${actionType}d successfully!`);
-
-                // Optionally, re-fetch orders to update the UI or remove the processed card
-                // For now, we'll just show a success message.
-                // If you want to refresh the list, uncomment the next line:
-                // fetchOrders();
-
+                renderOrders();
             } catch (error) {
                 console.error(`Failed to ${actionType} order ${orderId}:`, error);
                 showMessageBox(`Failed to ${actionType} order ${orderId}. Error: ${error.message}`);

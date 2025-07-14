@@ -112,6 +112,10 @@
             justify-content: space-between; /* Ensures button is at bottom */
             height: 100%; /* Important for consistent card height */
         }
+        .request-card.highlighted {
+                    background-color: #e8f5e9; /* Light green */
+                    border-color: #a5d6a7; /* Slightly darker green border */
+                }        
 
         .request-card:hover {
             transform: translateY(-3px); /* Slightly less transform */
@@ -618,6 +622,9 @@
         function createRequestCard(request, index) {
             const card = document.createElement('div');
             card.className = 'request-card';
+                        if (request.responseRemark && request.responseRemark.trim() !== '') {
+                            card.classList.add('highlighted');
+                        }
             
             // Format CRM value if it looks like a URL
             let crmValue = request.crm || 'N/A';

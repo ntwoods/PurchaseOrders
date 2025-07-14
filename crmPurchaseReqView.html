@@ -631,19 +631,44 @@
             });
         }
 
+        // Helper function to parse DD/MM/YYYY HH:MM:SS to a Date object
+        function parseDateTime(dtString) {
+            if (!dtString) return null;
+            const parts = dtString.match(/(\d{2})\/(\d{2})\/(\d{4}) (\d{2}):(\d{2}):(\d{2})/);
+            if (!parts) return null;
+            const [, day, month, year, hours, minutes, seconds] = parts;
+            // Note: Month is 0-indexed in JavaScript Date constructor
+            return new Date(year, month - 1, day, hours, minutes, seconds);
+        }
+
         // Create request card (priority tags removed)
         function createRequestCard(request, index) {
             const card = document.createElement('div');
             card.className = 'request-card';
-                        if (request.responseRemark && request.responseRemark.trim() !== '') {
-                            card.classList.add('highlighted');
-                        }
+            if (request.responseRemark && request.responseRemark.trim() !== '') {
+                card.classList.add('highlighted');
+            }
             
             // Format CRM value if it looks like a URL
             let crmValue = request.crm || 'N/A';
             if (crmValue !== 'N/A' && (crmValue.startsWith('http://') || crmValue.startsWith('https://'))) {
                 crmValue = `<a href="${crmValue}" target="_blank" style="color: var(--color-primary); text-decoration: none;">View CRM</a>`;
             }
+
+            let poReceivedDisplay = 'N/A';
+            let poReceivedTimestamp = null;
+
+            if (request.poReceived) {
+                const parsedDate = parseDateTime(request.poReceived);
+                if (parsedDate && !isNaN(parsedDate)) { // Check if parsing was successful
+                    poReceivedTimestamp = parsedDate.getTime();
+                    // Display in Indian Standard Time (IST) if you know the server time is IST or want to convert it
+                    poReceivedDisplay = parsedDate.toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' });
+                } else {
+                    console.warn('Could not parse poReceived:', request.poReceived);
+                }
+            }
+
 
             card.innerHTML = `
                 <div class="card-content">
@@ -676,10 +701,10 @@
                         <span class="field-label">CRM:</span>
                         <div class="field-value">${crmValue}</div>
                     </div>
-                    ${request.poReceived ? `
+                    ${poReceivedTimestamp ? `
                         <div class="field-group">
                             <span class="field-label">PO Received:</span>
-                            <div class="field-value">${new Date(request.poReceived).toLocaleString()}</div>
+                            <div class="field-value">${poReceivedDisplay}</div>
                         </div>
                         <div class="field-group">
                             <span class="field-label">Deadline:</span>
@@ -692,10 +717,9 @@
                 </button>
             `;
             
-            // Start countdown if poReceived exists
-            if (request.poReceived) {
-                // Ensure poReceived is treated as a number (timestamp)
-                startCountdown(Number(request.poReceived), `countdown-${index}`);
+            // Start countdown if poReceivedTimestamp is valid
+            if (poReceivedTimestamp) {
+                startCountdown(poReceivedTimestamp, `countdown-${index}`);
             }
 
             return card;

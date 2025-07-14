@@ -113,9 +113,14 @@
             height: 100%; /* Important for consistent card height */
         }
         .request-card.highlighted {
-                    background-color: #b5f5d2; /* Light green */
-                    border-color: #14914d; /* Slightly darker green border */
-                }        
+            background-color: #b5f5d2; /* Light green for general highlight */
+            border-color: #14914d; /* Slightly darker green border */
+        }
+        .request-card.overdue-card-highlight { /* Specific highlight for overdue */
+            background-color: #ffebee; /* Very light red */
+            border-color: #ef5350; /* Red border */
+            box-shadow: 0 4px 15px rgba(239, 83, 80, 0.2); /* Reddish shadow */
+        }       
 
         .request-card:hover {
             transform: translateY(-3px); /* Slightly less transform */
@@ -426,6 +431,21 @@
             font-weight: 600;
         }
 
+        /* Countdown text colors */
+        .countdown-red {
+            color: #ef5350; /* Light red */
+            font-weight: 600;
+        }
+        .countdown-yellow {
+            color: #ffee58; /* Light yellow */
+            font-weight: 600;
+        }
+        .countdown-green {
+            color: #66bb6a; /* Light green */
+            font-weight: 600;
+        }
+
+
         /* Media Queries */
         @media (max-width: 768px) {
             .header h1 {
@@ -627,8 +647,8 @@
             container.style.display = 'grid';
             container.innerHTML = '';
 
-            requests.forEach((request, index) => {
-                const card = createRequestCard(request, index);
+            requests.forEach((request) => { // Removed index as it's not used for ID now
+                const card = createRequestCard(request);
                 container.appendChild(card);
             });
         }
@@ -665,9 +685,10 @@
         }
 
         // Create request card
-        function createRequestCard(request, index) {
+        function createRequestCard(request) { // Removed index parameter
             const card = document.createElement('div');
             card.className = 'request-card';
+            // Highlight card if there's a responseRemark (already marked)
             if (request.responseRemark && request.responseRemark.trim() !== '') {
                 card.classList.add('highlighted');
             }
@@ -696,11 +717,11 @@
                         second: '2-digit',
                         hour12: true // For AM/PM
                     });
-                    // Placeholder for countdown
+                    // CORRECTED: Use request.id for the countdown element's ID
                     deadlineHtml = `
                         <div class="field-group">
                             <span class="field-label">Deadline:</span>
-                            <div class="field-value" id="countdown-${request.id}"></div>
+                            <div class="field-value" id="countdown-${request.id}"></div> 
                         </div>
                     `;
                 } else {
@@ -754,7 +775,7 @@
             
             // Start countdown only if poReceivedTimestamp is valid
             if (poReceivedTimestamp) {
-                // Use request.id for unique element ID for countdown
+                // Pass request.id for unique element ID for countdown
                 startCountdown(poReceivedTimestamp, `countdown-${request.id}`, card);
             }
 
@@ -790,15 +811,15 @@
                 } else {
                     const days = Math.floor(timeRemaining / (1000 * 60 * 60 * 24));
                     const hours = Math.floor((timeRemaining % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-                    const minutes = Math.floor((timeRemaining % (1000 * 60 * 60)) / (1000 * 60));
+                    const minutes = Math.floor((timeRemaining % (1000 * 60)) / (1000 * 60));
                     const seconds = Math.floor((timeRemaining % (1000 * 60)) / 1000);
 
-                    // Optional: Apply color based on time remaining for better visual cues
-                    let countdownClass = '';
+                    // Apply color based on time remaining for better visual cues
+                    let countdownClass = 'countdown-green'; // Default green
                     if (timeRemaining < 1 * 60 * 60 * 1000) { // Less than 1 hour
-                        countdownClass = 'text-red-400'; // Define this in your CSS
+                        countdownClass = 'countdown-red'; 
                     } else if (timeRemaining < 4 * 60 * 60 * 1000) { // Less than 4 hours
-                        countdownClass = 'text-yellow-400'; // Define this in your CSS
+                        countdownClass = 'countdown-yellow'; 
                     }
 
                     countdownElement.innerHTML = `<span class="${countdownClass}">` +

@@ -169,6 +169,28 @@
             background: linear-gradient(135deg, #1565c0 0%, var(--color-primary) 100%);
             transform: translateY(-1px);
         }
+        
+        .view-file-button {
+            display: block; /* Make it a block element to take full width */
+            width: fit-content; /* Adjust width to content */
+            background: var(--color-secondary); /* A slightly different blue */
+            color: var(--color-white);
+            border: none;
+            padding: 0.4rem 0.8rem; /* Smaller padding for inline button */
+            border-radius: var(--border-radius-small);
+            font-size: 0.85rem; /* Smaller font size */
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none; /* Remove underline for links */
+            text-align: center;
+            margin-top: 0.5rem; /* Space below label */
+        }
+
+        .view-file-button:hover {
+            background: #399ae1; /* Darker shade on hover */
+            transform: translateY(-1px);
+        }
 
         /* Modal Styles */
         .modal-overlay {
@@ -698,6 +720,23 @@
                 crmValue = `<a href="${crmValue}" target="_blank" style="color: var(--color-primary); text-decoration: none;">View CRM</a>`;
             }
 
+            let productHtml = '';
+            if (request.product && (request.product.startsWith('http://') || request.product.startsWith('https://'))) {
+                productHtml = `
+                    <div class="field-group">
+                        <span class="field-label">File:</span>
+                        <a href="${request.product}" target="_blank" class="view-file-button">View File</a>
+                    </div>
+                `;
+            } else {
+                productHtml = `
+                    <div class="field-group">
+                        <span class="field-label">Product:</span>
+                        <div class="field-value">${request.product || 'N/A'}</div>
+                    </div>
+                `;
+            }
+
             let poReceivedDisplay = 'N/A';
             let poReceivedTimestamp = null;
             let deadlineHtml = ''; // Initialize deadline HTML as empty
@@ -736,15 +775,7 @@
                         <div class="field-value">${request.dealer || 'N/A'}</div>
                     </div>
                     
-                    <div class="field-group">
-                        <span class="field-label">Product:</span>
-                        <div class="field-value">${request.product || 'N/A'}</div>
-                    </div>
-                    
-                    <div class="field-group">
-                        <span class="field-label">Qty:</span>
-                        <div class="field-value">${request.qty || 'N/A'}</div>
-                    </div>
+                    ${productHtml}
                     
                     <div class="field-group">
                         <span class="field-label">Priority:</span>

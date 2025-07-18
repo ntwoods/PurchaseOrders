@@ -284,20 +284,17 @@
             statusMessageDiv.innerHTML = `<div class="${className} p-10 rounded-xl shadow-md">${content}</div>`;
         }
 
-        // Format date and time for display
+        // Format date for display in dd-mmm-yyyy format
         function formatDateTime(isoString) {
             if (!isoString || isoString.trim() === '') return 'N/A';
             try {
                 const date = new Date(isoString);
                 if (isNaN(date.getTime())) return 'N/A';
-                return date.toLocaleString('en-US', {
-                    year: 'numeric',
-                    month: 'short',
-                    day: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit',
-                    hour12: true
-                });
+                return date.toLocaleDateString('en-GB', { // Use 'en-GB' for dd/mm/yyyy base
+                    day: '2-digit',
+                    month: 'short', // 'short' for mmm (e.g., Jan)
+                    year: 'numeric'
+                }).replace(/ /g, '-'); // Replace spaces with hyphens for dd-mmm-yyyy
             } catch (error) {
                 return 'N/A';
             }

@@ -192,6 +192,27 @@
             transform: translateY(-1px);
         }
 
+        /* New Cancel Button Style */
+        .cancel-button {
+            width: 100%;
+            background: #e53935; /* Red color for cancel */
+            color: var(--color-white);
+            border: none;
+            padding: 0.6rem 1.25rem;
+            border-radius: var(--border-radius-small);
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin-top: 0.5rem; /* Space between action and cancel */
+            flex-shrink: 0;
+        }
+
+        .cancel-button:hover {
+            background: #c62828; /* Darker red on hover */
+            transform: translateY(-1px);
+        }
+
         /* Modal Styles */
         .modal-overlay {
             display: none;
@@ -486,6 +507,7 @@
             .modal-actions {
                 flex-direction: column;
             }
+            
             .btn-cancel, .btn-submit {
                 width: 100%;
             }
@@ -505,15 +527,12 @@
             <p>Manage the CRM's requests here and mark the details such as when and with which order we are expecting those products</p>
         </div>
     </div>
-
     <div class="container">
         <div id="loading" class="loading">
             <div class="loading-spinner"></div>
             <p style="color: var(--color-primary); font-weight: 600;">Loading requests...</p>
         </div>
-
         <div id="requests-container" class="requests-grid" style="display: none;"></div>
-
         <div id="empty-state" class="empty-state" style="display: none;">
             <div class="empty-state-icon">📋</div>
             <h3>No requests found</h3>
@@ -521,13 +540,13 @@
         </div>
     </div>
 
+    <!-- Modal for Marking Response (Existing) -->
     <div id="modal-overlay" class="modal-overlay">
         <div class="modal">
             <div class="modal-header">
                 <h3 class="modal-title">Mark Response</h3>
                 <button class="close-button" onclick="closeModal()">&times;</button>
             </div>
-            
             <div class="form-group">
                 <label class="form-label" for="poSearchInput">Expected with PO No.</label>
                 <div class="searchable-dropdown-container">
@@ -536,20 +555,36 @@
                     <div id="poSearchResults" class="searchable-dropdown-results" style="display: none;"></div>
                 </div>
             </div>
-            
             <div class="form-group">
                 <label class="form-label" for="remark">Remark</label>
                 <textarea id="remark" class="form-textarea" placeholder="Enter your remark..."></textarea>
             </div>
-            
             <div class="form-group">
                 <label class="form-label" for="expectedBy">Expected by</label>
                 <input type="date" id="expectedBy" class="form-input">
             </div>
-            
             <div class="modal-actions">
                 <button class="btn-cancel" onclick="closeModal()">Cancel</button>
                 <button id="submit-btn" class="btn-submit" onclick="submitResponse()" disabled>Submit</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- New Modal for Cancellation Remark -->
+    <div id="cancel-modal-overlay" class="modal-overlay">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">Cancel Request</h3>
+                <button class="close-button" onclick="closeCancelModal()">&times;</button>
+            </div>
+            <p>Please provide a reason for cancelling Request ID: <strong id="cancelRequestId"></strong></p>
+            <div class="form-group">
+                <label class="form-label" for="cancellationRemark">Cancellation Remark</label>
+                <textarea id="cancellationRemark" class="form-textarea" placeholder="Enter cancellation reason..."></textarea>
+            </div>
+            <div class="modal-actions">
+                <button class="btn-cancel" onclick="closeCancelModal()">Close</button>
+                <button id="confirm-cancel-btn" class="btn-submit">Confirm Cancellation</button>
             </div>
         </div>
     </div>
@@ -564,539 +599,37 @@
         let selectedRequest = null;
         let selectedPoNo = ''; // To store the selected PO number from searchable dropdown
         let countdownIntervals = {}; // Store intervals to clear them
+        let currentRequestIdToCancel = null; // To store the ID of the request being cancelled
 
         // API URLs
         // IMPORTANT: Replace this with your actual Google Apps Script Web App URL
         const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycby7Iwfzy98sI8UFYs6lCZZF_ESoaTzFd3UWwZJWepffBD6rueQ9TdzgLq7oE98npIwpdQ/exec';
         // IMPORTANT: Replace this with your actual Google Sheet URL for PO numbers
         // Ensure this sheet is published to the web for the Google Visualization API to access it.
-        const GOOGLE_SHEET_PO_URL = 'https://docs.google.com/spreadsheets/d/1MPBE5EED1iN8np3oVqcn3VSAYl7M-OUXaLj9_YJogh0/gviz/tq?tqx=out:json&sheet=Requests&range=U:AL';
+        const GOOGLE_SHEET_PO_URL = 'https://docs.google.com/spreadsheets/d/1MPBE5EED1iN8np3oVqcn3VSAYl7M-OUXaLj9_YJogh0/gviz/tq?tqx=out:json&sheet=Requests&range=U:U';
+
+        // DOM Elements
+        const loadingDiv = document.getElementById('loading');
+        const requestsContainer = document.getElementById('requests-container');
+        const emptyStateDiv = document.getElementById('empty-state');
+        const modalOverlay = document.getElementById('modal-overlay');
+        const poSearchInput = document.getElementById('poSearchInput');
+        const poSearchResults = document.getElementById('poSearchResults');
+        const remarkInput = document.getElementById('remark');
+        const expectedByInput = document.getElementById('expectedBy');
+        const submitBtn = document.getElementById('submit-btn');
+        const toastContainer = document.getElementById('toast-container');
+
+        // Cancellation Modal Elements
+        const cancelModalOverlay = document.getElementById('cancel-modal-overlay');
+        const cancelRequestIdSpan = document.getElementById('cancelRequestId');
+        const cancellationRemarkInput = document.getElementById('cancellationRemark');
+        const confirmCancelBtn = document.getElementById('confirm-cancel-btn');
 
 
-        // Initialize the application
-        document.addEventListener('DOMContentLoaded', function() {
-            fetchRequests();
-            fetchPoNumbers();
-            setupFormValidation();
-            setupSearchableDropdown();
-        });
+        // --- Utility Functions ---
 
-        // Function to fetch data from your Google Apps Script
-        async function fetchRequests() {
-            const loading = document.getElementById('loading');
-            const container = document.getElementById('requests-container');
-            const emptyState = document.getElementById('empty-state');
-
-            loading.style.display = 'block';
-            container.style.display = 'none';
-            emptyState.style.display = 'none';
-
-            // Clear existing countdown intervals before re-rendering
-            for (const key in countdownIntervals) {
-                clearInterval(countdownIntervals[key]);
-            }
-            countdownIntervals = {};
-
-            try {
-                const response = await fetch(`${GAS_WEB_APP_URL}?action=getRequests`);
-                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-
-                const result = await response.json();
-                console.log('Fetched requests response:', result);
-                
-                if (!Array.isArray(result.data)) {
-                    throw new Error("Expected 'data' to be an array");
-                }
-                requests = result.data; 
-                renderRequests();
-            } catch (error) {
-                console.error('Error fetching requests:', error);
-                showToast('Error loading requests. Please try again.', 'error');
-                requests = []; // Clear requests on error
-                renderRequests();
-            } finally {
-                loading.style.display = 'none';
-            }
-        }
-
-        async function fetchPoNumbers() {
-            try {
-                const response = await fetch(GOOGLE_SHEET_PO_URL);
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                const text = await response.text();
-                // Google Visualization API response is not pure JSON, it's wrapped
-                const jsonText = text.substring(text.indexOf('{'), text.lastIndexOf('}') + 1);
-                const data = JSON.parse(jsonText);
-        
-                // Extract PO numbers only when column U (index 0) is blank/null
-                // and then get value from AL column (index 17)
-                poNumbers = data.table.rows
-                    .filter(row => row.c[0] === null || row.c[0].v === null || row.c[0].v === '') // Filter for blank U
-                    .map(row => row.c[17]?.v) // Get value from AL
-                    .filter(value => value !== undefined && value !== null && value !== '') // Remove undefined/null/empty
-                    .map(String); // Ensure values are strings for consistency
-        
-                poNumbers = [...new Set(poNumbers)].sort(); // Remove duplicates and sort
-                filteredPoNumbers = [...poNumbers];
-                populateSearchResults();
-            } catch (error) {
-                console.error('Error fetching PO numbers:', error);
-                showToast('Error loading PO numbers. Fallback used.', 'error');
-                // Fallback PO numbers in case of API issues
-                poNumbers = ['PO-2024-001-Fallback', 'PO-2024-002-Fallback', 'PO-2024-003-Fallback', 'PO-2024-004-Fallback'];
-                poNumbers = [...new Set(poNumbers)].sort();
-                filteredPoNumbers = [...poNumbers];
-                populateSearchResults();
-            }
-        }
-
-        // Render requests
-        function renderRequests() {
-            const loading = document.getElementById('loading');
-            const container = document.getElementById('requests-container');
-            const emptyState = document.getElementById('empty-state');
-
-            loading.style.display = 'none';
-
-            if (requests.length === 0) {
-                emptyState.style.display = 'block';
-                container.style.display = 'none';
-                return;
-            }
-
-            container.style.display = 'grid';
-            container.innerHTML = '';
-
-            requests.forEach((request) => { // Removed index as it's not used for ID now
-                const card = createRequestCard(request);
-                container.appendChild(card);
-            });
-        }
-
-        // Helper function to parse ISO 8601 string explicitly
-        function parseIsoDateTime(isoString) {
-            if (!isoString || typeof isoString !== 'string') return null;
-            // Example: 2025-07-14T08:37:24.000Z or 2025-07-14T08:37:24Z
-            const parts = isoString.match(/(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.(\d{3}))?Z/);
-            if (!parts) {
-                // If direct regex fails, try native Date constructor as a last resort,
-                // it might handle some variations or invalid parts gracefully
-                const nativeDate = new Date(isoString);
-                if (!isNaN(nativeDate.getTime())) {
-                    return nativeDate;
-                }
-                return null; // Still couldn't parse
-            }
-
-            const [, year, month, day, hours, minutes, seconds, milliseconds] = parts;
-            
-            // Create a Date object in UTC
-            const date = new Date(Date.UTC(
-                parseInt(year),
-                parseInt(month) - 1, // Month is 0-indexed
-                parseInt(day),
-                parseInt(hours),
-                parseInt(minutes),
-                parseInt(seconds),
-                parseInt(milliseconds || '0') // Handle missing milliseconds part
-            ));
-
-            return date;
-        }
-
-        // Create request card
-        function createRequestCard(request) { // Removed index parameter
-            const card = document.createElement('div');
-            card.className = 'request-card';
-            // Highlight card if there's a responseRemark (already marked)
-            if (request.responseRemark && request.responseRemark.trim() !== '') {
-                card.classList.add('highlighted');
-            }
-            
-            let crmValue = request.crm || 'N/A';
-            if (crmValue !== 'N/A' && (crmValue.startsWith('http://') || crmValue.startsWith('https://'))) {
-                crmValue = `<a href="${crmValue}" target="_blank" style="color: var(--color-primary); text-decoration: none;">View CRM</a>`;
-            }
-
-            let productHtml = '';
-            if (request.product && (request.product.startsWith('http://') || request.product.startsWith('https://'))) {
-                productHtml = `
-                    <div class="field-group">
-                        <span class="field-label">File:</span>
-                        <a href="${request.product}" target="_blank" class="view-file-button">View File</a>
-                    </div>
-                `;
-            } else {
-                productHtml = `
-                    <div class="field-group">
-                        <span class="field-label">Product:</span>
-                        <div class="field-value">${request.product || 'N/A'}</div>
-                    </div>
-                `;
-            }
-
-            let poReceivedDisplay = 'N/A';
-            let poReceivedTimestamp = null;
-            let deadlineHtml = ''; // Initialize deadline HTML as empty
-
-            if (request.poReceived) {
-                const parsedDate = parseIsoDateTime(request.poReceived); 
-                if (parsedDate && !isNaN(parsedDate.getTime())) {
-                    poReceivedTimestamp = parsedDate.getTime();
-                    // Display in Indian Standard Time (IST)
-                    poReceivedDisplay = parsedDate.toLocaleString('en-IN', { 
-                        timeZone: 'Asia/Kolkata',
-                        year: 'numeric',
-                        month: '2-digit',
-                        day: '2-digit',
-                        hour: '2-digit',
-                        minute: '2-digit',
-                        second: '2-digit',
-                        hour12: true // For AM/PM
-                    });
-                    // CORRECTED: Use request.id for the countdown element's ID
-                    deadlineHtml = `
-                        <div class="field-group">
-                            <span class="field-label">Deadline:</span>
-                            <div class="field-value" id="countdown-${request.id}"></div> 
-                        </div>
-                    `;
-                } else {
-                    console.warn('Could not parse poReceived:', request.poReceived, 'Falling back to N/A.');
-                }
-            }
-
-            card.innerHTML = `
-                <div class="card-content">
-                    <div class="field-group">
-                        <span class="field-label">Dealer Name:</span>
-                        <div class="field-value">${request.dealer || 'N/A'}</div>
-                    </div>
-                    
-                    ${productHtml}
-                    
-                    <div class="field-group">
-                        <span class="field-label">Priority:</span>
-                        <div class="field-value">${request.priority || 'N/A'}</div>
-                    </div>
-                    
-                    <div class="field-group">
-                        <span class="field-label">Remark:</span>
-                        <div class="field-value">${request.remark || 'N/A'}</div>
-                    </div>
-                    
-                    <div class="field-group">
-                        <span class="field-label">CRM:</span>
-                        <div class="field-value">${crmValue}</div>
-                    </div>
-                    ${poReceivedTimestamp ? `
-                        <div class="field-group">
-                            <span class="field-label">PO Received:</span>
-                            <div class="field-value">${poReceivedDisplay}</div>
-                        </div>
-                        ${deadlineHtml}
-                    ` : ''}
-                </div>
-                <button class="action-button" onclick="openModal('${request.id}')">
-                    Mark Response
-                </button>
-            `;
-            
-            // Start countdown only if poReceivedTimestamp is valid
-            if (poReceivedTimestamp) {
-                // Pass request.id for unique element ID for countdown
-                startCountdown(poReceivedTimestamp, `countdown-${request.id}`, card);
-            }
-
-            return card;
-        }
-
-        // Function to start the countdown timer
-        function startCountdown(poReceivedTimestamp, elementId, cardElement) {
-            const deadline = poReceivedTimestamp + (24 * 60 * 60 * 1000); // 24 hours in milliseconds
-            const countdownElement = document.getElementById(elementId);
-
-            if (!countdownElement) {
-                console.warn(`Countdown element with ID ${elementId} not found.`);
-                return; // Exit if element not found
-            }
-
-            // Clear any existing interval for this element to prevent multiple timers
-            if (countdownIntervals[elementId]) {
-                clearInterval(countdownIntervals[elementId]);
-            }
-
-            const interval = setInterval(() => {
-                const now = new Date().getTime();
-                const timeRemaining = deadline - now;
-
-                if (timeRemaining <= 0) {
-                    clearInterval(interval);
-                    countdownElement.innerHTML = '<span class="overdue-text">Overdue</span>';
-                    // Add highlight to the card if overdue
-                    if (cardElement) {
-                        cardElement.classList.add('overdue-card-highlight'); // Use a distinct class for overdue highlight
-                    }
-                } else {
-                    const days = Math.floor(timeRemaining / (1000 * 60 * 60 * 24));
-                    const hours = Math.floor((timeRemaining % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-                    const minutes = Math.floor((timeRemaining % (1000 * 60)) / (1000 * 60));
-                    const seconds = Math.floor((timeRemaining % (1000 * 60)) / 1000);
-
-                    // Apply color based on time remaining for better visual cues
-                    let countdownClass = 'countdown-green'; // Default green
-                    if (timeRemaining < 1 * 60 * 60 * 1000) { // Less than 1 hour
-                        countdownClass = 'countdown-red'; 
-                    } else if (timeRemaining < 4 * 60 * 60 * 1000) { // Less than 4 hours
-                        countdownClass = 'countdown-yellow'; 
-                    }
-
-                    countdownElement.innerHTML = `<span class="${countdownClass}">` +
-                        `${days > 0 ? days + 'd ' : ''}` + 
-                        `${hours.toString().padStart(2, '0')}h ` + 
-                        `${minutes.toString().padStart(2, '0')}m ` + 
-                        `${seconds.toString().padStart(2, '0')}s` +
-                        `</span>`;
-                }
-            }, 1000); // Update every second
-
-            countdownIntervals[elementId] = interval; // Store the interval ID
-        }
-
-        // Open modal
-        function openModal(requestId) {
-            // Find the request object by id
-            selectedRequest = requests.find(req => req.id === requestId);
-            if (!selectedRequest) {
-                console.error("Could not find request with ID:", requestId);
-                showToast("Error opening response form. Request not found.", "error");
-                return;
-            }
-
-            document.getElementById('modal-overlay').style.display = 'block';
-            document.body.style.overflow = 'hidden';
-            
-            // Reset form
-            document.getElementById('poSearchInput').value = '';
-            selectedPoNo = ''; // Reset selected PO
-            document.getElementById('remark').value = '';
-            document.getElementById('expectedBy').value = '';
-            populateSearchResults(); // Repopulate and hide dropdown
-            validateForm();
-        }
-
-        // Close modal
-        function closeModal() {
-            document.getElementById('modal-overlay').style.display = 'none';
-            document.body.style.overflow = 'auto';
-            selectedRequest = null;
-            document.getElementById('poSearchResults').style.display = 'none'; // Hide dropdown on close
-        }
-
-        // Setup form validation
-        function setupFormValidation() {
-            const remarkInput = document.getElementById('remark');
-            const expectedByInput = document.getElementById('expectedBy');
-            const poSearchInput = document.getElementById('poSearchInput');
-
-            remarkInput.addEventListener('input', validateForm);
-            expectedByInput.addEventListener('input', validateForm);
-            expectedByInput.addEventListener('change', validateForm); // For date input change
-            poSearchInput.addEventListener('input', validateForm); // For searchable PO input
-        }
-
-        // Validate form
-        function validateForm() {
-            const remark = document.getElementById('remark').value.trim();
-            const expectedBy = document.getElementById('expectedBy').value;
-            // The PO number is valid if selectedPoNo is not empty
-            const isValid = selectedPoNo && remark && expectedBy;
-            document.getElementById('submit-btn').disabled = !isValid;
-        }
-
-        // Setup Searchable Dropdown
-        function setupSearchableDropdown() {
-            const poSearchInput = document.getElementById('poSearchInput');
-            const poSearchResults = document.getElementById('poSearchResults');
-
-            poSearchInput.addEventListener('input', function() {
-                const searchText = this.value.toLowerCase();
-                filteredPoNumbers = poNumbers.filter(po => po.toLowerCase().includes(searchText));
-                populateSearchResults();
-                poSearchResults.style.display = filteredPoNumbers.length > 0 && searchText.length > 0 ? 'block' : 'none';
-                
-                // If input matches exactly one filtered result, pre-select it but don't set as final selection yet
-                if (filteredPoNumbers.length === 1 && filteredPoNumbers[0].toLowerCase() === searchText) {
-                    selectedPoNo = filteredPoNumbers[0]; // Tentatively set
-                } else {
-                    selectedPoNo = ''; // Clear if not exact match or multiple
-                }
-                validateForm(); // Re-validate on input
-            });
-
-            poSearchInput.addEventListener('focus', function() {
-                const searchText = this.value.toLowerCase();
-                filteredPoNumbers = poNumbers.filter(po => po.toLowerCase().includes(searchText));
-                populateSearchResults();
-                poSearchResults.style.display = filteredPoNumbers.length > 0 ? 'block' : 'none';
-            });
-
-            // Hide results when clicking outside, but not if clicking on results themselves
-            document.addEventListener('click', function(e) {
-                if (!poSearchInput.contains(e.target) && !poSearchResults.contains(e.target)) {
-                    poSearchResults.style.display = 'none';
-                }
-            });
-
-             // Keyboard navigation for accessibility
-             poSearchInput.addEventListener('keydown', function(e) {
-                const resultsDivs = Array.from(poSearchResults.children);
-                let currentFocus = -1;
-
-                if (poSearchResults.style.display === 'block') {
-                    for (let i = 0; i < resultsDivs.length; i++) {
-                        if (resultsDivs[i].classList.contains('selected')) {
-                            currentFocus = i;
-                            break;
-                        }
-                    }
-                }
-
-                if (e.key === 'ArrowDown') {
-                    e.preventDefault();
-                    currentFocus = (currentFocus + 1) % resultsDivs.length;
-                    focusResult(resultsDivs, currentFocus);
-                } else if (e.key === 'ArrowUp') {
-                    e.preventDefault();
-                    currentFocus = (currentFocus - 1 + resultsDivs.length) % resultsDivs.length;
-                    focusResult(resultsDivs, currentFocus);
-                } else if (e.key === 'Enter' && currentFocus > -1) {
-                    e.preventDefault();
-                    resultsDivs[currentFocus].click();
-                }
-            });
-        }
-
-        function populateSearchResults() {
-            const poSearchResults = document.getElementById('poSearchResults');
-            poSearchResults.innerHTML = ''; // Clear previous results
-
-            if (filteredPoNumbers.length === 0 && document.getElementById('poSearchInput').value.length > 0) {
-                const noResultDiv = document.createElement('div');
-                noResultDiv.textContent = 'No matching PO numbers';
-                noResultDiv.style.cursor = 'default';
-                noResultDiv.style.color = 'var(--color-text-light)';
-                poSearchResults.appendChild(noResultDiv);
-                return;
-            }
-
-            filteredPoNumbers.forEach(po => {
-                const div = document.createElement('div');
-                div.textContent = po;
-                div.onclick = () => selectPoNumber(po);
-                poSearchResults.appendChild(div);
-            });
-        }
-
-        function selectPoNumber(po) {
-            document.getElementById('poSearchInput').value = po;
-            selectedPoNo = po; // Final selection
-            document.getElementById('poSearchResults').style.display = 'none';
-            validateForm();
-        }
-
-        function clearPoSearch() {
-            document.getElementById('poSearchInput').value = '';
-            selectedPoNo = '';
-            filteredPoNumbers = [...poNumbers]; // Reset filter
-            populateSearchResults();
-            document.getElementById('poSearchResults').style.display = 'none'; // Hide results
-            validateForm();
-        }
-
-        function focusResult(resultsDivs, index) {
-            resultsDivs.forEach((div, i) => {
-                if (i === index) {
-                    div.classList.add('selected');
-                    div.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-                } else {
-                    div.classList.remove('selected');
-                }
-            });
-        }
-
-
-        // Submit response
-        async function submitResponse() {
-            const formData = {
-                expectedPoNo: selectedPoNo, // Use the selected PO number
-                remark: document.getElementById('remark').value.trim(),
-                expectedBy: document.getElementById('expectedBy').value
-            };
-
-            const submissionData = {
-                action: 'submitResponse',
-                id: selectedRequest.id, // Use the actual ID from the selected request
-                dealer: selectedRequest.dealer, 
-                product: selectedRequest.product,
-                qty: selectedRequest.qty,
-                crm: selectedRequest.crm,
-                crmRemark: selectedRequest.remark,                
-                ...formData
-            };
-
-            const submitBtn = document.getElementById('submit-btn');
-            const originalBtnText = submitBtn.textContent;
-            submitBtn.disabled = true; // Disable button to prevent multiple submissions
-            submitBtn.textContent = 'Submitting...';
-
-            try {
-                console.log('Submitting:', submissionData);
-                const response = await fetch(GAS_WEB_APP_URL, {
-                    method: 'POST',
-                    mode: 'no-cors', // Required for Google Apps Script Web Apps when not in same origin
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(submissionData)
-                });
-                // For 'no-cors' mode, response.ok will always be false and status 0.
-                // You'll need to rely on the Apps Script's success/failure from its side.
-                // If your Apps Script is configured to respond with specific JSON and CORS is handled,
-                // you can change mode to 'cors' and check response.ok.
-                
-                showToast('Response submitted successfully!', 'success');
-                closeModal();
-                fetchRequests(); // Re-fetch requests to update the dashboard
-            } catch (error) {
-                console.error('Error submitting response:', error);
-                showToast('Error submitting response. Please try again.', 'error');
-            } finally {
-                submitBtn.disabled = false; // Re-enable button
-                submitBtn.textContent = originalBtnText;
-            }
-        }
-
-        // Close modal when clicking outside
-        document.getElementById('modal-overlay').addEventListener('click', function(e) {
-            // Check if the click is directly on the overlay, not its children
-            if (e.target === this) {
-                closeModal();
-            }
-        });
-
-        // Close modal with Escape key
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape' && document.getElementById('modal-overlay').style.display === 'block') {
-                closeModal();
-            }
-        });
-
-        // Toast Notification System
         function showToast(message, type = 'success', duration = 3000) {
-            const toastContainer = document.getElementById('toast-container');
             const toast = document.createElement('div');
             toast.className = `toast ${type}`;
             toast.textContent = message;
@@ -1112,6 +645,402 @@
                 toast.addEventListener('transitionend', () => toast.remove());
             }, duration);
         }
+
+        function formatDate(dateString) {
+            if (!dateString) return '';
+            const date = new Date(dateString);
+            const options = { day: '2-digit', month: 'short', year: '2-digit' };
+            return date.toLocaleDateString('en-GB', options).replace(/ /g, '-');
+        }
+
+        function calculateCountdown(expectedDateString) {
+            if (!expectedDateString) return 'N/A';
+            const expectedDate = new Date(expectedDateString);
+            const now = new Date();
+            expectedDate.setHours(0, 0, 0, 0); // Normalize to start of day
+            now.setHours(0, 0, 0, 0); // Normalize to start of day
+
+            const diffTime = expectedDate - now;
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+            if (diffDays < 0) {
+                return { text: 'Overdue', class: 'overdue-text' };
+            } else if (diffDays === 0) {
+                return { text: 'Due Today', class: 'countdown-red' };
+            } else if (diffDays <= 3) {
+                return { text: `${diffDays} day${diffDays > 1 ? 's' : ''} left`, class: 'countdown-red' };
+            } else if (diffDays <= 7) {
+                return { text: `${diffDays} days left`, class: 'countdown-yellow' };
+            } else {
+                return { text: `${diffDays} days left`, class: 'countdown-green' };
+            }
+        }
+
+        function updateCountdownDisplay(cardElement, expectedDateString) {
+            const countdownSpan = cardElement.querySelector('.countdown-display');
+            if (countdownSpan) {
+                const countdown = calculateCountdown(expectedDateString);
+                countdownSpan.textContent = countdown.text;
+                countdownSpan.className = `countdown-display ${countdown.class}`;
+            }
+        }
+
+        function clearAllCountdownIntervals() {
+            for (const id in countdownIntervals) {
+                clearInterval(countdownIntervals[id]);
+            }
+            countdownIntervals = {};
+        }
+
+        // --- Modal Functions (for Marking Response) ---
+
+        function openModal(request) {
+            selectedRequest = request;
+            modalOverlay.style.display = 'flex'; // Use flex to center
+            document.body.style.overflow = 'hidden'; // Prevent scrolling
+            
+            // Populate modal fields
+            remarkInput.value = selectedRequest.remarkPurchase || '';
+            expectedByInput.value = selectedRequest.expectedDelivery ? new Date(selectedRequest.expectedDelivery).toISOString().split('T')[0] : '';
+            poSearchInput.value = selectedRequest.expectedPoNo || '';
+            selectedPoNo = selectedRequest.expectedPoNo || ''; // Set selectedPoNo for validation
+
+            // Enable/disable submit button based on initial state
+            checkSubmitButtonStatus();
+        }
+
+        function closeModal() {
+            modalOverlay.style.display = 'none';
+            document.body.style.overflow = ''; // Restore scrolling
+            selectedRequest = null;
+            poSearchInput.value = '';
+            poSearchResults.style.display = 'none';
+            remarkInput.value = '';
+            expectedByInput.value = '';
+            submitBtn.disabled = true;
+        }
+
+        // --- Modal Functions (for Cancellation) ---
+
+        function openCancelModal(requestId) {
+            currentRequestIdToCancel = requestId;
+            cancelRequestIdSpan.textContent = requestId;
+            cancellationRemarkInput.value = ''; // Clear any previous remark
+            cancelModalOverlay.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeCancelModal() {
+            cancelModalOverlay.style.display = 'none';
+            document.body.style.overflow = '';
+            currentRequestIdToCancel = null;
+            cancellationRemarkInput.value = '';
+        }
+
+        // --- Searchable Dropdown Logic ---
+
+        function filterPoNumbers(query) {
+            if (!query) {
+                filteredPoNumbers = [];
+                return;
+            }
+            filteredPoNumbers = poNumbers.filter(po =>
+                po.toLowerCase().includes(query.toLowerCase())
+            );
+        }
+
+        function displayPoSearchResults() {
+            poSearchResults.innerHTML = '';
+            if (filteredPoNumbers.length === 0 && poSearchInput.value.trim() !== '') {
+                const noResultsDiv = document.createElement('div');
+                noResultsDiv.textContent = 'No matching PO numbers';
+                noResultsDiv.style.fontStyle = 'italic';
+                noResultsDiv.style.color = 'var(--color-text-light)';
+                poSearchResults.appendChild(noResultsDiv);
+                poSearchResults.style.display = 'block';
+                return;
+            }
+
+            if (filteredPoNumbers.length > 0) {
+                filteredPoNumbers.forEach(po => {
+                    const div = document.createElement('div');
+                    div.textContent = po;
+                    div.addEventListener('click', () => {
+                        poSearchInput.value = po;
+                        selectedPoNo = po;
+                        poSearchResults.style.display = 'none';
+                        checkSubmitButtonStatus();
+                    });
+                    poSearchResults.appendChild(div);
+                });
+                poSearchResults.style.display = 'block';
+            } else {
+                poSearchResults.style.display = 'none';
+            }
+        }
+
+        function clearPoSearch() {
+            poSearchInput.value = '';
+            selectedPoNo = '';
+            poSearchResults.style.display = 'none';
+            checkSubmitButtonStatus();
+        }
+
+        poSearchInput.addEventListener('input', () => {
+            const query = poSearchInput.value.trim();
+            filterPoNumbers(query);
+            displayPoSearchResults();
+            selectedPoNo = query; // Update selectedPoNo as user types for validation
+            checkSubmitButtonStatus();
+        });
+
+        // Hide search results when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!poSearchInput.contains(e.target) && !poSearchResults.contains(e.target)) {
+                poSearchResults.style.display = 'none';
+            }
+        });
+
+        // --- Submit Button Validation ---
+
+        remarkInput.addEventListener('input', checkSubmitButtonStatus);
+        expectedByInput.addEventListener('input', checkSubmitButtonStatus);
+        poSearchInput.addEventListener('input', checkSubmitButtonStatus); // Listen for changes in PO search input
+
+        function checkSubmitButtonStatus() {
+            const remarkProvided = remarkInput.value.trim() !== '';
+            const expectedByProvided = expectedByInput.value.trim() !== '';
+            const poNoSelectedOrTyped = selectedPoNo.trim() !== ''; // Check if PO is selected or typed
+
+            // Enable submit if at least one of remark or expectedBy is provided, AND PO is provided
+            submitBtn.disabled = !(poNoSelectedOrTyped && (remarkProvided || expectedByProvided));
+        }
+
+        // --- Data Fetching & Rendering ---
+
+        async function fetchRequests() {
+            loadingDiv.style.display = 'block';
+            requestsContainer.style.display = 'none';
+            emptyStateDiv.style.display = 'none';
+            clearAllCountdownIntervals(); // Clear existing intervals
+
+            try {
+                const response = await fetch(GAS_WEB_APP_URL);
+                const result = await response.json();
+
+                if (result.status === "success" && result.data && result.data.length > 0) {
+                    requests = result.data;
+                    renderRequests(requests);
+                    loadingDiv.style.display = 'none';
+                    requestsContainer.style.display = 'grid';
+                    emptyStateDiv.style.display = 'none';
+                } else {
+                    loadingDiv.style.display = 'none';
+                    requestsContainer.style.display = 'none';
+                    emptyStateDiv.style.display = 'block';
+                }
+            } catch (error) {
+                console.error("Error fetching requests:", error);
+                loadingDiv.style.display = 'none';
+                requestsContainer.style.display = 'none';
+                emptyStateDiv.style.display = 'block';
+                emptyStateDiv.innerHTML = `<div class="empty-state-icon">❌</div><h3>Error loading data</h3><p>${error.message}. Please try again later.</p>`;
+                showToast('Failed to load requests. Please try again.', 'error');
+            }
+        }
+
+        async function fetchPoNumbers() {
+            try {
+                const response = await fetch(GOOGLE_SHEET_PO_URL);
+                const text = await response.text();
+                // Extract JSON from Google Visualization API response
+                const jsonString = text.substring(text.indexOf('{'), text.lastIndexOf('}') + 1);
+                const data = JSON.parse(jsonString);
+
+                if (data && data.table && data.table.rows) {
+                    poNumbers = data.table.rows.map(row => row.c[0]?.v).filter(Boolean);
+                }
+            } catch (error) {
+                console.error("Error fetching PO numbers:", error);
+                showToast('Failed to load PO numbers.', 'error');
+            }
+        }
+
+        function renderRequests(requestsToRender) {
+            requestsContainer.innerHTML = '';
+            requestsToRender.forEach(request => {
+                const card = document.createElement('div');
+                card.className = 'request-card';
+                
+                // Add highlight for overdue requests
+                const countdownResult = calculateCountdown(request.expectedDelivery);
+                if (countdownResult.text === 'Overdue') {
+                    card.classList.add('overdue-card-highlight');
+                }
+
+                card.innerHTML = `
+                    <div class="field-group"><span class="field-label">Request ID:</span> <span class="field-value">${request.requestId || 'N/A'}</span></div>
+                    <div class="field-group"><span class="field-label">Dealer Name:</span> <span class="field-value">${request.dealername || 'N/A'}</span></div>
+                    <div class="field-group"><span class="field-label">Priority:</span> <span class="field-value">${request.priority || 'N/A'}</span></div>
+                    <div class="field-group"><span class="field-label">CRM Remark:</span> <span class="field-value">${request.crmRemark || 'N/A'}</span></div>
+                    <div class="field-group"><span class="field-label">Request Date:</span> <span class="field-value">${formatDate(request.requestDate)}</span></div>
+                    <div class="field-group"><span class="field-label">Expected Delivery:</span> <span class="field-value">${formatDate(request.expectedDelivery)} <span class="countdown-display ${countdownResult.class}">${countdownResult.text}</span></span></div>
+                    <div class="field-group"><span class="field-label">Remark Purchase:</span> <span class="field-value">${request.remarkPurchase || 'N/A'}</span></div>
+                    <div class="field-group"><span class="field-label">Expected PO No:</span> <span class="field-value">${request.expectedPoNo || 'N/A'}</span></div>
+                    ${request.product ? `<a href="${request.product}" target="_blank" class="view-file-button">View File</a>` : ''}
+                    <button class="action-button" data-request-id="${request.requestId}">Mark Response</button>
+                    <button class="cancel-button" data-request-id="${request.requestId}">Cancel Request</button>
+                `;
+                requestsContainer.appendChild(card);
+
+                // Set up interval for countdown display
+                if (request.expectedDelivery) {
+                    countdownIntervals[request.requestId] = setInterval(() => {
+                        updateCountdownDisplay(card, request.expectedDelivery);
+                    }, 60000); // Update every minute
+                }
+            });
+
+            // Add event listeners to the action buttons
+            requestsContainer.querySelectorAll('.action-button').forEach(button => {
+                button.addEventListener('click', (event) => {
+                    const requestId = event.target.dataset.requestId;
+                    const request = requests.find(r => r.requestId === requestId);
+                    if (request) {
+                        openModal(request);
+                    }
+                });
+            });
+
+            // Add event listeners to the new cancel buttons
+            requestsContainer.querySelectorAll('.cancel-button').forEach(button => {
+                button.addEventListener('click', (event) => {
+                    const requestId = event.target.dataset.requestId;
+                    openCancelModal(requestId);
+                });
+            });
+        }
+
+        // --- Form Submission Logic ---
+
+        async function submitResponse() {
+            if (!selectedRequest) return;
+
+            const originalBtnText = submitBtn.textContent;
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Submitting...';
+
+            const payload = {
+                action: 'update',
+                requestId: selectedRequest.requestId,
+                remarkPurchase: remarkInput.value.trim(),
+                expectedDelivery: expectedByInput.value.trim(),
+                expectedPoNo: selectedPoNo.trim()
+            };
+
+            try {
+                const response = await fetch(GAS_WEB_APP_URL, {
+                    method: 'POST',
+                    mode: 'no-cors', // Required for Google Apps Script
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(payload),
+                });
+
+                // Since mode is 'no-cors', we can't directly read the response.
+                // Assume success and refetch data.
+                showToast('Request updated successfully!', 'success');
+                closeModal();
+                await fetchRequests(); // Refresh the data
+
+            } catch (error) {
+                console.error('Error submitting response:', error);
+                showToast('Failed to submit response. Please try again.', 'error');
+            } finally {
+                submitBtn.disabled = false; // Re-enable button
+                submitBtn.textContent = originalBtnText;
+            }
+        }
+
+        async function sendCancellationRequest() {
+            if (!currentRequestIdToCancel) return;
+
+            const remark = cancellationRemarkInput.value.trim();
+            if (!remark) {
+                showToast('Cancellation remark is required.', 'error');
+                return;
+            }
+
+            const originalBtnText = confirmCancelBtn.textContent;
+            confirmCancelBtn.disabled = true;
+            confirmCancelBtn.textContent = 'Cancelling...';
+
+            const payload = {
+                action: 'cancel', // New action type
+                requestId: currentRequestIdToCancel,
+                cancellationRemark: remark // User provided remark
+            };
+
+            try {
+                const response = await fetch(GAS_WEB_APP_URL, {
+                    method: 'POST',
+                    mode: 'no-cors', // Required for Google Apps Script
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(payload),
+                });
+
+                showToast(`Request ${currentRequestIdToCancel} cancelled successfully!`, 'success');
+                closeCancelModal();
+                await fetchRequests(); // Refresh the data
+
+            } catch (error) {
+                console.error('Error sending cancellation request:', error);
+                showToast('Failed to cancel request. Please try again.', 'error');
+            } finally {
+                confirmCancelBtn.disabled = false;
+                confirmCancelBtn.textContent = originalBtnText;
+            }
+        }
+
+
+        // --- Event Listeners and Initial Load ---
+
+        // Close modal when clicking outside
+        document.getElementById('modal-overlay').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeModal();
+            }
+        });
+
+        document.getElementById('cancel-modal-overlay').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeCancelModal();
+            }
+        });
+
+        // Close modals with Escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                if (modalOverlay.style.display === 'flex') {
+                    closeModal();
+                }
+                if (cancelModalOverlay.style.display === 'flex') {
+                    closeCancelModal();
+                }
+            }
+        });
+
+        // Event listener for confirm cancellation button
+        confirmCancelBtn.addEventListener('click', sendCancellationRequest);
+
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            await fetchRequests();
+            await fetchPoNumbers();
+        });
     </script>
 </body>
 </html>

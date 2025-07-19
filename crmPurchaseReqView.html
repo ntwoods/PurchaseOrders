@@ -648,13 +648,22 @@
 
         function formatDate(dateString) {
             if (!dateString) return '';
-            const date = new Date(dateString);
-            const options = { day: '2-digit', month: 'short', year: '2-digit' };
-            return date.toLocaleDateString('en-GB', options).replace(/ /g, '-');
+            try {
+                const date = new Date(dateString);
+                // Check if the date is valid
+                if (isNaN(date.getTime())) {
+                    return dateString; // Return original if invalid
+                }
+                const options = { day: '2-digit', month: 'short', year: '2-digit' };
+                return date.toLocaleDateString('en-GB', options).replace(/ /g, '-');
+            } catch (e) {
+                console.error("Error formatting date:", dateString, e);
+                return dateString; // Return original if error occurs
+            }
         }
 
         function calculateCountdown(expectedDateString) {
-            if (!expectedDateString) return 'N/A';
+            if (!expectedDateString) return { text: 'N/A', class: '' };
             const expectedDate = new Date(expectedDateString);
             const now = new Date();
             expectedDate.setHours(0, 0, 0, 0); // Normalize to start of day
@@ -663,7 +672,9 @@
             const diffTime = expectedDate - now;
             const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-            if (diffDays < 0) {
+            if (isNaN(diffDays)) { // Handle invalid date strings
+                return { text: 'N/A', class: '' };
+            } else if (diffDays < 0) {
                 return { text: 'Overdue', class: 'overdue-text' };
             } else if (diffDays === 0) {
                 return { text: 'Due Today', class: 'countdown-red' };
@@ -699,11 +710,11 @@
             modalOverlay.style.display = 'flex'; // Use flex to center
             document.body.style.overflow = 'hidden'; // Prevent scrolling
             
-            // Populate modal fields
-            remarkInput.value = selectedRequest.remarkPurchase || '';
-            expectedByInput.value = selectedRequest.expectedDelivery ? new Date(selectedRequest.expectedDelivery).toISOString().split('T')[0] : '';
-            poSearchInput.value = selectedRequest.expectedPoNo || '';
-            selectedPoNo = selectedRequest.expectedPoNo || ''; // Set selectedPoNo for validation
+            // Populate modal fields using the new property names from doGet
+            remarkInput.value = selectedRequest.responseRemark || ''; // Mapped from row[8]
+            expectedByInput.value = selectedRequest.expectedBy ? new Date(selectedRequest.expectedBy).toISOString().split('T')[0] : ''; // Mapped from row[9]
+            poSearchInput.value = selectedRequest.poReceived || ''; // Mapped from row[11]
+            selectedPoNo = selectedRequest.poReceived || ''; // Set selectedPoNo for validation
 
             // Enable/disable submit button based on initial state
             checkSubmitButtonStatus();
@@ -873,20 +884,21 @@
                 card.className = 'request-card';
                 
                 // Add highlight for overdue requests
-                const countdownResult = calculateCountdown(request.expectedDelivery);
+                const countdownResult = calculateCountdown(request.expectedBy); // Use request.expectedBy
                 if (countdownResult.text === 'Overdue') {
                     card.classList.add('overdue-card-highlight');
                 }
 
                 card.innerHTML = `
                     <div class="field-group"><span class="field-label">Request ID:</span> <span class="field-value">${request.requestId || 'N/A'}</span></div>
-                    <div class="field-group"><span class="field-label">Dealer Name:</span> <span class="field-value">${request.dealername || 'N/A'}</span></div>
+                    <div class="field-group"><span class="field-label">Dealer Name:</span> <span class="field-value">${request.dealer || 'N/A'}</span></div>
+                    <div class="field-group"><span class="field-label">Product Quantity:</span> <span class="field-value">${request.qty || 'N/A'}</span></div>
                     <div class="field-group"><span class="field-label">Priority:</span> <span class="field-value">${request.priority || 'N/A'}</span></div>
-                    <div class="field-group"><span class="field-label">CRM Remark:</span> <span class="field-value">${request.crmRemark || 'N/A'}</span></div>
-                    <div class="field-group"><span class="field-label">Request Date:</span> <span class="field-value">${formatDate(request.requestDate)}</span></div>
-                    <div class="field-group"><span class="field-label">Expected Delivery:</span> <span class="field-value">${formatDate(request.expectedDelivery)} <span class="countdown-display ${countdownResult.class}">${countdownResult.text}</span></span></div>
-                    <div class="field-group"><span class="field-label">Remark Purchase:</span> <span class="field-value">${request.remarkPurchase || 'N/A'}</span></div>
-                    <div class="field-group"><span class="field-label">Expected PO No:</span> <span class="field-value">${request.expectedPoNo || 'N/A'}</span></div>
+                    <div class="field-group"><span class="field-label">CRM Remark:</span> <span class="field-value">${request.remark || 'N/A'}</span></div>
+                    <div class="field-group"><span class="field-label">Request Date:</span> <span class="field-value">${formatDate(request.timeStamp)}</span></div>
+                    <div class="field-group"><span class="field-label">Expected Delivery:</span> <span class="field-value">${formatDate(request.expectedBy)} <span class="countdown-display ${countdownResult.class}">${countdownResult.text}</span></span></div>
+                    <div class="field-group"><span class="field-label">Remark Purchase:</span> <span class="field-value">${request.responseRemark || 'N/A'}</span></div>
+                    <div class="field-group"><span class="field-label">Expected PO No:</span> <span class="field-value">${request.poReceived || 'N/A'}</span></div>
                     ${request.product ? `<a href="${request.product}" target="_blank" class="view-file-button">View File</a>` : ''}
                     <button class="action-button" data-request-id="${request.requestId}">Mark Response</button>
                     <button class="cancel-button" data-request-id="${request.requestId}">Cancel Request</button>
@@ -894,9 +906,9 @@
                 requestsContainer.appendChild(card);
 
                 // Set up interval for countdown display
-                if (request.expectedDelivery) {
+                if (request.expectedBy) { // Use request.expectedBy
                     countdownIntervals[request.requestId] = setInterval(() => {
-                        updateCountdownDisplay(card, request.expectedDelivery);
+                        updateCountdownDisplay(card, request.expectedBy); // Use request.expectedBy
                     }, 60000); // Update every minute
                 }
             });
@@ -905,6 +917,7 @@
             requestsContainer.querySelectorAll('.action-button').forEach(button => {
                 button.addEventListener('click', (event) => {
                     const requestId = event.target.dataset.requestId;
+                    // Find the request using the new structure
                     const request = requests.find(r => r.requestId === requestId);
                     if (request) {
                         openModal(request);
@@ -933,9 +946,9 @@
             const payload = {
                 action: 'update',
                 requestId: selectedRequest.requestId,
-                remarkPurchase: remarkInput.value.trim(),
-                expectedDelivery: expectedByInput.value.trim(),
-                expectedPoNo: selectedPoNo.trim()
+                remarkPurchase: remarkInput.value.trim(), // This will be mapped to responseRemark in doGet
+                expectedDelivery: expectedByInput.value.trim(), // This will be mapped to expectedBy in doGet
+                expectedPoNo: selectedPoNo.trim() // This will be mapped to poReceived in doGet
             };
 
             try {

@@ -4,7 +4,7 @@ export async function checkMissingSuppliers(googleSheetURL) {
   try {
     let csvUrl = googleSheetURL;
     if (googleSheetURL.includes('/edit')) {
-      const match = googleSheetURL.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
+      const match = googleSheetURL.match(/\/(?:spreadsheets)\/d\/([a-zA-Z0-9-_]+)/);
       if (match) {
         csvUrl = `https://docs.google.com/spreadsheets/d/${match[1]}/export?format=csv`;
       }
@@ -16,76 +16,73 @@ export async function checkMissingSuppliers(googleSheetURL) {
     }
     const csvText = await response.text();
 
-    // Basic CSV parsing - assuming no commas within fields for simplicity based on original code
     const rows = csvText.split('\n').map(row => row.split(',').map(cell => cell.trim()));
     const missingOrders = [];
     const completedOrders = [];
     const categoriesWithSuppliers = new Set();
 
-    // Assuming a consistent structure where order is in column A/F, category in B/G, supplier in C/H
     for (let i = 0; i < rows.length; i++) {
-        const row = rows[i];
-        if (row.length >= 3) { // Check for first set of columns (Order 1, Category 1, Supplier 1)
-            const order1 = row[0];
-            const category1 = row[1];
-            const supplier1 = row[2];
+      const row = rows[i];
+      // Assuming a consistent structure where order is in column A/F, category in B/G, supplier in C/H
+      if (row.length >= 3) { // Check for first set of columns
+        const order1 = row[0];
+        const category1 = row[1];
+        const supplier1 = row[2];
 
-            if (order1?.toLowerCase().includes('order-')) {
-                const info = `${order1} (${category1})`;
-                if (!supplier1 || supplier1.trim().length === 0 || supplier1.toLowerCase().includes('supplier')) {
-                    missingOrders.push(info);
-                } else {
-                    completedOrders.push(`${info} - ${supplier1}`);
-                    if (category1) categoriesWithSuppliers.add(category1);
-                }
+        if (order1 && order1.trim().toLowerCase().startsWith('order-')) { // Validate order format
+            if (!supplier1 || supplier1.trim().length === 0 || supplier1.toLowerCase().includes('supplier')) {
+                missingOrders.push(`${order1} - Category: ${category1 || 'N/A'}`);
+            } else {
+                completedOrders.push(`${order1} - ${supplier1}`);
+                if (category1) categoriesWithSuppliers.add(category1);
             }
         }
-        
-        if (row.length >= 8) { // Check for second set of columns (Order 2, Category 2, Supplier 2)
-            const order2 = row[5]; // Assuming column F (index 5)
-            const category2 = row[6]; // Assuming column G (index 6)
-            const supplier2 = row[7]; // Assuming column H (index 7)
-
-            if (order2?.toLowerCase().includes('order-')) {
-                const info = `${order2} (${category2})`;
-                if (!supplier2 || supplier2.trim().length === 0 || supplier2.toLowerCase().includes('supplier')) {
-                    missingOrders.push(info);
-                } else {
-                    completedOrders.push(`${info} - ${supplier2}`);
-                    if (category2) categoriesWithSuppliers.add(category2);
-                }
-            }
-        }
-    }
-
-    // Fetch specifications from backend
-    const specsUrl = `${API_URL}?action=getSpecificationsForAllCategories&sourceUrl=${encodeURIComponent(googleSheetURL)}`;
-    const specsResp = await fetch(specsUrl);
-    if (!specsResp.ok) {
-        throw new Error(`Failed to fetch specifications: ${specsResp.statusText}`);
-    }
-    const allSpecs = await specsResp.json();
-  
-  // In api.js, inside checkMissingSuppliers:
-  const filteredSpecsForEditor = [];
-  categoriesWithSuppliers.forEach(category => {
-      const key = Object.keys(allSpecs).find(
-          k => k.trim().toLowerCase() === category.trim().toLowerCase()
-      );
-  
-      if (key) {
-          filteredSpecsForEditor.push({
-              category,
-              specifications: Array.isArray(allSpecs[key])
-                  ? allSpecs[key]
-                  : [String(allSpecs[key])]
-          });
       }
-  });
-  return { missingOrders, completedOrders, filteredSpecsForEditor };
+      if (row.length >= 8) { // Check for second set of columns if applicable
+        const order2 = row[5];
+        const category2 = row[6];
+        const supplier2 = row[7];
+
+        if (order2 && order2.trim().toLowerCase().startsWith('order-')) { // Validate order format
+            if (!supplier2 || supplier2.trim().length === 0 || supplier2.toLowerCase().includes('supplier')) {
+                missingOrders.push(`${order2} - Category: ${category2 || 'N/A'}`);
+            } else {
+                completedOrders.push(`${order2} - ${supplier2}`);
+                if (category2) categoriesWithSuppliers.add(category2);
+            }
+        }
+      }
+    }
+
+    // --- NEW CODE START ---
+    // Fetch all specifications from the Google Apps Script backend
+    const specsUrl = `${API_URL}?action=getSpecificationsForAllCategories&sourceUrl=${encodeURIComponent(googleSheetURL)}`;
+    const specsResponse = await fetch(specsUrl);
+    if (!specsResponse.ok) {
+        throw new Error(`Failed to fetch specifications: ${specsResponse.statusText}`);
+    }
+    const allSpecs = await specsResponse.json(); // This should be an object: { 'Category Name': ['Spec1', 'Spec2'], ... }
+    // --- NEW CODE END ---
+
+    const filteredSpecsForEditor = [];
+    categoriesWithSuppliers.forEach(category => {
+        const key = Object.keys(allSpecs).find(
+            k => k.trim().toLowerCase() === category.trim().toLowerCase()
+        );
+
+        if (key) {
+            filteredSpecsForEditor.push({
+                category,
+                specifications: Array.isArray(allSpecs[key])
+                    ? allSpecs[key]
+                    : [String(allSpecs[key])]
+            });
+        }
+    });
+    return { missingOrders, completedOrders, filteredSpecsForEditor };
   } catch (e) {
     console.error('Error checking suppliers:', e);
-    throw new Error('Unable to check suppliers. Make sure the sheet is public and accessible.');
+    throw new Error('Unable to check suppliers or fetch specifications. Make sure the sheet is public and accessible.');
   }
 }
 

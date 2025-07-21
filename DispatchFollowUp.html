@@ -114,18 +114,22 @@
             justify-content: space-between;
             margin-bottom: 8px;
             padding: 5px 0;
+            flex-wrap: wrap; /* Allow wrapping for long remarks */
         }
 
         .detail-label {
             font-weight: 600;
             color: #424242; /* Darker grey */
+            flex-shrink: 0; /* Prevent label from shrinking */
+            margin-right: 10px; /* Space between label and value */
         }
 
         .detail-value {
             color: #212121; /* Dark grey */
             text-align: right;
-            max-width: 60%;
+            flex-grow: 1; /* Allow value to take remaining space */
             word-wrap: break-word;
+            min-width: 0; /* Allow text to wrap within flex item */
         }
 
         .countdown-section {
@@ -159,7 +163,14 @@
             font-weight: bold;
         }
 
-        .view-po-btn {
+        .view-link-group {
+            display: flex;
+            flex-direction: column; /* Stack buttons vertically */
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .view-po-btn, .view-crm-btn { /* Added .view-crm-btn */
             display: inline-block;
             background: linear-gradient(135deg, #2196f3 0%, #1976d2 100%); /* Blue gradient button */
             color: white;
@@ -169,10 +180,13 @@
             font-size: 0.9rem;
             font-weight: bold;
             transition: transform 0.2s ease;
+            text-align: center; /* Center text in button */
+            cursor: pointer;
+            border: none; /* Remove default button border */
         }
 
-        .view-po-btn:hover {
-            transform: scale(1.05);
+        .view-po-btn:hover, .view-crm-btn:hover { /* Added .view-crm-btn */
+            transform: scale(1.03); /* Slightly less aggressive scale for multiple buttons */
             background: linear-gradient(135deg, #1976d2 0%, #1565c0 100%);
         }
 
@@ -471,32 +485,28 @@
             const diffTime = dispatchDateOnly.getTime() - timestampDateOnly.getTime();
             const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
             
-            console.log('Date calculation for deadline:', {
-                dispatchDateOnly: dispatchDateOnly.toDateString(),
-                timestampDateOnly: timestampDateOnly.toDateString(),
-                diffDays,
-                halfDiff: Math.ceil(diffDays / 2)
-            });
-            
+            console.log('Date calculation for deadline:', { dispatchDateOnly: dispatchDateOnly.toDateString(), timestampDateOnly: timestampDateOnly.toDateString(), diffDays, halfDiff: Math.ceil(diffDays / 2) });
+
             // Half the difference and round up (take ceiling)
             const reminderDays = Math.ceil(diffDays / 2);
-            
+
             // Add reminder days to the original dispatchDateTimeStamp (with time)
             const deadline = new Date(dispatchTimestamp);
             deadline.setDate(deadline.getDate() + reminderDays);
-            deadline.setHours(20, 0, 0, 0);
+            deadline.setHours(20, 0, 0, 0); // Set to 8:00 PM
+
             return deadline;
         }
 
         // Format time left for countdown timer
         function formatCountdown(timeLeft) {
             if (timeLeft <= 0) return null;
-            
+
             const days = Math.floor(timeLeft / (1000 * 60 * 60 * 24));
             const hours = Math.floor((timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
             const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
             const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
-            
+
             return `${days}d ${hours}h ${minutes}m ${seconds}s`;
         }
 
@@ -504,13 +514,12 @@
         function updateCountdown(orderId) {
             const order = orders.find(o => o.id === orderId);
             if (!order || !order.deadline) return;
-            
+
             const now = new Date();
             const timeLeft = order.deadline.getTime() - now.getTime();
             const countdownElement = document.getElementById(`countdown-${orderId}`);
-            
             if (!countdownElement) return;
-            
+
             if (timeLeft <= 0) {
                 countdownElement.innerHTML = '<div class="countdown-overdue">⚠️ OVERDUE</div>';
                 const statusBadge = document.getElementById(`status-${orderId}`);
@@ -528,18 +537,17 @@
         }
 
         // Create HTML structure for each order card
-        function createOrderCard(order, index) {
+        function createOrderCard(order) {
             const isOverdue = order.deadline && new Date() > order.deadline;
             const statusClass = isOverdue ? 'status-overdue' : 'status-active';
             const statusText = isOverdue ? 'OVERDUE' : 'ACTIVE';
-            
+
             return `
                 <div class="order-card">
                     <div class="order-header">
                         <div class="order-id">${order.purchaseOrderNumber}</div>
                         <div id="status-${order.id}" class="status-badge ${statusClass}">${statusText}</div>
                     </div>
-                    
                     <div class="order-details">
                         <div class="detail-row">
                             <span class="detail-label">👤 Supplier:</span>
@@ -553,381 +561,269 @@
                             <span class="detail-label">⏰ Dispatch Confirmed on:</span>
                             <span class="detail-value">${formatDateTimeForDisplay(parseDate(order.dispatchDateTimeStamp))}</span>
                         </div>
-                        ${order.crmRemark ? `
-                        <div class="detail-row">
-                            <span class="detail-label">💬 CRM Remark:</span>
-                            <span class="detail-value">${order.crmRemark}</span>
-                        </div>
+                        ${order.crmRemark && order.crmRemark.trim() !== '' ? `
+                            <div class="detail-row">
+                                <span class="detail-label">💬 CRM Remark:</span>
+                                <span class="detail-value">${order.crmRemark}</span>
+                            </div>
                         ` : ''}
-                        ${order.responseRemark ? `
-                        <div class="detail-row">
-                            <span class="detail-label">📝 Purchase Remark:</span>
-                            <span class="detail-value">${order.responseRemark}</span>
-                        </div>
-                        ` : ''}                        
-                        ${order.deadline ? `
-                        <div class="detail-row">
-                            <span class="detail-label">🎯 Follow Up Deadline:</span>
-                            <span class="detail-value">${formatDateTimeForDisplay(order.deadline)}</span>
-                        </div>
+                        ${order.responseRemark && order.responseRemark.trim() !== '' ? `
+                            <div class="detail-row">
+                                <span class="detail-label">📝 Purchase Remark:</span>
+                                <span class="detail-value">${order.responseRemark}</span>
+                            </div>
                         ` : ''}
                         <div class="detail-row">
-                            <span class="detail-label">📋 View PO:</span>
+                            <span class="detail-label">📦 Order Sheet:</span>
                             <span class="detail-value">
-                                ${order.googleSheetURL ? 
-                                    `<a href="${order.googleSheetURL}" target="_blank" class="view-po-btn">📄 View PO</a>` : 
-                                    'No URL'}
+                                <a href="${order.orderSheet}" target="_blank" class="view-po-btn">View Sheet</a>
                             </span>
                         </div>
-                        <div class="detail-row">
-                            <span class="detail-label">🎼 Order Sheet:</span>
-                            <span class="detail-value">
-                                ${order.orderSheet ? 
-                                    `<a href="${order.orderSheet}" target="_blank" class="view-po-btn">🎼 Order Sheet</a>` : 
-                                    'No URL'}
-                            </span>
-                        </div>
-                       
                     </div>
-                    
+
                     <div id="countdown-${order.id}" class="countdown-section">
-                        ${order.deadline ? '' : '<div class="countdown-title">⚠️ Cannot calculate deadline</div>'}
+                        <!-- Countdown will be updated by JavaScript -->
                     </div>
-                <div class="editable">		                    
+
+                    <div class="view-link-group">
+                        <button class="view-po-btn" onclick="viewPO('${order.googleSheetURL}')">
+                            📄 View PO
+                        </button>
+                        ${order.crmRequestURL && order.crmRequestURL.trim() !== '' ? `
+                            <button class="view-crm-btn" onclick="viewCRMFile('${order.crmRequestURL}')">
+                                🔗 View CRM File
+                            </button>
+                        ` : ''}
+                    </div>
+
                     <div class="actions-section">
-                        <div class="actions-title">📋 Order Actions</div>
+                        <div class="actions-title">Update Follow-up Status</div>
                         <div class="action-buttons">
-                            <button class="action-btn on-time-btn" onclick="handleOnTime('${order.timestamp}', '${order.id}')">
-                                ✅ On Time
+                            <button class="action-btn on-time-btn" 
+                                onclick="toggleInputSection('${order.id}', 'onTime')" 
+                                id="onTime-btn-${order.id}">
+                                ✅ On-Time
                             </button>
-                            <button class="action-btn delayed-btn" onclick="toggleDelayedInput('${order.id}')">
-                                ⏰ Delayed
+                            <button class="action-btn delayed-btn" 
+                                onclick="toggleInputSection('${order.id}', 'delayed')" 
+                                id="delayed-btn-${order.id}">
+                                ⏳ Delayed
                             </button>
-                            <button class="action-btn hold-btn" onclick="toggleHoldInput('${order.id}')">
+                            <button class="action-btn hold-btn" 
+                                onclick="toggleInputSection('${order.id}', 'hold')" 
+                                id="hold-btn-${order.id}">
                                 ⏸️ Hold
                             </button>
                         </div>
-                        
-                        <div id="delayed-input-${order.id}" class="input-section">
-                            <div class="input-group">
-                                <label for="next-dispatch-${order.id}" class="input-label">Next Dispatch Date:</label>
-                                <input type="date" id="next-dispatch-${order.id}" class="date-input" required>
-                                <label for="delayed-reason-${order.id}" class="input-label">Delayed Reason:</label>
-                                <input type="text" id="delayed-reason-${order.id}" class="date-input" required>                                
-                            </div>
-                            <button class="submit-btn" onclick="handleDelayed('${order.timestamp}', '${order.id}')">
-                                Submit Delayed
-                            </button>
-                        </div>
 
-                        <div id="hold-input-${order.id}" class="input-section">
+                        <div id="input-section-${order.id}" class="input-section">
                             <div class="input-group">
-                                <label for="hold-until-${order.id}" class="input-label">Hold Until:</label>
+                                <label for="remark-${order.id}" class="input-label">Remark:</label>
+                                <input type="text" id="remark-${order.id}" class="text-input" placeholder="Enter remark">
+                            </div>
+                            <div class="input-group" id="expected-by-group-${order.id}" style="display: none;">
+                                <label for="expected-by-${order.id}" class="input-label">Expected By Date:</label>
+                                <input type="date" id="expected-by-${order.id}" class="date-input">
+                            </div>
+                            <div class="input-group" id="hold-until-group-${order.id}" style="display: none;">
+                                <label for="hold-until-${order.id}" class="input-label">Hold Until Date:</label>
                                 <input type="date" id="hold-until-${order.id}" class="date-input">
                             </div>
-                            <div class="input-group">
-                                <label for="hold-remark-${order.id}" class="input-label">Hold Remark:</label>
-                                <input type="text" id="hold-remark-${order.id}" class="text-input" placeholder="Enter remark">
-                            </div>
-                            <div class="action-buttons">
-                                <button class="action-btn mark-hold-btn" onclick="handleHold('${order.timestamp}', '${order.id}')">
-                                    ✔️ Mark Hold
-                                </button>
-                                <button class="action-btn cancel-hold-btn" onclick="toggleHoldInput('${order.id}', true)">
-                                    ✖️ Cancel Hold
-                                </button>
-                            </div>
+                            <button class="submit-btn" onclick="submitFollowUp('${order.id}')">Submit</button>
                         </div>
-                        
                         <div id="feedback-${order.id}" class="action-feedback"></div>
                     </div>
-                </div>
                 </div>
             `;
         }
 
-        // Load orders from the Google Apps Script API
+        // Load orders from Google Apps Script
         async function loadOrders() {
-            const loadingEl = document.getElementById('loading');
-            const errorEl = document.getElementById('error');
-            const containerEl = document.getElementById('orders-container');
-            
-            loadingEl.style.display = 'block';
-            errorEl.style.display = 'none';
-            containerEl.innerHTML = '';
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('error').style.display = 'none';
+            document.getElementById('orders-container').innerHTML = '';
             
             // Clear existing countdown intervals
             countdownIntervals.forEach(interval => clearInterval(interval));
             countdownIntervals = [];
-            
+
             try {
                 const response = await fetch(API_URL);
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                
-                const data = await response.json();
-                
-                // Handle different data formats from the API
-                let ordersData = [];
-                
-                if (Array.isArray(data)) {
-                    ordersData = data;
-                } else if (data && typeof data === 'object') {
-                    // If it's an object, try to extract orders from common properties
-                    if (data.orders && Array.isArray(data.orders)) {
-                        ordersData = data.orders;
-                    } else if (data.data && Array.isArray(data.data)) {
-                        ordersData = data.data;
-                    } else if (data.results && Array.isArray(data.results)) {
-                        ordersData = data.results;
+                const result = await response.json();
+
+                if (result.success) {
+                    orders = result.data.map(order => {
+                        // Assign a unique ID to each order for DOM manipulation
+                        order.id = `order-${order.timestamp}-${Math.random().toString(36).substr(2, 9)}`;
+                        order.deadline = calculateDeadline(order.dispatchDate, order.dispatchDateTimeStamp);
+                        return order;
+                    });
+                    
+                    if (orders.length === 0) {
+                        document.getElementById('orders-container').innerHTML = '<p style="text-align: center; color: #424242; font-size: 1.2rem; grid-column: 1/-1;">🎉 No orders requiring follow-up!</p>';
                     } else {
-                        // If it's a single object, treat it as one order
-                        ordersData = [data];
+                        document.getElementById('orders-container').innerHTML = orders.map(createOrderCard).join('');
+                        orders.forEach(order => {
+                            updateCountdown(order.id); // Initial update
+                            const intervalId = setInterval(() => updateCountdown(order.id), 1000);
+                            countdownIntervals.push(intervalId);
+                        });
                     }
                 } else {
-                    throw new Error('Invalid data format received from API');
+                    showError(result.error || 'Failed to load orders.');
                 }
-                
-                orders = ordersData.map((item, index) => {
-                    const deadline = calculateDeadline(item.dispatchDate, item.dispatchDateTimeStamp);
-                    return {
-                        id: `order-${index}`, // Assign a unique ID for DOM manipulation
-                        ...item,
-                        deadline
-                    };
-                });
-                
-                if (orders.length === 0) {
-                    containerEl.innerHTML = '<div class="error-message">📭 No orders found</div>';
-                    return;
-                }
-                
-                // Render order cards
-                containerEl.innerHTML = orders.map(createOrderCard).join('');
-                
-                // Start countdown timers for each order
-                startCountdownTimers();
-                if (typeof setReadOnlyMode === "function") {
-                  setReadOnlyMode();
-                }                
-                
             } catch (error) {
                 console.error('Error loading orders:', error);
-                errorEl.textContent = `❌ Error loading orders: ${error.message}`;
-                errorEl.style.display = 'block';
+                showError('Failed to load orders. Please check your network connection or API URL.');
             } finally {
-                loadingEl.style.display = 'none';
+                document.getElementById('loading').style.display = 'none';
+                if (typeof setReadOnlyMode === "function") {
+                    setReadOnlyMode();
+                }
             }
         }
 
-        // Start all countdown timers for currently displayed orders
-        function startCountdownTimers() {
-            orders.forEach(order => {
-                if (order.deadline) {
-                    // Update immediately upon load
-                    updateCountdown(order.id);
-                    
-                    // Set up interval to update every second
-                    const interval = setInterval(() => {
-                        updateCountdown(order.id);
-                    }, 1000);
-                    
-                    countdownIntervals.push(interval);
+        // Toggle input section visibility and button states
+        function toggleInputSection(orderId, actionType) {
+            const inputSection = document.getElementById(`input-section-${orderId}`);
+            const remarkInput = document.getElementById(`remark-${orderId}`);
+            const expectedByGroup = document.getElementById(`expected-by-group-${orderId}`);
+            const holdUntilGroup = document.getElementById(`hold-until-group-${orderId}`);
+
+            // Reset all input sections and buttons
+            document.querySelectorAll('.input-section').forEach(section => {
+                if (section.id !== `input-section-${orderId}`) {
+                    section.classList.remove('show');
                 }
             });
-        }
+            document.querySelectorAll('.action-btn').forEach(btn => {
+                if (btn.id.includes(orderId)) {
+                    btn.disabled = false;
+                    btn.classList.remove('active-action'); // Optional: Add a class for active button styling
+                }
+            });
+            document.querySelectorAll('.action-feedback').forEach(feedback => feedback.style.display = 'none');
 
-        // Initialize the application when the DOM is ready
-        document.addEventListener('DOMContentLoaded', function() {
-            loadOrders();
-            
-            // Set up auto-refresh for orders every 5 minutes
-            setInterval(loadOrders, 5 * 60 * 1000);
-        });
 
-        // Format a Date object to "DD/MM/YYYY HH:mm:ss" matching the Google Sheet format
-        function formatTimestampForSheet(dateString) {
-            const date = new Date(dateString); 
-            if (isNaN(date.getTime())) {
-                console.error('Invalid date string for formatting:', dateString);
-                return dateString; 
-            }
-
-            const dd = String(date.getDate()).padStart(2, '0');
-            const mm = String(date.getMonth() + 1).padStart(2, '0'); 
-            const year = date.getFullYear();
-            const hh = String(date.getHours()).padStart(2, '0');
-            const min = String(date.getMinutes()).padStart(2, '0');
-            const ss = String(date.getSeconds()).padStart(2, '0');
-            return `${dd}/${mm}/${year} ${hh}:${min}:${ss}`;
-        }
-
-        // Handle "On Time" action submission
-        async function handleOnTime(timestamp, orderId) {
-            const button = event.target;
-           
-            try {
-                // Disable the button and show processing state
-                button.disabled = true;
-                button.textContent = 'Processing...';
-            
-                // Send POST request (using no-cors as it's a Google Apps Script Web App)
-                fetch(API_URL, {
-                    method: 'POST',
-                    mode: 'no-cors',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        action: 'onTime',
-                        timestamp: formatTimestampForSheet(timestamp)
-                    })
-                });
-            
-                // Show success message immediately as no-cors doesn't provide direct feedback
-                showFeedback(orderId, 'Action submitted successfully (check sheet for update)!', 'success');
-            
-                // Refresh orders after a short delay to reflect changes in the UI
-                setTimeout(loadOrders, 2000);
-            
-            } catch (error) {
-                console.error('Error submitting On Time action:', error);
-                showFeedback(orderId, `Client-side error: ${error.message}`, 'error');
-            } finally {
-                // Re-enable button after a short delay
-                 setTimeout(() => {
-                    button.disabled = false;
-                    button.textContent = '✅ On Time';
-                }, 2000);
-            }
-        }
-
-        // Toggle visibility of the delayed input section
-        function toggleDelayedInput(orderId) {
-            const inputSection = document.getElementById(`delayed-input-${orderId}`);
-            inputSection.classList.toggle('show');
-            // Hide hold section if it's open
-            document.getElementById(`hold-input-${orderId}`).classList.remove('show');
-        }
-
-        // Handle "Delayed" action submission
-        async function handleDelayed(timestamp, orderId) {
-            const nextDispatchInput = document.getElementById(`next-dispatch-${orderId}`);
-            const nextDispatchDate = nextDispatchInput.value; // YYYY-MM-DD format from input type="date"
-            const delayedRemarkInput = document.getElementById(`delayed-reason-${orderId}`);
-            const delayedRemarkText = delayedRemarkInput.value; // YYYY-MM-DD format from input type="date"
-            
-            const submitButton = event.target;
-            
-            if (!nextDispatchDate) {
-                showFeedback(orderId, 'Please select a next dispatch date', 'error');
-                return;
-            }
-            
-            submitButton.disabled = true;
-            submitButton.textContent = '⏳ Processing...';
-            
-            try {
-                // Send POST request
-                fetch(API_URL, {
-                    method: 'POST',
-                    mode: 'no-cors',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        action: 'delayed',
-                        timestamp: formatTimestampForSheet(timestamp),
-                        nextDispatchDate: nextDispatchDate,
-                        delayedRemark: delayedRemarkText                         
-                    })
-                });
-                            
-                // Show success message immediately
-                showFeedback(orderId, 'Delayed action submitted successfully (check sheet for update)!', 'success');
-            
-                // Hide input section and reset value
-                document.getElementById(`delayed-input-${orderId}`).classList.remove('show');
-                nextDispatchInput.value = '';
-            
-                // Refresh orders after a short delay
-                setTimeout(loadOrders, 2000);                
-            } catch (error) {
-                console.error('Error submitting Delayed action:', error);
-                showFeedback(orderId, `Client-side error: ${error.message}`, 'error');
-            } finally {
-                 setTimeout(() => {
-                    submitButton.disabled = false;
-                    submitButton.textContent = 'Submit Delayed';
-                }, 2000);
-            }
-        }
-
-        // Toggle visibility of the hold input section
-        function toggleHoldInput(orderId, forceHide = false) {
-            const holdInputSection = document.getElementById(`hold-input-${orderId}`);
-            const holdUntilInput = document.getElementById(`hold-until-${orderId}`);
-            const holdRemarkInput = document.getElementById(`hold-remark-${orderId}`);
-
-            if (forceHide) {
-                holdInputSection.classList.remove('show');
-                holdUntilInput.value = ''; // Clear fields
-                holdRemarkInput.value = '';
+            // If the clicked section is already open, close it
+            if (inputSection.classList.contains('show') && inputSection.dataset.currentAction === actionType) {
+                inputSection.classList.remove('show');
+                inputSection.dataset.currentAction = '';
+                // Clear inputs when closing
+                remarkInput.value = '';
+                if (expectedByGroup) expectedByGroup.style.display = 'none';
+                if (holdUntilGroup) holdUntilGroup.style.display = 'none';
+                if (document.getElementById(`${actionType}-btn-${orderId}`)) {
+                    document.getElementById(`${actionType}-btn-${orderId}`).disabled = false;
+                }
             } else {
-                holdInputSection.classList.toggle('show');
-                // Hide delayed section if it's open
-                document.getElementById(`delayed-input-${orderId}`).classList.remove('show');
+                // Show the clicked section
+                inputSection.classList.add('show');
+                inputSection.dataset.currentAction = actionType; // Store current action
+                
+                // Clear inputs when opening new section
+                remarkInput.value = '';
+                if (expectedByGroup) expectedByGroup.style.display = 'none';
+                if (holdUntilGroup) holdUntilGroup.style.display = 'none';
+
+                if (actionType === 'delayed') {
+                    expectedByGroup.style.display = 'block';
+                } else if (actionType === 'hold') {
+                    holdUntilGroup.style.display = 'block';
+                }
+                
+                // Disable other action buttons for this card
+                const currentBtn = document.getElementById(`${actionType}-btn-${orderId}`);
+                document.getElementById(`onTime-btn-${orderId}`).disabled = (actionType !== 'onTime');
+                document.getElementById(`delayed-btn-${orderId}`).disabled = (actionType !== 'delayed');
+                document.getElementById(`hold-btn-${orderId}`).disabled = (actionType !== 'hold');
             }
         }
 
-        // Handle "Hold" action submission
-        async function handleHold(timestamp, orderId) {
-            const holdUntilInput = document.getElementById(`hold-until-${orderId}`);
-            const holdRemarkInput = document.getElementById(`hold-remark-${orderId}`);
-            const holdUntilDate = holdUntilInput.value; // YYYY-MM-DD format
-            const holdRemark = holdRemarkInput.value;
-            const markHoldButton = event.target;
+        // Submit follow-up data
+        async function submitFollowUp(orderId) {
+            const order = orders.find(o => o.id === orderId);
+            if (!order) return;
 
-            if (!holdUntilDate && !holdRemark) {
-                showFeedback(orderId, 'Please enter either a "Hold Until" date or a "Hold Remark".', 'error');
+            const feedback = document.getElementById(`feedback-${orderId}`);
+            const remark = document.getElementById(`remark-${orderId}`).value;
+            const currentAction = document.getElementById(`input-section-${orderId}`).dataset.currentAction;
+
+            let payload = {
+                type: currentAction,
+                timestamp: order.timestamp,
+                remark: remark
+            };
+
+            if (currentAction === 'delayed') {
+                const expectedBy = document.getElementById(`expected-by-${orderId}`).value;
+                if (!expectedBy) {
+                    showFeedback(orderId, 'Please select an expected by date.', 'error');
+                    return;
+                }
+                payload.expectedBy = expectedBy;
+            } else if (currentAction === 'hold') {
+                const holdUntil = document.getElementById(`hold-until-${orderId}`).value;
+                if (!holdUntil) {
+                    showFeedback(orderId, 'Please select a hold until date.', 'error');
+                    return;
+                }
+                payload.holdUntil = holdUntil;
+            }
+
+            if (!remark.trim()) {
+                showFeedback(orderId, 'Remark cannot be empty.', 'error');
                 return;
             }
 
-            markHoldButton.disabled = true;
-            markHoldButton.textContent = '⏳ Processing...';
-
             try {
-                // Send POST request
-                fetch(API_URL, {
+                // Disable all buttons for this card during submission
+                toggleHoldInput(orderId, false); // Disable all buttons
+                
+                const response = await fetch(API_URL, {
                     method: 'POST',
-                    mode: 'no-cors',
+                    mode: 'no-cors', // Important for Google Apps Script
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({
-                        action: 'hold',
-                        timestamp: formatTimestampForSheet(timestamp),
-                        holdUntilDate: holdUntilDate,
-                        holdRemark: holdRemark
-                    })
+                    body: JSON.stringify(payload),
                 });
 
-                showFeedback(orderId, 'Hold action submitted successfully (check sheet for update)!', 'success');
-                
+                // Since 'no-cors' mode, we assume success and refresh the list
+                showFeedback(orderId, 'Follow-up submitted successfully!', 'success');
                 // Hide input section and clear values after submission
                 toggleHoldInput(orderId, true); // Force hide and clear fields
 
                 setTimeout(loadOrders, 2000); // Refresh orders
             } catch (error) {
-                console.error('Error submitting Hold action:', error);
+                console.error('Error submitting Follow-up action:', error);
                 showFeedback(orderId, `Client-side error: ${error.message}`, 'error');
             } finally {
                 setTimeout(() => {
-                    markHoldButton.disabled = false;
-                    markHoldButton.textContent = '✔️ Mark Hold';
+                    // Re-enable buttons if needed, or simply let loadOrders refresh the UI
+                    // For this app, loadOrders will re-render, so no explicit re-enabling here.
                 }, 2000);
             }
+        }
+
+        // Helper to show/hide input section and clear values
+        function toggleHoldInput(orderId, hideAndClear) {
+            const inputSection = document.getElementById(`input-section-${orderId}`);
+            const remarkInput = document.getElementById(`remark-${orderId}`);
+            const expectedByInput = document.getElementById(`expected-by-${orderId}`);
+            const holdUntilInput = document.getElementById(`hold-until-${orderId}`);
+
+            if (hideAndClear) {
+                inputSection.classList.remove('show');
+                remarkInput.value = '';
+                if (expectedByInput) expectedByInput.value = '';
+                if (holdUntilInput) holdUntilInput.value = '';
+            }
+            
+            // Re-enable all action buttons for this card
+            document.getElementById(`onTime-btn-${orderId}`).disabled = false;
+            document.getElementById(`delayed-btn-${orderId}`).disabled = false;
+            document.getElementById(`hold-btn-${orderId}`).disabled = false;
         }
 
         // Display feedback messages to the user
@@ -942,6 +838,37 @@
                 feedback.style.display = 'none';
             }, 5000);
         }
+
+        // Display general error message
+        function showError(message) {
+            const errorDiv = document.getElementById('error');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+        }
+
+        // Open PO URL
+        function viewPO(url) {
+            if (url) {
+                window.open(url, '_blank');
+            } else {
+                showError('Purchase Order URL not available.');
+            }
+        }
+
+        // New function to open CRM file URL
+        function viewCRMFile(url) {
+            if (url) {
+                window.open(url, '_blank');
+            } else {
+                showError('CRM Request URL not available.');
+            }
+        }
+
+        // Initial load of orders when the DOM is fully loaded
+        document.addEventListener('DOMContentLoaded', loadOrders);
+        
+        // Auto-refresh every 2 minutes
+        setInterval(loadOrders, 120000); // 120000 ms = 2 minutes
     </script>
     <script src="https://ntwoods.github.io/ordertodispatch/js/viewOnly.js"></script>
     <script>

@@ -349,7 +349,7 @@
                     const orderId = event.target.dataset.orderId || event.target.closest('button').dataset.orderId;
                     const purchaseOrderNumber = event.target.dataset.purchaseOrderNumber || event.target.closest('button').dataset.purchaseOrderNumber;
                     const actionType = event.target.dataset.action || event.target.closest('button').dataset.action;
-                    handleAction(orderId, poNumber, actionType);
+                    handleAction(orderId, purchaseOrderNumber, actionType);
                 });
             });
         }

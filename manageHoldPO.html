@@ -343,16 +343,17 @@
         /**
          * Adds click event listeners to all Approve and Cancel buttons.
          */
-        function addActionListener() {
-            document.querySelectorAll('.btn-approve, .btn-cancel').forEach(button => {
-                button.addEventListener('click', (event) => {
-                    const orderId = event.target.dataset.orderId || event.target.closest('button').dataset.orderId;
-                    const purchaseOrderNumber = event.target.dataset.purchaseOrderNumber || event.target.closest('button').dataset.purchaseOrderNumber;
-                    const actionType = event.target.dataset.action || event.target.closest('button').dataset.action;
-                    handleAction(orderId, poNumber, actionType);
-                });
+    function addActionListener() {
+        document.querySelectorAll('.btn-approve, .btn-cancel').forEach(button => {
+            button.addEventListener('click', (event) => {
+                const orderId = event.target.dataset.orderId || event.target.closest('button').dataset.orderId;
+                const purchaseOrderNumber = event.target.dataset.purchaseOrderNumber || event.target.closest('button').dataset.purchaseOrderNumber;
+                const actionType = event.target.dataset.action || event.target.closest('button').dataset.action;
+                // Corrected line: Use purchaseOrderNumber instead of poNumber
+                handleAction(orderId, purchaseOrderNumber, actionType);
             });
-        }
+        });
+    }
 
         /**
          * Handles the Approve or Cancel action for an order.

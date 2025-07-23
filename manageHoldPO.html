@@ -4,16 +4,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Hold Orders Management</title>
-    <!-- Tailwind CSS CDN for quick styling -->
+    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Google Fonts - Inter for clean typography -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
-        /* Custom CSS for the black and golden theme with less shine */
+        /* Custom CSS for White & Blue Theme */
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #000000; /* Deep black background */
-            color: #E0E0E0; /* Light gray for general text */
+            background-color: #F0F4F8; /* Light blue-gray background */
+            color: #334155; /* Dark slate gray for general text */
         }
         .container {
             max-width: 96rem; /* Equivalent to max-w-6xl in Tailwind */
@@ -22,71 +24,135 @@
             padding: 2rem; /* p-8 */
         }
         .header h1 {
-            color: #D4AF37; /* Golden color for main heading */
-            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5); /* Subtle shadow for depth */
+            color: #1E40AF; /* Darker blue for main heading */
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Subtle shadow */
         }
         .order-card {
-            background-color: #1A1A1A; /* Darker gray for card background */
-            border: 1px solid #7D6B00; /* Muted golden border */
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4); /* Deeper shadow */
+            background-color: #FFFFFF; /* White card background */
+            border: 1px solid #BFDBFE; /* Light blue border */
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08); /* Soft shadow */
             transition: all 0.3s ease-in-out;
         }
         .order-card:hover {
-            border-color: #A38C00; /* Slightly brighter golden on hover */
-            transform: translateY(-5px) scale(1.02); /* Lift and slightly enlarge on hover */
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.6);
+            border-color: #93C5FD; /* Brighter blue on hover */
+            transform: translateY(-5px) scale(1.02); /* Lift and slightly enlarge */
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
         }
         .order-card h3 {
-            color: #FFD700; /* Brighter golden for supplier name */
+            color: #1D4ED8; /* Medium blue for supplier name */
         }
         .order-card p {
-            color: #C0C0C0; /* Lighter gray for card text */
+            color: #4B5563; /* Gray for card text */
         }
         .order-card .font-medium {
-            color: #FFBF00; /* Muted golden for labels like 'Hold Until' */
+            color: #2563EB; /* Bright blue for labels like 'Hold Until' */
         }
         .btn-approve {
-            background-color: #1E8449; /* Darker green */
-            transition: background-color 0.2s ease-in-out;
+            background-color: #10B981; /* Green for approve */
+            transition: background-color 0.2s ease-in-out, transform 0.2s ease-in-out;
         }
         .btn-approve:hover {
-            background-color: #2ECC71; /* Brighter green on hover */
+            background-color: #059669; /* Darker green on hover */
+            transform: scale(1.05);
         }
         .btn-cancel {
-            background-color: #C0392B; /* Darker red */
-            transition: background-color 0.2s ease-in-out;
+            background-color: #EF4444; /* Red for cancel */
+            transition: background-color 0.2s ease-in-out, transform 0.2s ease-in-out;
         }
         .btn-cancel:hover {
-            background-color: #E74C3C; /* Brighter red on hover */
+            background-color: #DC2626; /* Darker red on hover */
+            transform: scale(1.05);
         }
-        /* Message box for alerts */
-        .message-box {
+
+        /* Message Box / Toast Notification */
+        .toast-message-box {
             position: fixed;
             top: 50%;
             left: 50%;
-            transform: translate(-50%, -50%);
-            background-color: #333;
+            transform: translate(-50%, -50%) scale(0.8); /* Start smaller */
+            background-color: #1F2937; /* Dark gray background */
             color: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+            padding: 24px 32px;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
             z-index: 1000;
             display: none; /* Hidden by default */
-            max-width: 80%;
+            max-width: 90%;
+            text-align: center;
+            opacity: 0; /* Start invisible */
+            transition: all 0.3s ease-out;
+            border: 1px solid #4B5563;
+        }
+        .toast-message-box.show {
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1);
+        }
+        .toast-message-box button {
+            background-color: #3B82F6; /* Blue button */
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-top: 20px;
+            font-weight: bold;
+            transition: background-color 0.2s ease-in-out;
+        }
+        .toast-message-box button:hover {
+            background-color: #2563EB; /* Darker blue on hover */
+        }
+
+        /* Loading Spinner */
+        .loader {
+            border: 6px solid #E5E7EB; /* Light gray */
+            border-top: 6px solid #3B82F6; /* Blue */
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto; /* Center the loader */
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Success Notification */
+        .success-notification {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.5);
+            background-color: #10B981; /* Green background */
+            color: white;
+            padding: 30px 40px;
+            border-radius: 15px;
+            box-shadow: 0 15px 30px rgba(0,0,0,0.4);
+            z-index: 1001;
+            display: none;
+            opacity: 0;
+            transition: all 0.4s cubic-bezier(0.68, -0.55, 0.27, 1.55); /* Springy animation */
             text-align: center;
         }
-        .message-box button {
-            background-color: #D4AF37;
-            color: black;
-            padding: 8px 15px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            margin-top: 15px;
-            font-weight: bold;
+        .success-notification.show {
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1);
         }
-        .message-box button:hover {
-            background-color: #FFD700;
+        .success-notification i {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            animation: bounceIn 0.6s forwards;
+        }
+        .success-notification p {
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        @keyframes bounceIn {
+            0% { transform: scale(0.1); opacity: 0; }
+            60% { transform: scale(1.2); opacity: 1; }
+            100% { transform: scale(1); }
         }
     </style>
 </head>
@@ -94,11 +160,14 @@
     <div class="container p-8">
         <header class="header text-center mb-10">
             <h1 class="text-4xl font-bold mb-2 drop-shadow-lg">Hold Orders Management</h1>
-            <p class="text-gray-400 text-lg">Review and manage pending hold orders.</p>
+            <p class="text-gray-600 text-lg">Review and manage pending hold orders.</p>
         </header>
 
         <!-- Loading, Error, and No Orders messages -->
-        <div id="status-message" class="text-center text-amber-500 text-xl mt-8">Loading orders...</div>
+        <div id="status-message" class="text-center text-blue-600 text-xl mt-8">
+            <div class="loader"></div>
+            Loading orders...
+        </div>
 
         <!-- Container for order cards -->
         <div id="orders-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mt-8">
@@ -106,10 +175,16 @@
         </div>
     </div>
 
-    <!-- Custom Message Box -->
-    <div id="message-box" class="message-box">
-        <p id="message-content"></p>
-        <button onclick="document.getElementById('message-box').style.display = 'none';">OK</button>
+    <!-- Custom Message Box / Toast Notification -->
+    <div id="toast-message-box" class="toast-message-box">
+        <p id="toast-message-content" class="mb-4"></p>
+        <button onclick="hideToastMessageBox()">OK</button>
+    </div>
+
+    <!-- Success Notification -->
+    <div id="success-notification" class="success-notification">
+        <i class="fas fa-check-circle"></i>
+        <p id="success-message-content">Order Cancelled Successfully!</p>
     </div>
 
     <script>
@@ -117,16 +192,60 @@
         const API_URL = "https://script.google.com/macros/s/AKfycbxmknmN_A0jdyu8B489qcb1UfVSwyG7sGvRs3LPCj6647GyYU2oL0sIf7GaKuLodYfFeg/exec";
         const ordersContainer = document.getElementById('orders-container');
         const statusMessage = document.getElementById('status-message');
-        const messageBox = document.getElementById('message-box');
-        const messageContent = document.getElementById('message-content');
+        const toastMessageBox = document.getElementById('toast-message-box');
+        const toastMessageContent = document.getElementById('toast-message-content');
+        const successNotification = document.getElementById('success-notification');
+        const successMessageContent = document.getElementById('success-message-content');
+
+        let allOrders = []; // To store all fetched orders for easy lookup
 
         /**
-         * Displays a custom message box instead of alert().
+         * Displays a custom toast message box.
          * @param {string} message - The message to display.
          */
-        function showMessageBox(message) {
-            messageContent.textContent = message;
-            messageBox.style.display = 'block';
+        function showToastMessageBox(message) {
+            toastMessageContent.textContent = message;
+            toastMessageBox.style.display = 'block';
+            setTimeout(() => {
+                toastMessageBox.classList.add('show');
+            }, 10); // Small delay to trigger transition
+        }
+
+        /**
+         * Hides the custom toast message box.
+         */
+        function hideToastMessageBox() {
+            toastMessageBox.classList.remove('show');
+            setTimeout(() => {
+                toastMessageBox.style.display = 'none';
+            }, 300); // Match transition duration
+        }
+
+        /**
+         * Displays a success notification at the center of the window.
+         * @param {string} message - The success message to display.
+         */
+        function showSuccessNotification(message) {
+            successMessageContent.textContent = message;
+            successNotification.style.display = 'block';
+            setTimeout(() => {
+                successNotification.classList.add('show');
+            }, 10);
+
+            // Automatically hide after 3 seconds
+            setTimeout(() => {
+                hideSuccessNotification();
+            }, 3000);
+        }
+
+        /**
+         * Hides the success notification.
+         */
+        function hideSuccessNotification() {
+            successNotification.classList.remove('show');
+            setTimeout(() => {
+                successNotification.style.display = 'none';
+            }, 400); // Match transition duration
         }
 
         /**
@@ -154,8 +273,8 @@
          * Fetches order data from the Google Script API.
          */
         async function fetchOrders() {
-            statusMessage.textContent = 'Loading orders...';
-            statusMessage.className = 'text-center text-amber-500 text-xl mt-8'; // Reset class for loading
+            statusMessage.innerHTML = '<div class="loader"></div> Loading orders...';
+            statusMessage.className = 'text-center text-blue-600 text-xl mt-8'; // Reset class for loading
             ordersContainer.innerHTML = ''; // Clear previous orders
 
             try {
@@ -166,20 +285,20 @@
                 const data = await response.json();
 
                 // Assuming data is an array or an object with a 'data' key
-                const orders = Array.isArray(data) ? data : (data.data || []);
+                allOrders = Array.isArray(data) ? data : (data.data || []);
 
-                if (orders.length === 0) {
-                    statusMessage.textContent = 'No hold orders found.';
-                    statusMessage.className = 'text-center text-gray-400 text-xl mt-8';
+                if (allOrders.length === 0) {
+                    statusMessage.innerHTML = '<i class="fas fa-info-circle text-gray-500 mr-2"></i> No hold orders found.';
+                    statusMessage.className = 'text-center text-gray-500 text-xl mt-8';
                     return;
                 }
 
                 statusMessage.style.display = 'none'; // Hide status message once orders are loaded
-                renderOrders(orders); // Render the fetched orders
+                renderOrders(allOrders); // Render the fetched orders
             } catch (error) {
                 console.error("Failed to fetch orders:", error);
-                statusMessage.textContent = `Failed to load orders. Please try again later. Error: ${error.message}`;
-                statusMessage.className = 'text-center text-red-500 text-xl mt-8 p-4 bg-red-900 bg-opacity-30 rounded-lg border border-red-700';
+                statusMessage.innerHTML = `<i class="fas fa-exclamation-triangle text-red-500 mr-2"></i> Failed to load orders. Please try again later. Error: ${error.message}`;
+                statusMessage.className = 'text-center text-red-500 text-xl mt-8 p-4 bg-red-100 border border-red-300 rounded-lg';
             }
         }
 
@@ -191,11 +310,11 @@
             ordersContainer.innerHTML = ''; // Clear previous content
             orders.forEach(order => {
                 const orderCard = document.createElement('div');
-                orderCard.className = 'order-card p-6 rounded-lg shadow-lg transform hover:scale-105 relative'; // Added 'relative' for absolute positioning of PO No.
+                orderCard.className = 'order-card p-6 rounded-lg shadow-lg transform hover:scale-105 relative';
                 orderCard.innerHTML = `
                     <div class="flex justify-between items-start mb-2">
                         <h3 class="text-xl font-semibold">${order.supplierName || 'N/A'}</h3>
-                        <p class="text-xs text-gray-400 font-medium ml-4 mt-1">${order.purchaseOrderNumber || 'PO No.: N/A'}</p>
+                        <p class="text-xs text-gray-500 font-medium ml-4 mt-1">PO No.: ${order.purchaseOrderNumber || 'N/A'}</p>
                     </div>
                     <p class="text-sm mb-1">
                         <span class="font-medium">Hold Until:</span> ${formatHoldUntilDate(order.holdUntil)}
@@ -204,13 +323,13 @@
                         <span class="font-medium">Remark:</span> ${order.holdRemark || 'No remark'}
                     </p>
                     <div class="flex justify-end space-x-3">
-                        <button class="btn-approve text-white py-2 px-4 rounded-md text-sm font-semibold shadow-md transform hover:scale-105"
-                                data-order-id="${order.timestamp}" data-action="Approve">
-                            Approve
+                        <button class="btn-approve text-white py-2 px-4 rounded-md text-sm font-semibold shadow-md flex items-center"
+                                data-order-id="${order.timestamp}" data-po-number="${order.purchaseOrderNumber}" data-action="Approve">
+                                <i class="fas fa-check-circle mr-2"></i> Approve
                         </button>
-                        <button class="btn-cancel text-white py-2 px-4 rounded-md text-sm font-semibold shadow-md transform hover:scale-105"
-                                data-order-id="${order.timestamp}" data-action="Cancel">
-                            Cancel
+                        <button class="btn-cancel text-white py-2 px-4 rounded-md text-sm font-semibold shadow-md flex items-center"
+                                data-order-id="${order.timestamp}" data-po-number="${order.purchaseOrderNumber}" data-action="Cancel">
+                                <i class="fas fa-times-circle mr-2"></i> Cancel
                         </button>
                     </div>
                 `;
@@ -227,9 +346,10 @@
         function addActionListener() {
             document.querySelectorAll('.btn-approve, .btn-cancel').forEach(button => {
                 button.addEventListener('click', (event) => {
-                    const orderId = event.target.dataset.orderId;
-                    const actionType = event.target.dataset.action;
-                    handleAction(orderId, actionType);
+                    const orderId = event.target.dataset.orderId || event.target.closest('button').dataset.orderId;
+                    const poNumber = event.target.dataset.poNumber || event.target.closest('button').dataset.poNumber;
+                    const actionType = event.target.dataset.action || event.target.closest('button').dataset.action;
+                    handleAction(orderId, poNumber, actionType);
                 });
             });
         }
@@ -237,11 +357,18 @@
         /**
          * Handles the Approve or Cancel action for an order.
          * @param {string} orderId - The unique identifier for the order (timestamp).
+         * @param {string} poNumber - The Purchase Order Number.
          * @param {string} actionType - 'Approve' or 'Cancel'.
          */
-async function handleAction(orderId, actionType) {
+        async function handleAction(orderId, poNumber, actionType) {
+            showToastMessageBox(`Sending ${actionType} request for Order ID: ${orderId}...`);
+
             try {
-                showMessageBox(`Sending ${actionType} request for Order ID: ${orderId}...`);
+                const payload = {
+                    action: actionType,
+                    orderId: orderId,
+                    purchaseOrderNumber: poNumber // Include PO Number in the payload
+                };
 
                 const response = await fetch(API_URL, {
                     method: 'POST',
@@ -249,19 +376,23 @@ async function handleAction(orderId, actionType) {
                     headers: {
                         'Content-Type': 'application/x-www-form-urlencoded',
                     },
-                    body: new URLSearchParams({
-                        action: actionType,
-                        orderId: orderId,
-                    }).toString(),
+                    body: new URLSearchParams(payload).toString(),
                 });
-                showMessageBox(`Order ${orderId} has been ${actionType}d successfully!`);
-                // After a successful action, re-fetch and render the updated list of orders
-                await fetchOrders(); // Call fetchOrders to refresh the list
+
+                // Since mode: 'no-cors', response.ok will always be false.
+                // We assume success if no network error occurred.
+                // In a real application with CORS, you'd check response.ok and response.json() for backend confirmation.
+
+                hideToastMessageBox(); // Hide the "Sending request" toast
+                showSuccessNotification(`Order ${orderId} has been ${actionType}d successfully!`);
+                await fetchOrders(); // Re-fetch orders to update the UI
             } catch (error) {
                 console.error(`Failed to ${actionType} order ${orderId}:`, error);
-                showMessageBox(`Failed to ${actionType} order ${orderId}. Error: ${error.message}`);
+                hideToastMessageBox(); // Hide any existing toast
+                showToastMessageBox(`Failed to ${actionType} order ${orderId}. Error: ${error.message}`);
             }
         }
+
         // Fetch orders when the window loads
         window.onload = fetchOrders;
     </script>

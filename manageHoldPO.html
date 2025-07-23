@@ -360,35 +360,37 @@
          * @param {string} poNumber - The Purchase Order Number.
          * @param {string} actionType - 'Approve' or 'Cancel'.
          */
-        async function handleAction(orderId, purchaseOrderNumber, actionType) {
+/**
+         * Handles the Approve or Cancel action for an order.
+         * @param {string} orderId - The unique identifier for the order (timestamp).
+         * @param {string} purchaseOrderNumber - The Purchase Order Number.
+         * @param {string} actionType - 'Approve' or 'Cancel'.
+         */
+        async function handleAction(orderId, purchaseOrderNumber, actionType) { // Corrected parameter name
             showToastMessageBox(`Sending ${actionType} request for Order ID: ${orderId}...`);
 
             try {
                 const payload = {
                     action: actionType,
                     orderId: orderId,
-                    purchaseOrderNumber: purchaseOrderNumber // Include PO Number in the payload
+                    purchaseOrderNumber: purchaseOrderNumber // Use purchaseOrderNumber here
                 };
 
                 const response = await fetch(API_URL, {
                     method: 'POST',
-                    mode: 'no-cors',                    
+                    mode: 'no-cors',
                     headers: {
                         'Content-Type': 'application/x-www-form-urlencoded',
                     },
                     body: new URLSearchParams(payload).toString(),
                 });
 
-                // Since mode: 'no-cors', response.ok will always be false.
-                // We assume success if no network error occurred.
-                // In a real application with CORS, you'd check response.ok and response.json() for backend confirmation.
-
-                hideToastMessageBox(); // Hide the "Sending request" toast
+                hideToastMessageBox();
                 showSuccessNotification(`Order ${orderId} has been ${actionType}d successfully!`);
-                await fetchOrders(); // Re-fetch orders to update the UI
+                await fetchOrders();
             } catch (error) {
                 console.error(`Failed to ${actionType} order ${orderId}:`, error);
-                hideToastMessageBox(); // Hide any existing toast
+                hideToastMessageBox();
                 showToastMessageBox(`Failed to ${actionType} order ${orderId}. Error: ${error.message}`);
             }
         }

@@ -343,17 +343,17 @@
         /**
          * Adds click event listeners to all Approve and Cancel buttons.
          */
-        function addActionListener() {
-            document.querySelectorAll('.btn-approve, .btn-cancel').forEach(button => {
-                button.addEventListener('click', (event) => {
-                    const orderId = event.target.dataset.orderId || event.target.closest('button').dataset.orderId;
-                    const purchaseOrderNumber = event.target.dataset.purchaseOrderNumber || event.target.closest('button').dataset.purchaseOrderNumber;
-                    const actionType = event.target.dataset.action || event.target.closest('button').dataset.action;
-                    handleAction(orderId, purchaseOrderNumber, actionType);
-                });
-            });
-        }
-
+function addActionListener() {
+    document.querySelectorAll('.btn-approve, .btn-cancel').forEach(button => {
+        button.addEventListener('click', (event) => {
+            const orderId = event.target.dataset.orderId || event.target.closest('button').dataset.orderId;
+            const purchaseOrderNumber = event.target.dataset.purchaseOrderNumber || event.target.closest('button').dataset.purchaseOrderNumber;
+            const actionType = event.target.dataset.action || event.target.closest('button').dataset.action;
+            // Corrected line already applied in the provided file:
+            handleAction(orderId, purchaseOrderNumber, actionType);
+        });
+    });
+}
         /**
          * Handles the Approve or Cancel action for an order.
          * @param {string} orderId - The unique identifier for the order (timestamp).
@@ -366,35 +366,34 @@
          * @param {string} purchaseOrderNumber - The Purchase Order Number.
          * @param {string} actionType - 'Approve' or 'Cancel'.
          */
-        async function handleAction(orderId, purchaseOrderNumber, actionType) { // Corrected parameter name
-            showToastMessageBox(`Sending ${actionType} request for Order ID: ${orderId}...`);
+async function handleAction(orderId, purchaseOrderNumber, actionType) {
+    showToastMessageBox(`Sending ${actionType} request for Order ID: ${orderId}...`);
 
-            try {
-                const payload = {
-                    action: actionType,
-                    orderId: orderId,
-                    purchaseOrderNumber: purchaseOrderNumber // Use purchaseOrderNumber here
-                };
+    try {
+        const payload = {
+            action: actionType,
+            orderId: orderId,
+            purchaseOrderNumber: purchaseOrderNumber
+        };
 
-                const response = await fetch(API_URL, {
-                    method: 'POST',
-                    mode: 'no-cors',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded',
-                    },
-                    body: new URLSearchParams(payload).toString(),
-                });
+        const response = await fetch(API_URL, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: new URLSearchParams(payload).toString(),
+        });
 
-                hideToastMessageBox();
-                showSuccessNotification(`Order ${orderId} has been ${actionType}d successfully!`);
-                await fetchOrders();
-            } catch (error) {
-                console.error(`Failed to ${actionType} order ${orderId}:`, error);
-                hideToastMessageBox();
-                showToastMessageBox(`Failed to ${actionType} order ${orderId}. Error: ${error.message}`);
-            }
-        }
-
+        hideToastMessageBox();
+        showSuccessNotification(`Order ${orderId} has been ${actionType}d successfully!`);
+        await fetchOrders();
+    } catch (error) {
+        console.error(`Failed to ${actionType} order ${orderId}:`, error);
+        hideToastMessageBox();
+        showToastMessageBox(`Failed to ${actionType} order ${orderId}. Error: ${error.message}`);
+    }
+}
         // Fetch orders when the window loads
         window.onload = fetchOrders;
     </script>

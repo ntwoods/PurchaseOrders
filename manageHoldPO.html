@@ -9,11 +9,11 @@
     <!-- Google Fonts - Inter for clean typography -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        /* Custom CSS for the black and golden theme with less shine */
+        /* Custom CSS for the White & Shades of Blue theme */
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #000000; /* Deep black background */
-            color: #E0E0E0; /* Light gray for general text */
+            background-color: #F0F8FF; /* AliceBlue - very light blue */
+            color: #333333; /* Dark gray for general text */
         }
         .container {
             max-width: 96rem; /* Equivalent to max-w-6xl in Tailwind */
@@ -22,71 +22,98 @@
             padding: 2rem; /* p-8 */
         }
         .header h1 {
-            color: #D4AF37; /* Golden color for main heading */
-            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5); /* Subtle shadow for depth */
+            color: #1E90FF; /* DodgerBlue for main heading */
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
         }
         .order-card {
-            background-color: #1A1A1A; /* Darker gray for card background */
-            border: 1px solid #7D6B00; /* Muted golden border */
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4); /* Deeper shadow */
+            background-color: #FFFFFF; /* White for card background */
+            border: 1px solid #ADD8E6; /* LightBlue border */
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); /* Soft shadow */
             transition: all 0.3s ease-in-out;
         }
         .order-card:hover {
-            border-color: #A38C00; /* Slightly brighter golden on hover */
+            border-color: #87CEEB; /* SkyBlue on hover */
             transform: translateY(-5px) scale(1.02); /* Lift and slightly enlarge on hover */
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.6);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
         }
         .order-card h3 {
-            color: #FFD700; /* Brighter golden for supplier name */
+            color: #4682B4; /* SteelBlue for supplier name */
         }
         .order-card p {
-            color: #C0C0C0; /* Lighter gray for card text */
+            color: #555555; /* Medium gray for card text */
         }
         .order-card .font-medium {
-            color: #FFBF00; /* Muted golden for labels like 'Hold Until' */
+            color: #2F4F4F; /* DarkSlateGray for labels like 'Hold Until' */
         }
         .btn-approve {
-            background-color: #1E8449; /* Darker green */
+            background-color: #3CB371; /* MediumSeaGreen */
             transition: background-color 0.2s ease-in-out;
         }
         .btn-approve:hover {
-            background-color: #2ECC71; /* Brighter green on hover */
+            background-color: #2E8B57; /* SeaGreen on hover */
         }
         .btn-cancel {
-            background-color: #C0392B; /* Darker red */
+            background-color: #DC143C; /* Crimson */
             transition: background-color 0.2s ease-in-out;
         }
         .btn-cancel:hover {
-            background-color: #E74C3C; /* Brighter red on hover */
+            background-color: #B22222; /* FireBrick on hover */
         }
-        /* Message box for alerts */
-        .message-box {
+
+        /* Toast Notification */
+        .toast-container {
             position: fixed;
-            top: 50%;
+            bottom: 20px;
             left: 50%;
-            transform: translate(-50%, -50%);
-            background-color: #333;
-            color: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+            transform: translateX(-50%);
             z-index: 1000;
-            display: none; /* Hidden by default */
-            max-width: 80%;
+            display: flex;
+            flex-direction: column-reverse; /* New toasts appear on top */
+            gap: 10px;
+        }
+        .toast {
+            background-color: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            opacity: 0;
+            transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
+            transform: translateY(20px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            min-width: 250px;
             text-align: center;
         }
-        .message-box button {
-            background-color: #D4AF37;
-            color: black;
-            padding: 8px 15px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            margin-top: 15px;
-            font-weight: bold;
+        .toast.show {
+            opacity: 1;
+            transform: translateY(0);
         }
-        .message-box button:hover {
-            background-color: #FFD700;
+
+        /* Loader Overlay */
+        .loader-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.7); /* Semi-transparent white */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1001;
+            display: none; /* Hidden by default */
+        }
+        .loader {
+            border: 8px solid #f3f3f3; /* Light grey */
+            border-top: 8px solid #1E90FF; /* DodgerBlue */
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
     </style>
 </head>
@@ -94,11 +121,11 @@
     <div class="container p-8">
         <header class="header text-center mb-10">
             <h1 class="text-4xl font-bold mb-2 drop-shadow-lg">Hold Orders Management</h1>
-            <p class="text-gray-400 text-lg">Review and manage pending hold orders.</p>
+            <p class="text-gray-600 text-lg">Review and manage pending hold orders.</p>
         </header>
 
         <!-- Loading, Error, and No Orders messages -->
-        <div id="status-message" class="text-center text-amber-500 text-xl mt-8">Loading orders...</div>
+        <div id="status-message" class="text-center text-blue-600 text-xl mt-8">Loading orders...</div>
 
         <!-- Container for order cards -->
         <div id="orders-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mt-8">
@@ -106,27 +133,56 @@
         </div>
     </div>
 
-    <!-- Custom Message Box -->
-    <div id="message-box" class="message-box">
-        <p id="message-content"></p>
-        <button onclick="document.getElementById('message-box').style.display = 'none';">OK</button>
+    <!-- Toast Container -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <!-- Loader Overlay -->
+    <div id="loader-overlay" class="loader-overlay">
+        <div class="loader"></div>
     </div>
 
     <script>
         // Define the API URL for fetching and posting data
-        const API_URL = "https://script.google.com/macros/s/AKfycbwWbhyYTktRjDZoBBPulCjQsYI5fD2KaTkFdN5xlABnmkC_yJy8gboe44ujavujeLMATw/exec";
+        const API_URL = "https://script.google.com/macros/s/AKfycbwD-4QVS1VD8Ba-M03Aj_LVKDXwMtqQYlzMVkMERCgUY2-XXalafa1oTJlafsLHBm-joQ/exec"; // Replace with your deployed Google Apps Script URL
         const ordersContainer = document.getElementById('orders-container');
         const statusMessage = document.getElementById('status-message');
-        const messageBox = document.getElementById('message-box');
-        const messageContent = document.getElementById('message-content');
+        const toastContainer = document.getElementById('toast-container');
+        const loaderOverlay = document.getElementById('loader-overlay');
 
         /**
-         * Displays a custom message box instead of alert().
+         * Displays a toast notification.
          * @param {string} message - The message to display.
+         * @param {number} duration - How long the toast should be visible in milliseconds.
          */
-        function showMessageBox(message) {
-            messageContent.textContent = message;
-            messageBox.style.display = 'block';
+        function showToast(message, duration = 3000) {
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            toast.textContent = message;
+            toastContainer.appendChild(toast);
+
+            // Trigger reflow to ensure transition plays
+            void toast.offsetWidth;
+
+            toast.classList.add('show');
+
+            setTimeout(() => {
+                toast.classList.remove('show');
+                toast.addEventListener('transitionend', () => toast.remove(), { once: true });
+            }, duration);
+        }
+
+        /**
+         * Shows the loader overlay.
+         */
+        function showLoader() {
+            loaderOverlay.style.display = 'flex';
+        }
+
+        /**
+         * Hides the loader overlay.
+         */
+        function hideLoader() {
+            loaderOverlay.style.display = 'none';
         }
 
         /**
@@ -155,8 +211,9 @@
          */
         async function fetchOrders() {
             statusMessage.textContent = 'Loading orders...';
-            statusMessage.className = 'text-center text-amber-500 text-xl mt-8'; // Reset class for loading
+            statusMessage.className = 'text-center text-blue-600 text-xl mt-8'; // Reset class for loading
             ordersContainer.innerHTML = ''; // Clear previous orders
+            showLoader(); // Show loader when fetching starts
 
             try {
                 const response = await fetch(API_URL);
@@ -165,12 +222,12 @@
                 }
                 const data = await response.json();
 
-                // Assuming data is an array or an object with a 'data' key
                 const orders = Array.isArray(data) ? data : (data.data || []);
 
                 if (orders.length === 0) {
                     statusMessage.textContent = 'No hold orders found.';
-                    statusMessage.className = 'text-center text-gray-400 text-xl mt-8';
+                    statusMessage.className = 'text-center text-gray-500 text-xl mt-8';
+                    hideLoader(); // Hide loader if no orders
                     return;
                 }
 
@@ -179,7 +236,9 @@
             } catch (error) {
                 console.error("Failed to fetch orders:", error);
                 statusMessage.textContent = `Failed to load orders. Please try again later. Error: ${error.message}`;
-                statusMessage.className = 'text-center text-red-500 text-xl mt-8 p-4 bg-red-900 bg-opacity-30 rounded-lg border border-red-700';
+                statusMessage.className = 'text-center text-red-600 text-xl mt-8 p-4 bg-red-100 rounded-lg border border-red-300';
+            } finally {
+                hideLoader(); // Always hide loader when fetch completes
             }
         }
 
@@ -191,11 +250,11 @@
             ordersContainer.innerHTML = ''; // Clear previous content
             orders.forEach(order => {
                 const orderCard = document.createElement('div');
-                orderCard.className = 'order-card p-6 rounded-lg shadow-lg transform hover:scale-105 relative'; // Added 'relative' for absolute positioning of PO No.
+                orderCard.className = 'order-card p-6 rounded-lg shadow-lg transform hover:scale-105 relative';
                 orderCard.innerHTML = `
                     <div class="flex justify-between items-start mb-2">
                         <h3 class="text-xl font-semibold">${order.supplierName || 'N/A'}</h3>
-                        <p class="text-xs text-gray-400 font-medium ml-4 mt-1">${order.purchaseOrderNumber || 'PO No.: N/A'}</p>
+                        <p class="text-xs text-gray-500 font-medium ml-4 mt-1">${order.purchaseOrderNumber || 'PO No.: N/A'}</p>
                     </div>
                     <p class="text-sm mb-1">
                         <span class="font-medium">Hold Until:</span> ${formatHoldUntilDate(order.holdUntil)}
@@ -205,11 +264,11 @@
                     </p>
                     <div class="flex justify-end space-x-3">
                         <button class="btn-approve text-white py-2 px-4 rounded-md text-sm font-semibold shadow-md transform hover:scale-105"
-                                data-order-id="${order.timestamp}" data-action="Approve">
+                                data-order-id="${order.timestamp}" data-po-number="${order.rawPoNumber}" data-action="Approve">
                             Approve
                         </button>
                         <button class="btn-cancel text-white py-2 px-4 rounded-md text-sm font-semibold shadow-md transform hover:scale-105"
-                                data-order-id="${order.timestamp}" data-action="Cancel">
+                                data-order-id="${order.timestamp}" data-po-number="${order.rawPoNumber}" data-action="Cancel">
                             Cancel
                         </button>
                     </div>
@@ -228,8 +287,9 @@
             document.querySelectorAll('.btn-approve, .btn-cancel').forEach(button => {
                 button.addEventListener('click', (event) => {
                     const orderId = event.target.dataset.orderId;
+                    const poNumber = event.target.dataset.poNumber; // Get the raw PO number
                     const actionType = event.target.dataset.action;
-                    handleAction(orderId, actionType);
+                    handleAction(orderId, poNumber, actionType);
                 });
             });
         }
@@ -237,28 +297,44 @@
         /**
          * Handles the Approve or Cancel action for an order.
          * @param {string} orderId - The unique identifier for the order (timestamp).
+         * @param {string} poNumber - The raw PO number for the order.
          * @param {string} actionType - 'Approve' or 'Cancel'.
          */
-        async function handleAction(orderId, actionType) {
-            try {
-                showMessageBox(`Sending ${actionType} request for Order ID: ${orderId}...`);
+        async function handleAction(orderId, poNumber, actionType) {
+            showLoader(); // Show loader when action starts
+            showToast(`Sending ${actionType} request for PO No.: ${poNumber}...`);
 
+            try {
+                // Note: 'no-cors' mode means you cannot read the response.
+                // For a successful response, you'd typically need CORS enabled on the Google Apps Script side.
+                // However, the request itself will still be sent.
                 const response = await fetch(API_URL, {
                     method: 'POST',
-                    mode: 'no-cors',                    
+                    mode: 'no-cors', // Required for cross-origin requests to Google Apps Script
                     headers: {
                         'Content-Type': 'application/x-www-form-urlencoded',
                     },
                     body: new URLSearchParams({
                         action: actionType,
                         orderId: orderId,
+                        poNumber: poNumber, // Send raw PO number
                     }).toString(),
                 });
-                showMessageBox(`Order ${orderId} has been ${actionType}d successfully!`);
-                renderOrders();
+
+                // Since mode is 'no-cors', response.ok will always be false, and response.json() will fail.
+                // We rely on the backend script executing successfully.
+                // A real-world scenario would involve a proper CORS setup to get a success confirmation.
+                // For now, assume success if no network error.
+                showToast(`Order ${poNumber} has been ${actionType}d successfully!`, 5000);
+                // Re-fetch orders to update the UI after a short delay to allow backend to process
+                setTimeout(fetchOrders, 1500);
+
             } catch (error) {
-                console.error(`Failed to ${actionType} order ${orderId}:`, error);
-                showMessageBox(`Failed to ${actionType} order ${orderId}. Error: ${error.message}`);
+                console.error(`Failed to ${actionType} order ${poNumber}:`, error);
+                showToast(`Failed to ${actionType} order ${poNumber}. Error: ${error.message}`, 5000);
+            } finally {
+                // Hide loader immediately after fetch, even if re-fetching happens later
+                hideLoader();
             }
         }
 

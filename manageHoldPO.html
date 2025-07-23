@@ -239,7 +239,7 @@
          * @param {string} orderId - The unique identifier for the order (timestamp).
          * @param {string} actionType - 'Approve' or 'Cancel'.
          */
-        async function handleAction(orderId, actionType) {
+async function handleAction(orderId, actionType) {
             try {
                 showMessageBox(`Sending ${actionType} request for Order ID: ${orderId}...`);
 
@@ -255,13 +255,13 @@
                     }).toString(),
                 });
                 showMessageBox(`Order ${orderId} has been ${actionType}d successfully!`);
-                renderOrders();
+                // After a successful action, re-fetch and render the updated list of orders
+                await fetchOrders(); // Call fetchOrders to refresh the list
             } catch (error) {
                 console.error(`Failed to ${actionType} order ${orderId}:`, error);
                 showMessageBox(`Failed to ${actionType} order ${orderId}. Error: ${error.message}`);
             }
         }
-
         // Fetch orders when the window loads
         window.onload = fetchOrders;
     </script>

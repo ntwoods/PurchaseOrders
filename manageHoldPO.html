@@ -347,7 +347,7 @@
             document.querySelectorAll('.btn-approve, .btn-cancel').forEach(button => {
                 button.addEventListener('click', (event) => {
                     const orderId = event.target.dataset.orderId || event.target.closest('button').dataset.orderId;
-                    const poNumber = event.target.dataset.poNumber || event.target.closest('button').dataset.poNumber;
+                    const purchaseOrderNumber = event.target.dataset.purchaseOrderNumber || event.target.closest('button').dataset.purchaseOrderNumber;
                     const actionType = event.target.dataset.action || event.target.closest('button').dataset.action;
                     handleAction(orderId, poNumber, actionType);
                 });
@@ -360,7 +360,7 @@
          * @param {string} poNumber - The Purchase Order Number.
          * @param {string} actionType - 'Approve' or 'Cancel'.
          */
-        async function handleAction(orderId, poNumber, actionType) {
+        async function handleAction(orderId, purchaseOrderNumber, actionType) {
             showToastMessageBox(`Sending ${actionType} request for Order ID: ${orderId}...`);
 
             try {

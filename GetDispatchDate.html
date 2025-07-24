@@ -571,28 +571,55 @@
                     <div class="order-card">
                         <div class="order-header">
                             <div class="requester-name">👤 ${order.supplierName}</div><div class="po-number">${order.purchaseOrderNumber}</div>
-<div class="timestamp">
-    🕒 Sent to Supplier: ${this.formatDate(order.timestamp)}
-    ${order.crmRemark ? `<br>💬 CRM Remark: ${order.crmRemark}` : ""}
-    ${order.responseRemark ? `<br>📝 Purchase Remark: ${order.responseRemark}` : ""}
-    ${order.expectedBy ? `<br>🚚 Expected Delivery: ${this.formatDate(order.expectedBy)}` : ""}
-</div>
+		<div class="timestamp">
+		    🕒 Sent to Supplier: ${this.formatDate(order.timestamp)}
+		    ${order.crmRemark ? `<br>💬 CRM Remark: ${order.crmRemark}` : ""}
+		    ${order.responseRemark ? `<br>📝 Purchase Remark: ${order.responseRemark}` : ""}
+		    ${order.expectedBy ? `<br>🚚 Expected Delivery: ${this.formatDate(order.expectedBy)}` : ""}
+		</div>
 
-			<div class="countdown-timer" id="countdown-${order.timestamp}"></div>
-                        </div>
-                        
-                        <div class="order-actions">
-                            <button class="view-po-btn" onclick="orderManager.viewPO('${order.googleSheetURL}')">
-                                📄 View PO
-                            </button>
-                        </div>
-			<a href="${order.orderSheet}" target="_blank">
-			  <div class="order-actions">
-			    <button class="view-po-btn">
-			      📄 View G-Sheet
-			    </button>
-			  </div>
-			</a>
+		<div class="countdown-timer" id="countdown-${order.timestamp}"></div>
+		</div>
+		<div class="order-actions-container">
+		  ${order.googleSheetURL ? `
+		    <div class="order-actions">
+		      <button class="view-po-btn" onclick="orderManager.viewPO('${order.googleSheetURL}')">
+		        📄 View PO
+		      </button>
+		    </div>
+		  ` : ''}
+		
+		  ${order.orderSheet ? `
+		    <a href="${order.orderSheet}" target="_blank">
+		      <div class="order-actions">
+		        <button class="view-po-btn">
+		          📄 View G-Sheet
+		        </button>
+		      </div>
+		    </a>
+		  ` : ''}
+		
+		  ${order.additionalPurchaseURL ? `
+		    <a href="${order.additionalPurchaseURL}" target="_blank">
+		      <div class="order-actions">
+		        <button class="view-po-btn">
+		          📄 View Additional Purchase
+		        </button>
+		      </div>
+		    </a>
+		  ` : ''}
+		
+		  ${order.crmRequestURL ? `
+		    <a href="${order.crmRequestURL}" target="_blank">
+		      <div class="order-actions">
+		        <button class="view-po-btn">
+		          📄 CRM Request File
+		        </button>
+		      </div>
+		    </a>
+		  ` : ''}
+		</div>
+
 			<div class="editable">	
    			f
                         <div class="dispatch-section">
@@ -678,6 +705,7 @@
                     this.showMessage('Purchase Order URL not available', 'error');
                 }
             }
+
 
             async submitDispatch(index) {
                 const order = this.orders[index];

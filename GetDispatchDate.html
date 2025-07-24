@@ -575,7 +575,7 @@
     🕒 Sent to Supplier: ${this.formatDate(order.timestamp)}
     ${order.crmRemark ? `<br>💬 CRM Remark: ${order.crmRemark}` : ""}
     ${order.responseRemark ? `<br>📝 Purchase Remark: ${order.responseRemark}` : ""}
-    ${order.expectedDeliveryDate ? `<br>🚚 Expected Delivery: ${this.formatDate(order.expectedDeliveryDate)}` : ""}
+    ${order.expectedBy ? `<br>🚚 Expected Delivery: ${this.formatDate(order.expectedBy)}` : ""}
 </div>
 
 			<div class="countdown-timer" id="countdown-${order.timestamp}"></div>

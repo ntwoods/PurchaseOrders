@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Add Additional Purchase Order File</title>
+    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         /* Custom styles for shades of blue and white theme */
@@ -12,7 +13,7 @@
             background-color: #f0f8ff; /* Lightest blue/off-white */
         }
         .container {
-            max-width: 960px;
+            max-width: 1200px; /* Increased max-width for wider grid */
             margin: 2rem auto;
             padding: 1.5rem;
             background-color: #ffffff; /* White background for the main content area */
@@ -32,17 +33,26 @@
             border: 1px solid #bfdbfe; /* Light blue border */
             border-radius: 8px;
             padding: 1.5rem;
-            margin-bottom: 1.5rem;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
             position: relative;
+            display: flex; /* Use flex for internal alignment */
+            flex-direction: column;
+            justify-content: space-between; /* Pushes button to bottom */
+            height: 100%; /* Ensure cards in a row have equal height */
         }
         .card-header {
             display: flex;
             justify-content: space-between;
-            align-items: center;
+            align-items: flex-start; /* Align items to the top for better spacing */
             margin-bottom: 1rem;
             font-weight: bold;
             color: #1e40af; /* Medium blue */
+            flex-wrap: wrap; /* Allow wrapping on very small cards if content is long */
+        }
+        .supplier-name {
+            font-size: 1.125rem; /* text-lg */
+            margin-right: 0.5rem; /* Space between name and PO */
+            flex-grow: 1; /* Allow supplier name to take available space */
         }
         .po-number {
             background-color: #93c5fd; /* Lighter blue for PO number badge */
@@ -50,6 +60,7 @@
             padding: 0.3rem 0.6rem;
             border-radius: 6px;
             font-size: 0.875rem;
+            white-space: nowrap; /* Prevent PO number from breaking */
         }
         .form-group label {
             display: block;
@@ -86,6 +97,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            margin-top: auto; /* Pushes button to the bottom of the flex container */
         }
         .submit-button:hover {
             background-color: #1d4ed8; /* Darker blue on hover */
@@ -146,10 +158,12 @@
             Loading purchase orders...
         </div>
 
-        <div id="ordersContainer">
-            </div>
+        <!-- Orders container with responsive grid layout -->
+        <div id="ordersContainer" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6">
+            <!-- Order cards will be dynamically inserted here -->
+        </div>
 
-        <div id="noOrdersMessage" class="message-box bg-yellow-100 text-yellow-800 border border-yellow-200 hidden">
+        <div id="noOrdersMessage" class="message-box bg-yellow-100 text-yellow-800 border border-yellow-200 hidden mt-6">
             No pending orders found matching the criteria.
         </div>
     </div>
@@ -214,7 +228,7 @@
 
                     card.innerHTML = `
                         <div class="card-header">
-                            <span class="supplier-name text-lg">${order.supplierName}</span>
+                            <span class="supplier-name">${order.supplierName}</span>
                             <span class="po-number">PO: ${order.poNumber}</span>
                         </div>
                         <div class="form-group mb-4">
@@ -228,7 +242,8 @@
                         <button class="submit-button w-full" data-po-number="${order.poNumber}">
                             Submit Order
                         </button>
-                        <div class="submission-message"></div> `;
+                        <div class="submission-message"></div> <!-- Placeholder for submission messages -->
+                    `;
                     ordersContainer.appendChild(card);
                 });
 

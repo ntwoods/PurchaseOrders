@@ -580,6 +580,22 @@
                             </span>
                         </div>
                         <div class="detail-row">
+                            <span class="detail-label">📋 Additional Purchase:</span>
+                            <span class="detail-value">
+                                ${order.additionalPurchaseURL ? 
+                                    `<a href="${order.additionalPurchaseURL}" target="_blank" class="view-po-btn">📄 Additional Purchase</a>` : 
+                                    'No URL'}
+                            </span>
+                        </div>                        
+                        <div class="detail-row">
+                            <span class="detail-label">📋 CRM Request:</span>
+                            <span class="detail-value">
+                                ${order.crmRequestURL ? 
+                                    `<a href="${order.crmRequestURL}" target="_blank" class="view-po-btn">📄 CRM Request</a>` : 
+                                    'No URL'}
+                            </span>
+                        </div>                        
+                        <div class="detail-row">
                             <span class="detail-label">🎼 Order Sheet:</span>
                             <span class="detail-value">
                                 ${order.orderSheet ? 

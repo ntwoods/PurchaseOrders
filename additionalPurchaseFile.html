@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Additional Purchase Order File</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom styles for shades of blue and white theme */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f8ff; /* Lightest blue/off-white */
+        }
+        .container {
+            max-width: 960px;
+            margin: 2rem auto;
+            padding: 1.5rem;
+            background-color: #ffffff; /* White background for the main content area */
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        .header {
+            background-color: #1e3a8a; /* Dark blue */
+            color: #ffffff;
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+        .card {
+            background-color: #ffffff;
+            border: 1px solid #bfdbfe; /* Light blue border */
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            position: relative;
+        }
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            font-weight: bold;
+            color: #1e40af; /* Medium blue */
+        }
+        .po-number {
+            background-color: #93c5fd; /* Lighter blue for PO number badge */
+            color: #1e3a8a;
+            padding: 0.3rem 0.6rem;
+            border-radius: 6px;
+            font-size: 0.875rem;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: #3b82f6; /* Accent blue */
+        }
+        .form-group input[type="file"],
+        .form-group textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #bfdbfe;
+            border-radius: 6px;
+            background-color: #eff6ff; /* Very light blue for input fields */
+            color: #1e3a8a;
+            transition: border-color 0.2s;
+        }
+        .form-group input[type="file"]:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25);
+        }
+        .submit-button {
+            background-color: #2563eb; /* Blue for buttons */
+            color: #ffffff;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.2s ease-in-out, transform 0.1s ease-in-out;
+            border: none;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .submit-button:hover {
+            background-color: #1d4ed8; /* Darker blue on hover */
+            transform: translateY(-1px);
+        }
+        .submit-button:disabled {
+            background-color: #93c5fd; /* Lighter blue when disabled */
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+        .message-box {
+            padding: 1rem;
+            border-radius: 8px;
+            margin-top: 1rem;
+            text-align: center;
+            font-weight: 600;
+            opacity: 0; /* Initially hidden */
+            transition: opacity 0.3s ease-in-out;
+        }
+        .message-box.visible {
+            opacity: 1;
+        }
+        .message-box.success {
+            background-color: #d1fae5; /* Light green */
+            color: #065f46; /* Dark green */
+            border: 1px solid #a7f3d0;
+        }
+        .message-box.error {
+            background-color: #fee2e2; /* Light red */
+            color: #991b1b; /* Dark red */
+            border: 1px solid #fecaca;
+        }
+        .loading-spinner {
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-top: 4px solid #ffffff;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            vertical-align: middle;
+            margin-right: 8px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="p-4">
+    <div class="container">
+        <div class="header">
+            <h1 class="text-3xl font-bold">Add Additional Purchase Order File</h1>
+        </div>
+
+        <div id="loadingMessage" class="message-box visible bg-blue-100 text-blue-800 border border-blue-200 mb-4">
+            Loading purchase orders...
+        </div>
+
+        <div id="ordersContainer">
+            </div>
+
+        <div id="noOrdersMessage" class="message-box bg-yellow-100 text-yellow-800 border border-yellow-200 hidden">
+            No pending orders found matching the criteria.
+        </div>
+    </div>
+
+    <script>
+        // !! IMPORTANT: Replace this with your actual deployed Google Apps Script Web App URL !!
+        const APPS_SCRIPT_API_URL = 'https://script.google.com/macros/s/AKfycbwC5l-2t0iDHWA06kVFZMOGFkfGrjsgocCxSlTVFuzLUIvxkJnr6H6ydZj92GLNVrQDcQ/exec'; 
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const ordersContainer = document.getElementById('ordersContainer');
+            const loadingMessage = document.getElementById('loadingMessage');
+            const noOrdersMessage = document.getElementById('noOrdersMessage');
+
+            /**
+             * Displays a message in a dedicated message box.
+             * @param {string} message The message to display.
+             * @param {string} type The type of message ('success' or 'error').
+             * @param {HTMLElement} targetElement The element to append the message to.
+             */
+            function showMessage(message, type, targetElement) {
+                let messageBox = targetElement.querySelector('.message-box');
+                if (!messageBox) {
+                    messageBox = document.createElement('div');
+                    messageBox.classList.add('message-box', 'mt-4');
+                    targetElement.appendChild(messageBox);
+                }
+                messageBox.textContent = message;
+                messageBox.className = 'message-box mt-4 visible'; // Reset classes and make visible
+                messageBox.classList.add(type === 'success' ? 'success' : 'error');
+            }
+
+            /**
+             * Hides the message box.
+             * @param {HTMLElement} targetElement The element containing the message box.
+             */
+            function hideMessage(targetElement) {
+                const messageBox = targetElement.querySelector('.message-box');
+                if (messageBox) {
+                    messageBox.classList.remove('visible');
+                    setTimeout(() => messageBox.textContent = '', 300); // Clear content after transition
+                }
+            }
+
+            /**
+             * Handles the successful retrieval of orders from the backend.
+             * @param {Array<Object>} orders An array of order objects.
+             */
+            function displayOrders(orders) {
+                loadingMessage.classList.remove('visible'); // Hide loading message
+
+                if (!orders || orders.length === 0) {
+                    noOrdersMessage.classList.remove('hidden'); // Show no orders message
+                    return;
+                }
+
+                ordersContainer.innerHTML = ''; // Clear previous content
+
+                orders.forEach(order => {
+                    const card = document.createElement('div');
+                    card.classList.add('card');
+                    card.setAttribute('data-po-number', order.poNumber); // Store PO number on the card
+
+                    card.innerHTML = `
+                        <div class="card-header">
+                            <span class="supplier-name text-lg">${order.supplierName}</span>
+                            <span class="po-number">PO: ${order.poNumber}</span>
+                        </div>
+                        <div class="form-group mb-4">
+                            <label for="fileAttachment-${order.poNumber}">File Attachment:</label>
+                            <input type="file" id="fileAttachment-${order.poNumber}" class="file-input p-2">
+                        </div>
+                        <div class="form-group mb-6">
+                            <label for="remark-${order.poNumber}">Additional File Remark:</label>
+                            <textarea id="remark-${order.poNumber}" rows="3" class="remark-input"></textarea>
+                        </div>
+                        <button class="submit-button w-full" data-po-number="${order.poNumber}">
+                            Submit Order
+                        </button>
+                        <div class="submission-message"></div> `;
+                    ordersContainer.appendChild(card);
+                });
+
+                // Attach event listeners to all submit buttons
+                document.querySelectorAll('.submit-button').forEach(button => {
+                    button.addEventListener('click', handleSubmit);
+                });
+            }
+
+            /**
+             * Handles the submission of an order card.
+             * @param {Event} event The click event from the submit button.
+             */
+            async function handleSubmit(event) {
+                const button = event.target;
+                const poNumber = button.getAttribute('data-po-number');
+                const card = button.closest('.card'); // Get the parent card element
+
+                const fileInput = card.querySelector(`#fileAttachment-${poNumber}`);
+                const remarkInput = card.querySelector(`#remark-${poNumber}`);
+                const submissionMessageContainer = card.querySelector('.submission-message');
+
+                hideMessage(submissionMessageContainer); // Clear previous messages
+
+                const remark = remarkInput.value.trim();
+                const file = fileInput.files[0];
+
+                if (!file) {
+                    showMessage('Please select a file to attach.', 'error', submissionMessageContainer);
+                    return;
+                }
+
+                // Disable button and show loading
+                button.disabled = true;
+                button.innerHTML = '<span class="loading-spinner"></span> Submitting...';
+
+                try {
+                    const reader = new FileReader();
+                    reader.onloadend = async function() {
+                        const fileData = reader.result; // Base64 encoded string (e.g., "data:image/png;base64,iVBORw...")
+                        const fileName = file.name;
+                        const mimeType = file.type || 'application/octet-stream'; // Fallback MIME type
+
+                        const formData = new FormData();
+                        formData.append('poNumber', poNumber);
+                        formData.append('remark', remark);
+                        formData.append('fileData', fileData);
+                        formData.append('fileName', fileName);
+                        formData.append('mimeType', mimeType);
+
+                        const response = await fetch(APPS_SCRIPT_API_URL, {
+                            method: 'POST',
+                            body: formData // FormData will set the correct Content-Type for multipart/form-data
+                        });
+
+                        const data = await response.json(); // Parse the JSON response from Apps Script
+
+                        if (data.success) {
+                            showMessage(`Success! File uploaded.`, 'success', submissionMessageContainer);
+                            // Optionally clear fields after successful submission
+                            fileInput.value = '';
+                            remarkInput.value = '';
+                        } else {
+                            showMessage(`Error: ${data.message}`, 'error', submissionMessageContainer);
+                        }
+                    };
+                    reader.readAsDataURL(file); // Read file as Base64 data URL
+                } catch (error) {
+                    showMessage(`An error occurred: ${error.message}`, 'error', submissionMessageContainer);
+                    console.error('Submission error:', error);
+                } finally {
+                    button.disabled = false;
+                    button.innerHTML = 'Submit Order';
+                }
+            }
+
+            // Initial call to fetch orders when the page loads
+            async function fetchOrders() {
+                try {
+                    const response = await fetch(APPS_SCRIPT_API_URL);
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    const data = await response.json();
+                    if (data.success) {
+                        displayOrders(data.data);
+                    } else {
+                        loadingMessage.classList.remove('visible');
+                        showMessage(`Failed to load orders: ${data.message}`, 'error', document.body);
+                    }
+                } catch (error) {
+                    loadingMessage.classList.remove('visible');
+                    showMessage(`Failed to load orders: ${error.message}`, 'error', document.body);
+                    console.error('Error fetching orders:', error);
+                }
+            }
+
+            fetchOrders();
+        });
+    </script>
+</body>
+</html>

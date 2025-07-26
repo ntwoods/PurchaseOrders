@@ -799,9 +799,11 @@
                         ${deadlineHtml}
                     ` : ''}
                 </div>
+                <div> class="editable"
                 <button class="action-button" onclick="openModal('${request.id}')">
                     Mark Response
                 </button>
+                </div>
             `;
             
             // Start countdown only if poReceivedTimestamp is valid
@@ -1113,5 +1115,6 @@
             }, duration);
         }
     </script>
+    <script src="https://ntwoods.github.io/ordertodispatch/js/viewOnly.js"></script>
 </body>
 </html>

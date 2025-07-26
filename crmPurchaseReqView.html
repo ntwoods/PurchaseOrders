@@ -185,6 +185,27 @@
             transform: translateY(-1px);
         }
         
+        /* New Cancel Button Style */
+        .cancel-button {
+            width: 100%;
+            background: #e53935; /* Red color for cancel */
+            color: var(--color-white);
+            border: none;
+            padding: 0.6rem 1.25rem;
+            border-radius: var(--border-radius-small);
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin-top: 0.5rem; /* Space between action buttons */
+            flex-shrink: 0;
+        }
+
+        .cancel-button:hover {
+            background: #c62828; /* Darker red on hover */
+            transform: translateY(-1px);
+        }
+
         .view-file-button {
             display: block; /* Make it a block element to take full width */
             width: fit-content; /* Adjust width to content */
@@ -585,7 +606,7 @@
         const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycby7Iwfzy98sI8UFYs6lCZZF_ESoaTzFd3UWwZJWepffBD6rueQ9TdzgLq7oE98npIwpdQ/exec';
         // IMPORTANT: Replace this with your actual Google Sheet URL for PO numbers
         // Ensure this sheet is published to the web for the Google Visualization API to access it.
-        const GOOGLE_SHEET_PO_URL = 'https://docs.google.com/spreadsheets/d/1MPBE5EED1iN8np3oVqcn3VSAYl7M-OUXaLj9_YJogh0/gviz/tq?tqx=out:json&sheet=Requests&range=U:AL';
+        const GOOGLE_SHEET_PO_URL = 'https://docs.google.com/spreadsheets/d/1MPBE5ED1iN8np3oVqcn3VSAYl7M-OUXaLj9_YJogh0/gviz/tq?tqx=out:json&sheet=Requests&range=U:AL';
 
 
         // Initialize the application
@@ -728,6 +749,7 @@
 function createRequestCard(request) {
     const card = document.createElement('div');
     card.className = 'request-card';
+    
     // Highlight card if there's a responseRemark (already marked)
     if (request.responseRemark && request.responseRemark.trim() !== '') {
         card.classList.add('highlighted');
@@ -798,8 +820,12 @@ function createRequestCard(request) {
         }
     }
 
-    // Watermark HTML, conditionally added
+    // Watermark HTML, conditionally added based on crmStatus
     const watermarkHtml = request.crmStatus === 'Cancel' ? '<div class="watermark">Cancelled</div>' : '';
+
+    // Determine button text based on whether a response remark exists
+    const buttonText = (request.responseRemark && request.responseRemark.trim() !== '') ? 'Modify Response' : 'Mark Response';
+
 
     card.innerHTML = `
         ${watermarkHtml} <div class="card-content">
@@ -833,9 +859,12 @@ function createRequestCard(request) {
             ` : ''}
         </div>
         <div class="editable">
-        <button class="action-button" onclick="openModal('${request.id}')">
-            Mark Response
-        </button>
+            <button class="action-button" onclick="openModal('${request.id}')">
+                ${buttonText}
+            </button>
+            <button class="cancel-button" onclick="cancelRequest('${request.id}')">
+                Cancel Request
+            </button>
         </div>
     `;
 
@@ -912,11 +941,12 @@ function createRequestCard(request) {
             document.getElementById('modal-overlay').style.display = 'block';
             document.body.style.overflow = 'hidden';
             
-            // Reset form
-            document.getElementById('poSearchInput').value = '';
-            selectedPoNo = ''; // Reset selected PO
-            document.getElementById('remark').value = '';
-            document.getElementById('expectedBy').value = '';
+            // Populate form fields if a response already exists
+            document.getElementById('poSearchInput').value = selectedRequest.expectedPoNo || '';
+            selectedPoNo = selectedRequest.expectedPoNo || '';
+            document.getElementById('remark').value = selectedRequest.responseRemark || '';
+            document.getElementById('expectedBy').value = selectedRequest.expectedBy || ''; // Assuming expectedBy is stored as 'YYYY-MM-DD'
+
             populateSearchResults(); // Repopulate and hide dropdown
             validateForm();
         }
@@ -1066,18 +1096,14 @@ function createRequestCard(request) {
         async function submitResponse() {
             const formData = {
                 expectedPoNo: selectedPoNo, // Use the selected PO number
-                remark: document.getElementById('remark').value.trim(),
+                responseRemark: document.getElementById('remark').value.trim(), // Changed to responseRemark
                 expectedBy: document.getElementById('expectedBy').value
             };
 
             const submissionData = {
                 action: 'submitResponse',
                 id: selectedRequest.id, // Use the actual ID from the selected request
-                dealer: selectedRequest.dealer, 
-                product: selectedRequest.product,
-                qty: selectedRequest.qty,
-                crm: selectedRequest.crm,
-                crmRemark: selectedRequest.remark,                
+                // Only send the form data, other fields are not needed for update action
                 ...formData
             };
 
@@ -1112,6 +1138,60 @@ function createRequestCard(request) {
                 submitBtn.textContent = originalBtnText;
             }
         }
+
+        // New function to handle cancelling a request
+        async function cancelRequest(requestId) {
+            const requestToCancel = requests.find(req => req.id === requestId);
+            if (!requestToCancel) {
+                console.error("Could not find request with ID for cancellation:", requestId);
+                showToast("Error cancelling request. Request not found.", "error");
+                return;
+            }
+
+            if (!confirm(`Are you sure you want to cancel the request for "${requestToCancel.product}"?`)) {
+                return; // User cancelled the confirmation
+            }
+
+            const submissionData = {
+                action: 'cancelRequest', // New action for backend
+                id: requestId
+            };
+
+            // Disable the specific buttons on the card during submission
+            const cardElement = document.querySelector(`.request-card .action-button[onclick*="${requestId}"]`).closest('.request-card');
+            const actionButton = cardElement.querySelector('.action-button');
+            const cancelButton = cardElement.querySelector('.cancel-button');
+            const originalActionButtonText = actionButton.textContent;
+            const originalCancelButtonText = cancelButton.textContent;
+
+            actionButton.disabled = true;
+            cancelButton.disabled = true;
+            cancelButton.textContent = 'Cancelling...';
+
+            try {
+                console.log('Cancelling request:', submissionData);
+                const response = await fetch(GAS_WEB_APP_URL, {
+                    method: 'POST',
+                    mode: 'no-cors', 
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(submissionData)
+                });
+                
+                showToast('Request cancelled successfully!', 'success');
+                fetchRequests(); // Re-fetch requests to update the dashboard
+            } catch (error) {
+                console.error('Error cancelling request:', error);
+                showToast('Error cancelling request. Please try again.', 'error');
+            } finally {
+                actionButton.disabled = false;
+                cancelButton.disabled = false;
+                actionButton.textContent = originalActionButtonText;
+                cancelButton.textContent = originalCancelButtonText;
+            }
+        }
+
 
         // Close modal when clicking outside
         document.getElementById('modal-overlay').addEventListener('click', function(e) {

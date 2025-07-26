@@ -579,6 +579,9 @@
             fetchPoNumbers();
             setupFormValidation();
             setupSearchableDropdown();
+            if (typeof setReadOnlyMode === "function") {
+          setReadOnlyMode();
+        } 
         });
 
         // Function to fetch data from your Google Apps Script

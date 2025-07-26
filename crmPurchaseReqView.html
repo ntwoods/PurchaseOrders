@@ -43,8 +43,8 @@
             background: var(--color-white);
             box-shadow: var(--shadow-light);
             border-bottom: 3px solid var(--color-accent);
-            padding: 1.5rem 0; /* Reduced padding */
-            margin-bottom: 1.5rem; /* Reduced margin */
+            padding: 1.5rem 0;
+            margin-bottom: 1.5rem;
         }
 
         .header-content {
@@ -55,14 +55,14 @@
 
         .header h1 {
             color: var(--color-primary);
-            font-size: 2rem; /* Smaller title */
+            font-size: 2rem;
             font-weight: 700;
-            margin-bottom: 0.25rem; /* Reduced margin */
+            margin-bottom: 0.25rem;
         }
 
         .header p {
             color: var(--color-secondary);
-            font-size: 0.95rem; /* Smaller tagline */
+            font-size: 0.95rem;
         }
 
         /* Container & Loading */
@@ -78,8 +78,8 @@
         }
 
         .loading-spinner {
-            width: 40px; /* Smaller spinner */
-            height: 40px; /* Smaller spinner */
+            width: 40px;
+            height: 40px;
             border: 3px solid var(--color-accent);
             border-top: 3px solid var(--color-primary);
             border-radius: 50%;
@@ -95,8 +95,8 @@
         /* Request Grid & Card */
         .requests-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); /* More compact grid */
-            gap: 1rem; /* Reduced gap */
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 1rem;
             margin-bottom: 1.5rem;
         }
 
@@ -105,48 +105,66 @@
             border-radius: var(--border-radius-medium);
             box-shadow: var(--shadow-medium);
             border: 1px solid var(--color-accent);
-            padding: 1.25rem; /* Reduced padding */
+            padding: 1.25rem;
             transition: transform 0.2s ease, box-shadow 0.2s ease;
             display: flex;
             flex-direction: column;
-            justify-content: space-between; /* Ensures button is at bottom */
-            height: 100%; /* Important for consistent card height */
+            justify-content: space-between;
+            height: 100%;
+            position: relative; /* Added for watermark positioning */
+            overflow: hidden; /* Added to ensure watermark doesn't spill out */
         }
         .request-card.highlighted {
-            background-color: #b5f5d2; /* Light green for general highlight */
-            border-color: #14914d; /* Slightly darker green border */
+            background-color: #b5f5d2;
+            border-color: #14914d;
         }
-        .request-card.overdue-card-highlight { /* Specific highlight for overdue */
-            background-color: #ffebee; /* Very light red */
-            border-color: #ef5350; /* Red border */
-            box-shadow: 0 4px 15px rgba(239, 83, 80, 0.2); /* Reddish shadow */
-        }       
+        .request-card.overdue-card-highlight {
+            background-color: #ffebee;
+            border-color: #ef5350;
+            box-shadow: 0 4px 15px rgba(239, 83, 80, 0.2);
+        }
+
+        /* NEW: Watermark for cancelled requests */
+        .request-card.cancelled::before {
+            content: "Cancelled";
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(-45deg); /* Center and rotate */
+            font-size: 3em; /* Large font size */
+            font-weight: 900;
+            color: rgba(255, 0, 0, 0.1); /* Light red with high transparency */
+            pointer-events: none; /* Allow clicks on elements beneath */
+            z-index: 10; /* Ensure it's above card content but below modal */
+            white-space: nowrap; /* Prevent text wrapping */
+            text-transform: uppercase;
+        }
 
         .request-card:hover {
-            transform: translateY(-3px); /* Slightly less transform */
+            transform: translateY(-3px);
             box-shadow: var(--shadow-hover);
         }
 
         /* Field Group - compact */
         .field-group {
-            margin-bottom: 0.6rem; /* Reduced margin */
+            margin-bottom: 0.6rem;
             display: flex;
-            align-items: baseline; /* Align label and value nicely */
+            align-items: baseline;
         }
 
         .field-label {
             font-weight: 600;
             color: var(--color-primary);
-            font-size: 0.85rem; /* Smaller font */
+            font-size: 0.85rem;
             margin-right: 0.5rem;
-            flex-shrink: 0; /* Prevent label from shrinking */
+            flex-shrink: 0;
         }
 
         .field-value {
             color: var(--color-text-medium);
-            font-size: 0.9rem; /* Smaller font */
+            font-size: 0.9rem;
             line-height: 1.3;
-            word-break: break-word; /* Ensure long text breaks */
+            word-break: break-word;
         }
 
         /* Action Button */
@@ -155,40 +173,40 @@
             background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-secondary) 100%);
             color: var(--color-white);
             border: none;
-            padding: 0.6rem 1.25rem; /* More compact padding */
+            padding: 0.6rem 1.25rem;
             border-radius: var(--border-radius-small);
-            font-size: 0.95rem; /* Slightly smaller font */
+            font-size: 0.95rem;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.2s ease;
             margin-top: 1rem;
-            flex-shrink: 0; /* Ensures button doesn't shrink */
+            flex-shrink: 0;
         }
 
         .action-button:hover {
             background: linear-gradient(135deg, #1565c0 0%, var(--color-primary) 100%);
             transform: translateY(-1px);
         }
-        
+
         .view-file-button {
-            display: block; /* Make it a block element to take full width */
-            width: fit-content; /* Adjust width to content */
-            background: var(--color-secondary); /* A slightly different blue */
+            display: block;
+            width: fit-content;
+            background: var(--color-secondary);
             color: var(--color-white);
             border: none;
-            padding: 0.4rem 0.8rem; /* Smaller padding for inline button */
+            padding: 0.4rem 0.8rem;
             border-radius: var(--border-radius-small);
-            font-size: 0.85rem; /* Smaller font size */
+            font-size: 0.85rem;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.2s ease;
-            text-decoration: none; /* Remove underline for links */
+            text-decoration: none;
             text-align: center;
-            margin-top: 0.5rem; /* Space below label */
+            margin-top: 0.5rem;
         }
 
         .view-file-button:hover {
-            background: #399ae1; /* Darker shade on hover */
+            background: #399ae1;
             transform: translateY(-1px);
         }
 
@@ -200,43 +218,43 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.4); /* Slightly lighter overlay */
+            background: rgba(0, 0, 0, 0.4);
             z-index: 1000;
-            backdrop-filter: blur(3px); /* Slightly less blur */
-            overflow-y: auto; /* Allow scrolling if modal content is tall */
+            backdrop-filter: blur(3px);
+            overflow-y: auto;
             padding: 1rem;
         }
 
         .modal {
             background: var(--color-white);
             border-radius: var(--border-radius-large);
-            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.25); /* Adjusted shadow */
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.25);
             width: 95%;
-            max-width: 450px; /* Slightly narrower modal */
-            padding: 1.75rem; /* Reduced padding */
-            position: relative; /* For proper centering */
-            margin: 50px auto; /* Centering for overflow-y:auto */
+            max-width: 450px;
+            padding: 1.75rem;
+            position: relative;
+            margin: 50px auto;
         }
 
         .modal-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 1.25rem; /* Reduced margin */
-            padding-bottom: 0.75rem; /* Reduced padding */
-            border-bottom: 1px solid var(--color-accent); /* Thinner border */
+            margin-bottom: 1.25rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid var(--color-accent);
         }
 
         .modal-title {
             color: var(--color-primary);
-            font-size: 1.35rem; /* Smaller title */
+            font-size: 1.35rem;
             font-weight: 700;
         }
 
         .close-button {
             background: none;
             border: none;
-            font-size: 1.35rem; /* Smaller close button */
+            font-size: 1.35rem;
             cursor: pointer;
             color: var(--color-text-light);
             padding: 0.2rem;
@@ -251,12 +269,12 @@
 
         /* Form Elements */
         .form-group {
-            margin-bottom: 1.25rem; /* Reduced margin */
+            margin-bottom: 1.25rem;
         }
 
         .form-label {
             display: block;
-            margin-bottom: 0.4rem; /* Reduced margin */
+            margin-bottom: 0.4rem;
             font-weight: 600;
             color: var(--color-primary);
             font-size: 0.9rem;
@@ -264,8 +282,8 @@
 
         .form-input, .form-select, .form-textarea, .searchable-dropdown-input {
             width: 100%;
-            padding: 0.65rem; /* More compact padding */
-            border: 1px solid var(--color-accent); /* Thinner border */
+            padding: 0.65rem;
+            border: 1px solid var(--color-accent);
             border-radius: var(--border-radius-small);
             font-size: 0.95rem;
             transition: border-color 0.2s ease, box-shadow 0.2s ease;
@@ -274,12 +292,12 @@
         .form-input:focus, .form-select:focus, .form-textarea:focus, .searchable-dropdown-input:focus {
             outline: none;
             border-color: var(--color-secondary);
-            box-shadow: 0 0 0 2px rgba(66, 165, 245, 0.15); /* Slightly lighter shadow */
+            box-shadow: 0 0 0 2px rgba(66, 165, 245, 0.15);
         }
 
         .form-textarea {
             resize: vertical;
-            min-height: 70px; /* Slightly smaller textarea */
+            min-height: 70px;
         }
 
         /* Searchable Dropdown Specific Styles */
@@ -289,13 +307,13 @@
         }
 
         .searchable-dropdown-input {
-            padding-right: 2.5rem; /* Space for clear button */
+            padding-right: 2.5rem;
         }
 
         .searchable-dropdown-results {
             position: absolute;
             width: 100%;
-            max-height: 180px; /* Limit height */
+            max-height: 180px;
             overflow-y: auto;
             background: var(--color-white);
             border: 1px solid var(--color-accent);
@@ -303,7 +321,7 @@
             box-shadow: var(--shadow-light);
             z-index: 1002;
             margin-top: 4px;
-            list-style: none; /* Remove default list styling */
+            list-style: none;
             padding: 0.25rem 0;
         }
 
@@ -323,7 +341,7 @@
             background-color: var(--color-secondary);
             color: var(--color-white);
         }
-        
+
         .search-clear-button {
             position: absolute;
             right: 0.75rem;
@@ -336,19 +354,19 @@
             cursor: pointer;
             padding: 0.2rem;
             line-height: 1;
-            display: none; /* Hidden by default */
+            display: none;
         }
         .searchable-dropdown-input:not(:placeholder-shown) + .search-clear-button {
-            display: block; /* Show clear button when input has value */
+            display: block;
         }
 
 
         .modal-actions {
             display: flex;
-            gap: 0.75rem; /* Reduced gap */
+            gap: 0.75rem;
             justify-content: flex-end;
-            margin-top: 1.5rem; /* Reduced margin */
-            padding-top: 0.75rem; /* Reduced padding */
+            margin-top: 1.5rem;
+            padding-top: 0.75rem;
             border-top: 1px solid var(--color-accent);
         }
 
@@ -356,7 +374,7 @@
             background: var(--color-gray-light);
             color: var(--color-text-light);
             border: 1px solid var(--color-gray-medium);
-            padding: 0.65rem 1.25rem; /* More compact padding */
+            padding: 0.65rem 1.25rem;
             border-radius: var(--border-radius-small);
             cursor: pointer;
             font-size: 0.95rem;
@@ -372,7 +390,7 @@
             background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-secondary) 100%);
             color: var(--color-white);
             border: none;
-            padding: 0.65rem 1.25rem; /* More compact padding */
+            padding: 0.65rem 1.25rem;
             border-radius: var(--border-radius-small);
             font-size: 0.95rem;
             font-weight: 600;
@@ -387,7 +405,7 @@
         .btn-submit:disabled {
             opacity: 0.6;
             cursor: not-allowed;
-            background: var(--color-gray-medium); /* Disabled button color */
+            background: var(--color-gray-medium);
             color: var(--color-text-light);
         }
 
@@ -399,7 +417,7 @@
         }
 
         .empty-state-icon {
-            font-size: 3.5rem; /* Smaller icon */
+            font-size: 3.5rem;
             margin-bottom: 0.8rem;
             opacity: 0.4;
         }
@@ -426,7 +444,7 @@
         }
 
         .toast {
-            background-color: rgba(25, 118, 210, 0.9); /* Primary blue with transparency */
+            background-color: rgba(25, 118, 210, 0.9);
             color: var(--color-white);
             padding: 12px 20px;
             border-radius: var(--border-radius-small);
@@ -444,26 +462,26 @@
         }
 
         .toast.error {
-            background-color: rgba(229, 57, 53, 0.9); /* Red for errors */
+            background-color: rgba(229, 57, 53, 0.9);
         }
-        
-        /* New: Overdue text style */
+
+        /* Overdue text style */
         .overdue-text {
-            color: #e53935; /* Red color */
+            color: #e53935;
             font-weight: 600;
         }
 
         /* Countdown text colors */
         .countdown-red {
-            color: #ef5350; /* Light red */
+            color: #ef5350;
             font-weight: 600;
         }
         .countdown-yellow {
-            color: #ffee58; /* Light yellow */
+            color: #ffee58;
             font-weight: 600;
         }
         .countdown-green {
-            color: #66bb6a; /* Light green */
+            color: #66bb6a;
             font-weight: 600;
         }
 
@@ -473,16 +491,16 @@
             .header h1 {
                 font-size: 1.75rem;
             }
-            
+
             .requests-grid {
                 grid-template-columns: 1fr;
             }
-            
+
             .modal {
                 width: 98%;
                 padding: 1.25rem;
             }
-            
+
             .modal-actions {
                 flex-direction: column;
             }
@@ -494,6 +512,10 @@
                 right: 10px;
                 left: 10px;
                 top: 10px;
+            }
+            /* NEW: Smaller font size for watermark on mobile */
+            .request-card.cancelled::before {
+                font-size: 2em;
             }
         }
     </style>
@@ -527,7 +549,7 @@
                 <h3 class="modal-title">Mark Response</h3>
                 <button class="close-button" onclick="closeModal()">&times;</button>
             </div>
-            
+
             <div class="form-group">
                 <label class="form-label" for="poSearchInput">Expected with PO No.</label>
                 <div class="searchable-dropdown-container">
@@ -536,17 +558,17 @@
                     <div id="poSearchResults" class="searchable-dropdown-results" style="display: none;"></div>
                 </div>
             </div>
-            
+
             <div class="form-group">
                 <label class="form-label" for="remark">Remark</label>
                 <textarea id="remark" class="form-textarea" placeholder="Enter your remark..."></textarea>
             </div>
-            
+
             <div class="form-group">
                 <label class="form-label" for="expectedBy">Expected by</label>
                 <input type="date" id="expectedBy" class="form-input">
             </div>
-            
+
             <div class="modal-actions">
                 <button class="btn-cancel" onclick="closeModal()">Cancel</button>
                 <button id="submit-btn" class="btn-submit" onclick="submitResponse()" disabled>Submit</button>
@@ -572,7 +594,6 @@
         // Ensure this sheet is published to the web for the Google Visualization API to access it.
         const GOOGLE_SHEET_PO_URL = 'https://docs.google.com/spreadsheets/d/1MPBE5EED1iN8np3oVqcn3VSAYl7M-OUXaLj9_YJogh0/gviz/tq?tqx=out:json&sheet=Requests&range=U:AL';
 
-
         // Initialize the application
         document.addEventListener('DOMContentLoaded', function() {
             fetchRequests();
@@ -580,8 +601,8 @@
             setupFormValidation();
             setupSearchableDropdown();
             if (typeof setReadOnlyMode === "function") {
-          setReadOnlyMode();
-        } 
+                setReadOnlyMode();
+            }
         });
 
         // Function to fetch data from your Google Apps Script
@@ -603,14 +624,13 @@
             try {
                 const response = await fetch(`${GAS_WEB_APP_URL}?action=getRequests`);
                 if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-
                 const result = await response.json();
                 console.log('Fetched requests response:', result);
-                
+
                 if (!Array.isArray(result.data)) {
                     throw new Error("Expected 'data' to be an array");
                 }
-                requests = result.data; 
+                requests = result.data;
                 renderRequests();
             } catch (error) {
                 console.error('Error fetching requests:', error);
@@ -632,7 +652,7 @@
                 // Google Visualization API response is not pure JSON, it's wrapped
                 const jsonText = text.substring(text.indexOf('{'), text.lastIndexOf('}') + 1);
                 const data = JSON.parse(jsonText);
-        
+
                 // Extract PO numbers only when column U (index 0) is blank/null
                 // and then get value from AL column (index 17)
                 poNumbers = data.table.rows
@@ -640,28 +660,21 @@
                     .map(row => row.c[17]?.v) // Get value from AL
                     .filter(value => value !== undefined && value !== null && value !== '') // Remove undefined/null/empty
                     .map(String); // Ensure values are strings for consistency
-        
+
                 poNumbers = [...new Set(poNumbers)].sort(); // Remove duplicates and sort
                 filteredPoNumbers = [...poNumbers];
                 populateSearchResults();
             } catch (error) {
                 console.error('Error fetching PO numbers:', error);
-                showToast('Error loading PO numbers. Fallback used.', 'error');
-                // Fallback PO numbers in case of API issues
-                poNumbers = ['PO-2024-001-Fallback', 'PO-2024-002-Fallback', 'PO-2024-003-Fallback', 'PO-2024-004-Fallback'];
-                poNumbers = [...new Set(poNumbers)].sort();
-                filteredPoNumbers = [...poNumbers];
-                populateSearchResults();
+                // Optionally show a toast for PO number fetch error
             }
         }
 
-        // Render requests
+        // Function to render requests
         function renderRequests() {
-            const loading = document.getElementById('loading');
             const container = document.getElementById('requests-container');
             const emptyState = document.getElementById('empty-state');
-
-            loading.style.display = 'none';
+            container.innerHTML = ''; // Clear previous requests
 
             if (requests.length === 0) {
                 emptyState.style.display = 'block';
@@ -669,317 +682,235 @@
                 return;
             }
 
+            emptyState.style.display = 'none';
             container.style.display = 'grid';
-            container.innerHTML = '';
 
-            requests.forEach((request) => { // Removed index as it's not used for ID now
-                const card = createRequestCard(request);
+            requests.forEach(request => {
+                const card = document.createElement('div');
+                card.className = 'request-card';
+
+                // NEW: Add 'cancelled' class if crmStatus is "Cancel"
+                if (request.crmStatus === 'Cancel') {
+                    card.classList.add('cancelled');
+                }
+
+                // Check for overdue status and apply highlight
+                const dueDate = new Date(request.dueDate);
+                const today = new Date();
+                today.setHours(0, 0, 0, 0); // Normalize today's date to compare only date part
+
+                if (dueDate < today && request.crmStatus !== 'Completed' && request.crmStatus !== 'Cancel') {
+                    card.classList.add('overdue-card-highlight');
+                }
+
+                card.innerHTML = `
+                    <div class="card-content">
+                        <div class="field-group">
+                            <span class="field-label">Request ID:</span>
+                            <span class="field-value">${request.requestID || 'N/A'}</span>
+                        </div>
+                        <div class="field-group">
+                            <span class="field-label">Customer Name:</span>
+                            <span class="field-value">${request.customerName || 'N/A'}</span>
+                        </div>
+                        <div class="field-group">
+                            <span class="field-label">Product Name:</span>
+                            <span class="field-value">${request.productName || 'N/A'}</span>
+                        </div>
+                        <div class="field-group">
+                            <span class="field-label">Quantity:</span>
+                            <span class="field-value">${request.quantity || 'N/A'}</span>
+                        </div>
+                        <div class="field-group">
+                            <span class="field-label">Remark:</span>
+                            <span class="field-value">${request.remark || 'N/A'}</span>
+                        </div>
+                        <div class="field-group">
+                            <span class="field-label">CRM Status:</span>
+                            <span class="field-value">${request.crmStatus || 'N/A'}</span>
+                        </div>
+                        <div class="field-group">
+                            <span class="field-label">Due Date:</span>
+                            <span class="field-value">${request.dueDate || 'N/A'}</span>
+                        </div>
+                        <div class="field-group">
+                            <span class="field-label">Expected with PO No.:</span>
+                            <span class="field-value">${request.expectedWithPONo || 'N/A'}</span>
+                        </div>
+                        <div class="field-group">
+                            <span class="field-label">Expected By:</span>
+                            <span class="field-value">${request.expectedBy || 'N/A'}</span>
+                        </div>
+                        <div class="field-group">
+                            <span class="field-label">File Link:</span>
+                            <span class="field-value">
+                                ${request.fileLink ? `<a href="${request.fileLink}" target="_blank" class="view-file-button">View File</a>` : 'N/A'}
+                            </span>
+                        </div>
+                        <div class="field-group">
+                            <span class="field-label">Countdown:</span>
+                            <span class="field-value" id="countdown-${request.requestID}">Calculating...</span>
+                        </div>
+                    </div>
+                    <button class="action-button" data-request-id="${request.requestID}" ${request.crmStatus === 'Completed' || request.crmStatus === 'Cancel' ? 'disabled' : ''}>
+                        ${request.crmStatus === 'Completed' ? 'Completed' : (request.crmStatus === 'Cancel' ? 'Cancelled' : 'Mark Response')}
+                    </button>
+                `;
                 container.appendChild(card);
+
+                const actionButton = card.querySelector('.action-button');
+                if (actionButton) {
+                    actionButton.addEventListener('click', () => openModal(request.requestID));
+                }
+
+                // Start countdown for each request
+                if (request.dueDate && request.crmStatus !== 'Completed' && request.crmStatus !== 'Cancel') {
+                    startCountdown(request.requestID, request.dueDate);
+                } else {
+                    const countdownElement = document.getElementById(`countdown-${request.requestID}`);
+                    if (countdownElement) {
+                        countdownElement.textContent = 'N/A';
+                        // NEW: Update countdown text for cancelled requests
+                        if (request.crmStatus === 'Cancel') {
+                            countdownElement.textContent = 'Request Cancelled';
+                            countdownElement.classList.add('countdown-red');
+                        } else if (request.crmStatus === 'Completed') {
+                            countdownElement.textContent = 'Request Completed';
+                            countdownElement.classList.add('countdown-green');
+                        }
+                    }
+                }
             });
         }
 
-        // Helper function to parse ISO 8601 string explicitly
-        function parseIsoDateTime(isoString) {
-            if (!isoString || typeof isoString !== 'string') return null;
-            // Example: 2025-07-14T08:37:24.000Z or 2025-07-14T08:37:24Z
-            const parts = isoString.match(/(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.(\d{3}))?Z/);
-            if (!parts) {
-                // If direct regex fails, try native Date constructor as a last resort,
-                // it might handle some variations or invalid parts gracefully
-                const nativeDate = new Date(isoString);
-                if (!isNaN(nativeDate.getTime())) {
-                    return nativeDate;
-                }
-                return null; // Still couldn't parse
-            }
+        // Countdown logic
+        function startCountdown(requestID, dueDateString) {
+            const countdownElement = document.getElementById(`countdown-${requestID}`);
+            if (!countdownElement) return;
 
-            const [, year, month, day, hours, minutes, seconds, milliseconds] = parts;
-            
-            // Create a Date object in UTC
-            const date = new Date(Date.UTC(
-                parseInt(year),
-                parseInt(month) - 1, // Month is 0-indexed
-                parseInt(day),
-                parseInt(hours),
-                parseInt(minutes),
-                parseInt(seconds),
-                parseInt(milliseconds || '0') // Handle missing milliseconds part
-            ));
+            const dueDate = new Date(dueDateString);
+            dueDate.setHours(0, 0, 0, 0); // Normalize due date to compare only date part
 
-            return date;
-        }
+            const updateCountdown = () => {
+                const now = new Date();
+                now.setHours(0, 0, 0, 0); // Normalize current date
 
-        // Create request card
-        function createRequestCard(request) { // Removed index parameter
-            const card = document.createElement('div');
-            card.className = 'request-card';
-            // Highlight card if there's a responseRemark (already marked)
-            if (request.responseRemark && request.responseRemark.trim() !== '') {
-                card.classList.add('highlighted');
-            }
-            
-            let crmValue = request.crm || 'N/A';
-            if (crmValue !== 'N/A' && (crmValue.startsWith('http://') || crmValue.startsWith('https://'))) {
-                crmValue = `<a href="${crmValue}" target="_blank" style="color: var(--color-primary); text-decoration: none;">View CRM</a>`;
-            }
+                const diffTime = dueDate.getTime() - now.getTime();
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-            let productHtml = '';
-            if (request.product && (request.product.startsWith('http://') || request.product.startsWith('https://'))) {
-                productHtml = `
-                    <div class="field-group">
-                        <span class="field-label">File:</span>
-                        <a href="${request.product}" target="_blank" class="view-file-button">View File</a>
-                    </div>
-                `;
-            } else {
-                productHtml = `
-                    <div class="field-group">
-                        <span class="field-label">Product:</span>
-                        <div class="field-value">${request.product || 'N/A'}</div>
-                    </div>
-                `;
-            }
+                countdownElement.classList.remove('countdown-red', 'countdown-yellow', 'countdown-green');
 
-            let poReceivedDisplay = 'N/A';
-            let poReceivedTimestamp = null;
-            let deadlineHtml = ''; // Initialize deadline HTML as empty
-
-            if (request.poReceived) {
-                const parsedDate = parseIsoDateTime(request.poReceived); 
-                if (parsedDate && !isNaN(parsedDate.getTime())) {
-                    poReceivedTimestamp = parsedDate.getTime();
-                    // Display in Indian Standard Time (IST)
-                    poReceivedDisplay = parsedDate.toLocaleString('en-IN', { 
-                        timeZone: 'Asia/Kolkata',
-                        year: 'numeric',
-                        month: '2-digit',
-                        day: '2-digit',
-                        hour: '2-digit',
-                        minute: '2-digit',
-                        second: '2-digit',
-                        hour12: true // For AM/PM
-                    });
-                    // CORRECTED: Use request.id for the countdown element's ID
-                    deadlineHtml = `
-                        <div class="field-group">
-                            <span class="field-label">Deadline:</span>
-                            <div class="field-value" id="countdown-${request.id}"></div> 
-                        </div>
-                    `;
+                if (diffDays < 0) {
+                    countdownElement.textContent = 'Overdue';
+                    countdownElement.classList.add('countdown-red');
+                    clearInterval(countdownIntervals[requestID]);
+                } else if (diffDays === 0) {
+                    countdownElement.textContent = 'Due Today';
+                    countdownElement.classList.add('countdown-yellow');
+                } else if (diffDays <= 3) {
+                    countdownElement.textContent = `${diffDays} day${diffDays === 1 ? '' : 's'} left`;
+                    countdownElement.classList.add('countdown-yellow');
                 } else {
-                    console.warn('Could not parse poReceived:', request.poReceived, 'Falling back to N/A.');
+                    countdownElement.textContent = `${diffDays} days left`;
+                    countdownElement.classList.add('countdown-green');
                 }
-            }
+            };
 
-            card.innerHTML = `
-                <div class="card-content">
-                    <div class="field-group">
-                        <span class="field-label">Dealer Name:</span>
-                        <div class="field-value">${request.dealer || 'N/A'}</div>
-                    </div>
-                    
-                    ${productHtml}
-                    
-                    <div class="field-group">
-                        <span class="field-label">Priority:</span>
-                        <div class="field-value">${request.priority || 'N/A'}</div>
-                    </div>
-                    
-                    <div class="field-group">
-                        <span class="field-label">Remark:</span>
-                        <div class="field-value">${request.remark || 'N/A'}</div>
-                    </div>
-                    
-                    <div class="field-group">
-                        <span class="field-label">CRM:</span>
-                        <div class="field-value">${crmValue}</div>
-                    </div>
-                    ${poReceivedTimestamp ? `
-                        <div class="field-group">
-                            <span class="field-label">PO Received:</span>
-                            <div class="field-value">${poReceivedDisplay}</div>
-                        </div>
-                        ${deadlineHtml}
-                    ` : ''}
-                </div>
-                <div class="editable">
-                <button class="action-button" onclick="openModal('${request.id}')">
-                    Mark Response
-                </button>
-                </div>
-            `;
-            
-            // Start countdown only if poReceivedTimestamp is valid
-            if (poReceivedTimestamp) {
-                // Pass request.id for unique element ID for countdown
-                startCountdown(poReceivedTimestamp, `countdown-${request.id}`, card);
-            }
-
-            return card;
+            // Initial call
+            updateCountdown();
+            // Update every day (or more frequently for testing)
+            countdownIntervals[requestID] = setInterval(updateCountdown, 1000 * 60 * 60 * 24); // Update once every 24 hours
         }
 
-        // Function to start the countdown timer
-        function startCountdown(poReceivedTimestamp, elementId, cardElement) {
-            const deadline = poReceivedTimestamp + (24 * 60 * 60 * 1000); // 24 hours in milliseconds
-            const countdownElement = document.getElementById(elementId);
 
-            if (!countdownElement) {
-                console.warn(`Countdown element with ID ${elementId} not found.`);
-                return; // Exit if element not found
-            }
-
-            // Clear any existing interval for this element to prevent multiple timers
-            if (countdownIntervals[elementId]) {
-                clearInterval(countdownIntervals[elementId]);
-            }
-
-            const interval = setInterval(() => {
-                const now = new Date().getTime();
-                const timeRemaining = deadline - now;
-
-                if (timeRemaining <= 0) {
-                    clearInterval(interval);
-                    countdownElement.innerHTML = '<span class="overdue-text">Overdue</span>';
-                    // Add highlight to the card if overdue
-                    if (cardElement) {
-                        cardElement.classList.add('overdue-card-highlight'); // Use a distinct class for overdue highlight
-                    }
-                } else {
-                    const days = Math.floor(timeRemaining / (1000 * 60 * 60 * 24));
-                    const hours = Math.floor((timeRemaining % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-                    const minutes = Math.floor((timeRemaining % (1000 * 60)) / (1000 * 60));
-                    const seconds = Math.floor((timeRemaining % (1000 * 60)) / 1000);
-
-                    // Apply color based on time remaining for better visual cues
-                    let countdownClass = 'countdown-green'; // Default green
-                    if (timeRemaining < 1 * 60 * 60 * 1000) { // Less than 1 hour
-                        countdownClass = 'countdown-red'; 
-                    } else if (timeRemaining < 4 * 60 * 60 * 1000) { // Less than 4 hours
-                        countdownClass = 'countdown-yellow'; 
-                    }
-
-                    countdownElement.innerHTML = `<span class="${countdownClass}">` +
-                        `${days > 0 ? days + 'd ' : ''}` + 
-                        `${hours.toString().padStart(2, '0')}h ` + 
-                        `${minutes.toString().padStart(2, '0')}m ` + 
-                        `${seconds.toString().padStart(2, '0')}s` +
-                        `</span>`;
-                }
-            }, 1000); // Update every second
-
-            countdownIntervals[elementId] = interval; // Store the interval ID
-        }
-
-        // Open modal
-        function openModal(requestId) {
-            // Find the request object by id
-            selectedRequest = requests.find(req => req.id === requestId);
+        // Modal functions
+        function openModal(requestID) {
+            selectedRequest = requests.find(req => req.requestID === requestID);
             if (!selectedRequest) {
-                console.error("Could not find request with ID:", requestId);
-                showToast("Error opening response form. Request not found.", "error");
+                showToast('Request not found.', 'error');
                 return;
             }
 
             document.getElementById('modal-overlay').style.display = 'block';
-            document.body.style.overflow = 'hidden';
-            
-            // Reset form
-            document.getElementById('poSearchInput').value = '';
-            selectedPoNo = ''; // Reset selected PO
-            document.getElementById('remark').value = '';
-            document.getElementById('expectedBy').value = '';
-            populateSearchResults(); // Repopulate and hide dropdown
+            document.getElementById('poSearchInput').value = selectedRequest.expectedWithPONo || '';
+            document.getElementById('remark').value = selectedRequest.remark || '';
+            document.getElementById('expectedBy').value = selectedRequest.expectedBy || '';
+
+            // Trigger validation on modal open to set initial button state
             validateForm();
         }
 
-        // Close modal
         function closeModal() {
             document.getElementById('modal-overlay').style.display = 'none';
-            document.body.style.overflow = 'auto';
+            document.getElementById('poSearchInput').value = '';
+            document.getElementById('remark').value = '';
+            document.getElementById('expectedBy').value = '';
             selectedRequest = null;
-            document.getElementById('poSearchResults').style.display = 'none'; // Hide dropdown on close
+            selectedPoNo = ''; // Clear selected PO number
+            document.getElementById('poSearchResults').style.display = 'none'; // Hide results
+            document.getElementById('submit-btn').disabled = true; // Disable submit button
         }
 
-        // Setup form validation
+        // Form Validation
         function setupFormValidation() {
+            const poInput = document.getElementById('poSearchInput');
             const remarkInput = document.getElementById('remark');
             const expectedByInput = document.getElementById('expectedBy');
-            const poSearchInput = document.getElementById('poSearchInput');
 
+            poInput.addEventListener('input', validateForm);
             remarkInput.addEventListener('input', validateForm);
             expectedByInput.addEventListener('input', validateForm);
-            expectedByInput.addEventListener('change', validateForm); // For date input change
-            poSearchInput.addEventListener('input', validateForm); // For searchable PO input
         }
 
-        // Validate form
         function validateForm() {
-            const remark = document.getElementById('remark').value.trim();
-            const expectedBy = document.getElementById('expectedBy').value;
-            // The PO number is valid if selectedPoNo is not empty
-            const isValid = selectedPoNo && remark && expectedBy;
-            document.getElementById('submit-btn').disabled = !isValid;
+            const poInput = document.getElementById('poSearchInput');
+            const remarkInput = document.getElementById('remark');
+            const expectedByInput = document.getElementById('expectedBy');
+            const submitBtn = document.getElementById('submit-btn');
+
+            // Check if selectedPoNo matches an actual PO number from the list
+            const isPoValid = poNumbers.includes(selectedPoNo);
+            const isRemarkValid = remarkInput.value.trim() !== '';
+            const isExpectedByValid = expectedByInput.value.trim() !== '';
+
+            submitBtn.disabled = !(isPoValid && isRemarkValid && isExpectedByValid);
         }
 
-        // Setup Searchable Dropdown
+
+        // Searchable Dropdown Logic
         function setupSearchableDropdown() {
             const poSearchInput = document.getElementById('poSearchInput');
             const poSearchResults = document.getElementById('poSearchResults');
+            const searchClearButton = document.querySelector('.search-clear-button');
 
             poSearchInput.addEventListener('input', function() {
-                const searchText = this.value.toLowerCase();
-                filteredPoNumbers = poNumbers.filter(po => po.toLowerCase().includes(searchText));
-                populateSearchResults();
-                poSearchResults.style.display = filteredPoNumbers.length > 0 && searchText.length > 0 ? 'block' : 'none';
-                
-                // If input matches exactly one filtered result, pre-select it but don't set as final selection yet
-                if (filteredPoNumbers.length === 1 && filteredPoNumbers[0].toLowerCase() === searchText) {
-                    selectedPoNo = filteredPoNumbers[0]; // Tentatively set
+                const query = poSearchInput.value.toLowerCase();
+                if (query.length > 0) {
+                    filteredPoNumbers = poNumbers.filter(po => po.toLowerCase().includes(query));
+                    populateSearchResults();
+                    poSearchResults.style.display = 'block';
                 } else {
-                    selectedPoNo = ''; // Clear if not exact match or multiple
-                }
-                validateForm(); // Re-validate on input
-            });
-
-            poSearchInput.addEventListener('focus', function() {
-                const searchText = this.value.toLowerCase();
-                filteredPoNumbers = poNumbers.filter(po => po.toLowerCase().includes(searchText));
-                populateSearchResults();
-                poSearchResults.style.display = filteredPoNumbers.length > 0 ? 'block' : 'none';
-            });
-
-            // Hide results when clicking outside, but not if clicking on results themselves
-            document.addEventListener('click', function(e) {
-                if (!poSearchInput.contains(e.target) && !poSearchResults.contains(e.target)) {
+                    filteredPoNumbers = [...poNumbers];
+                    populateSearchResults();
                     poSearchResults.style.display = 'none';
                 }
+                selectedPoNo = poSearchInput.value; // Update selectedPoNo on direct input
+                validateForm(); // Re-validate form
             });
 
-             // Keyboard navigation for accessibility
-             poSearchInput.addEventListener('keydown', function(e) {
-                const resultsDivs = Array.from(poSearchResults.children);
-                let currentFocus = -1;
-
-                if (poSearchResults.style.display === 'block') {
-                    for (let i = 0; i < resultsDivs.length; i++) {
-                        if (resultsDivs[i].classList.contains('selected')) {
-                            currentFocus = i;
-                            break;
-                        }
-                    }
+            poSearchResults.addEventListener('click', function(e) {
+                if (e.target.tagName === 'DIV') {
+                    selectedPoNo = e.target.dataset.value;
+                    poSearchInput.value = selectedPoNo;
+                    poSearchResults.style.display = 'none';
+                    validateForm(); // Re-validate form
                 }
+            });
 
-                if (e.key === 'ArrowDown') {
-                    e.preventDefault();
-                    currentFocus = (currentFocus + 1) % resultsDivs.length;
-                    focusResult(resultsDivs, currentFocus);
-                } else if (e.key === 'ArrowUp') {
-                    e.preventDefault();
-                    currentFocus = (currentFocus - 1 + resultsDivs.length) % resultsDivs.length;
-                    focusResult(resultsDivs, currentFocus);
-                } else if (e.key === 'Enter' && currentFocus > -1) {
-                    e.preventDefault();
-                    resultsDivs[currentFocus].click();
+            // Handle clicks outside to close dropdown
+            document.addEventListener('click', function(e) {
+                if (!poSearchInput.contains(e.target) && !poSearchResults.contains(e.target) && !searchClearButton.contains(e.target)) {
+                    poSearchResults.style.display = 'none';
                 }
             });
         }
@@ -988,99 +919,90 @@
             const poSearchResults = document.getElementById('poSearchResults');
             poSearchResults.innerHTML = ''; // Clear previous results
 
-            if (filteredPoNumbers.length === 0 && document.getElementById('poSearchInput').value.length > 0) {
-                const noResultDiv = document.createElement('div');
-                noResultDiv.textContent = 'No matching PO numbers';
-                noResultDiv.style.cursor = 'default';
-                noResultDiv.style.color = 'var(--color-text-light)';
-                poSearchResults.appendChild(noResultDiv);
+            if (filteredPoNumbers.length === 0) {
+                const noResults = document.createElement('div');
+                noResults.textContent = 'No matching POs found';
+                noResults.style.color = 'var(--color-text-light)';
+                noResults.style.fontStyle = 'italic';
+                poSearchResults.appendChild(noResults);
                 return;
             }
 
             filteredPoNumbers.forEach(po => {
-                const div = document.createElement('div');
-                div.textContent = po;
-                div.onclick = () => selectPoNumber(po);
-                poSearchResults.appendChild(div);
+                const resultItem = document.createElement('div');
+                resultItem.textContent = po;
+                resultItem.dataset.value = po;
+                poSearchResults.appendChild(resultItem);
             });
-        }
-
-        function selectPoNumber(po) {
-            document.getElementById('poSearchInput').value = po;
-            selectedPoNo = po; // Final selection
-            document.getElementById('poSearchResults').style.display = 'none';
-            validateForm();
         }
 
         function clearPoSearch() {
             document.getElementById('poSearchInput').value = '';
-            selectedPoNo = '';
-            filteredPoNumbers = [...poNumbers]; // Reset filter
+            selectedPoNo = ''; // Clear the selected PO number
+            filteredPoNumbers = [...poNumbers]; // Reset filtered list
             populateSearchResults();
-            document.getElementById('poSearchResults').style.display = 'none'; // Hide results
-            validateForm();
+            document.getElementById('poSearchResults').style.display = 'none';
+            validateForm(); // Re-validate form
         }
-
-        function focusResult(resultsDivs, index) {
-            resultsDivs.forEach((div, i) => {
-                if (i === index) {
-                    div.classList.add('selected');
-                    div.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-                } else {
-                    div.classList.remove('selected');
-                }
-            });
-        }
-
 
         // Submit response
         async function submitResponse() {
-            const formData = {
-                expectedPoNo: selectedPoNo, // Use the selected PO number
-                remark: document.getElementById('remark').value.trim(),
-                expectedBy: document.getElementById('expectedBy').value
-            };
+            if (!selectedRequest) return;
 
-            const submissionData = {
-                action: 'submitResponse',
-                id: selectedRequest.id, // Use the actual ID from the selected request
-                dealer: selectedRequest.dealer, 
-                product: selectedRequest.product,
-                qty: selectedRequest.qty,
-                crm: selectedRequest.crm,
-                crmRemark: selectedRequest.remark,                
-                ...formData
-            };
-
+            const poSearchInput = document.getElementById('poSearchInput');
+            const remarkInput = document.getElementById('remark');
+            const expectedByInput = document.getElementById('expectedBy');
             const submitBtn = document.getElementById('submit-btn');
             const originalBtnText = submitBtn.textContent;
-            submitBtn.disabled = true; // Disable button to prevent multiple submissions
+
+            const poNo = poSearchInput.value.trim();
+            const remark = remarkInput.value.trim();
+            const expectedBy = expectedByInput.value; // Date input value
+
+            // Basic validation
+            if (!poNo || !remark || !expectedBy) {
+                showToast('Please fill all required fields.', 'error');
+                return;
+            }
+
+            submitBtn.disabled = true;
             submitBtn.textContent = 'Submitting...';
 
             try {
-                console.log('Submitting:', submissionData);
                 const response = await fetch(GAS_WEB_APP_URL, {
                     method: 'POST',
-                    mode: 'no-cors', // Required for Google Apps Script Web Apps when not in same origin
+                    mode: 'cors',
                     headers: {
-                        'Content-Type': 'application/json'
+                        'Content-Type': 'application/x-www-form-urlencoded',
                     },
-                    body: JSON.stringify(submissionData)
+                    body: new URLSearchParams({
+                        action: 'updateRequest',
+                        requestID: selectedRequest.requestID,
+                        poNo: poNo,
+                        remark: remark,
+                        expectedBy: expectedBy
+                    }).toString()
                 });
-                // For 'no-cors' mode, response.ok will always be false and status 0.
-                // You'll need to rely on the Apps Script's success/failure from its side.
-                // If your Apps Script is configured to respond with specific JSON and CORS is handled,
-                // you can change mode to 'cors' and check response.ok.
-                
-                showToast('Response submitted successfully!', 'success');
-                closeModal();
-                fetchRequests(); // Re-fetch requests to update the dashboard
+
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+
+                const result = await response.json();
+                console.log('Update response:', result);
+
+                if (result.status === 'success') {
+                    showToast('Request updated successfully!', 'success');
+                    closeModal();
+                    fetchRequests(); // Re-fetch requests to update the dashboard
+                } else {
+                    showToast(`Error: ${result.message || 'Unknown error'}`, 'error');
+                }
             } catch (error) {
                 console.error('Error submitting response:', error);
-                showToast('Error submitting response. Please try again.', 'error');
+                showToast('An error occurred while submitting. Please try again.', 'error');
             } finally {
-                submitBtn.disabled = false; // Re-enable button
+                // Re-enable button
                 submitBtn.textContent = originalBtnText;
+                submitBtn.disabled = false; // Re-enable after attempt, validation will handle if still invalid
             }
         }
 
@@ -1109,7 +1031,7 @@
             toastContainer.appendChild(toast);
 
             // Trigger reflow to ensure transition starts
-            void toast.offsetWidth; 
+            void toast.offsetWidth;
             toast.classList.add('show');
 
             setTimeout(() => {

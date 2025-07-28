@@ -577,12 +577,7 @@
                 <label class="form-label" for="remark">Remark</label>
                 <textarea id="remark" class="form-textarea" placeholder="Enter your remark..."></textarea>
             </div>
-            
-            <div class="form-group">
-                <label class="form-label" for="expectedBy">Expected by</label>
-                <input type="date" id="expectedBy" class="form-input">
-            </div>
-            
+                
             <div class="modal-actions">
                 <button class="btn-cancel" onclick="closeModal()">Cancel</button>
                 <button id="submit-btn" class="btn-submit" onclick="submitResponse()" disabled>Submit</button>
@@ -945,8 +940,6 @@ function createRequestCard(request) {
             document.getElementById('poSearchInput').value = selectedRequest.expectedPoNo || '';
             selectedPoNo = selectedRequest.expectedPoNo || '';
             document.getElementById('remark').value = selectedRequest.responseRemark || '';
-            document.getElementById('expectedBy').value = selectedRequest.expectedBy || ''; // Assuming expectedBy is stored as 'YYYY-MM-DD'
-
             populateSearchResults(); // Repopulate and hide dropdown
             validateForm();
         }
@@ -962,21 +955,17 @@ function createRequestCard(request) {
         // Setup form validation
         function setupFormValidation() {
             const remarkInput = document.getElementById('remark');
-            const expectedByInput = document.getElementById('expectedBy');
             const poSearchInput = document.getElementById('poSearchInput');
 
             remarkInput.addEventListener('input', validateForm);
-            expectedByInput.addEventListener('input', validateForm);
-            expectedByInput.addEventListener('change', validateForm); // For date input change
             poSearchInput.addEventListener('input', validateForm); // For searchable PO input
         }
 
         // Validate form
         function validateForm() {
             const remark = document.getElementById('remark').value.trim();
-            const expectedBy = document.getElementById('expectedBy').value;
             // The PO number is valid if selectedPoNo is not empty
-            const isValid = selectedPoNo && remark && expectedBy;
+            const isValid = selectedPoNo && remark;
             document.getElementById('submit-btn').disabled = !isValid;
         }
 
@@ -1097,7 +1086,6 @@ function createRequestCard(request) {
             const formData = {
                 expectedPoNo: selectedPoNo, // Use the selected PO number
                 responseRemark: document.getElementById('remark').value.trim(), // Changed to responseRemark
-                expectedBy: document.getElementById('expectedBy').value
             };
 
             const submissionData = {

@@ -3,431 +3,176 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Order Monitor - NT Woods</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <title>NT Woods - Real-time Order Tracking</title>
     <style>
-        /* Custom styles for White & Shades of Blue theme with accessibility in mind */
-        body {
-            font-family: 'Inter', sans-serif;
-            background: linear-gradient(135deg, #F0F8FF 0%, #E0F2F7 100%); /* Light blue gradient background */
-            min-height: 100vh;
-            color: #2C3E50; /* Dark blue for text on light background */
-            line-height: 1.6;
-        }
-        .container {
-            background: rgba(255, 255, 255, 0.98); /* Near-white background for content */
-            backdrop-filter: blur(10px);
-            color: #2C3E50; /* Dark blue text on light background */
-        }
-        .header {
-            background: linear-gradient(135deg, #1A5276 0%, #21618C 100%); /* Darker blue gradient for header */
-            color: #FFFFFF; /* White for header text/logo */
-        }
-        .logo {
-            background: linear-gradient(135deg, #5DADE2 0%, #85C1E9 100%); /* Lighter blue gradient for logo */
-            color: #1A5276; /* Dark blue text on blue logo */
-        }
-        .refresh-btn {
-            background: rgba(93, 173, 226, 0.2); /* Transparent blue for refresh button */
-            border: 1px solid rgba(93, 173, 226, 0.3);
-            color: #5DADE2; /* Blue icon */
-        }
-        .refresh-btn:hover {
-            background: rgba(93, 173, 226, 0.3);
-        }
-        .section-title {
-            color: #1A5276; /* Dark blue for section titles */
-        }
-        .section-icon {
-            background: linear-gradient(135deg, #5DADE2, #85C1E9); /* Blue gradient for section icons */
-            color: #1A5276; /* Dark color for icon itself */
-        }
-        .filter-tabs {
-            background: #EBF5FB; /* Very light blue background for filter tabs */
-        }
-        .filter-tab {
-            color: #2C3E50; /* Dark text for inactive tabs */
-        }
-        .filter-tab.active {
-            background: linear-gradient(135deg, #5DADE2, #85C1E9); /* Blue gradient for active tab */
-            color: #FFFFFF; /* White text on active blue tab */
-            box-shadow: 0 4px 12px rgba(93, 173, 226, 0.3);
-        }
-        .table-header th {
-            background-color: #21618C; /* Dark blue background for table headers */
-            color: #FFFFFF; /* White text for table headers */
-        }
-        .table-row:nth-child(odd) {
-            background-color: #F8F8F8; /* Very light grey for odd rows */
-        }
-        .table-row:nth-child(even) {
-            background-color: #FFFFFF; /* White for even rows */
-        }
-        .table-row:hover {
-            background-color: #EBF5FB; /* Light blue on hover */
-            cursor: pointer;
-        }
-        .pagination-btn {
-            background-color: #5DADE2; /* Blue for pagination buttons */
-            color: #FFFFFF; /* White text on blue buttons */
-        }
-        .pagination-btn:disabled {
-            background-color: #AAB7B8; /* Grey for disabled buttons */
-            color: #616A6B;
-        }
-        .pagination-btn:hover:not(:disabled) {
-            background-color: #4A90E2; /* Darker blue on hover */
-        }
-        .loading-state, .empty-state, .error-state {
-            color: #566573; /* Medium grey for states */
-            background: #EBF5FB; /* Light blue background for states */
-            border-color: #AAB7B8;
-        }
-        .error-state {
-            color: #C0392B; /* Red for error messages */
-            background: #FADBD8; /* Light red background for errors */
-            border-color: #E74C3C;
-        }
-        /* Scrollbar styles for table body */
-        .table-body-scroll {
-            max-height: 70vh; /* Max height for scrollable table body */
-            overflow-y: auto;
-        }
-        /* Webkit browsers (Chrome, Safari) */
-        .table-body-scroll::-webkit-scrollbar {
-            width: 8px;
-        }
-        .table-body-scroll::-webkit-scrollbar-track {
-            background: #EBF5FB;
-            border-radius: 10px;
-        }
-        .table-body-scroll::-webkit-scrollbar-thumb {
-            background: #5DADE2;
-            border-radius: 10px;
-        }
-        .table-body-scroll::-webkit-scrollbar-thumb:hover {
-            background: #4A90E2;
-        }
-        .url-link {
-            color: #1D4ED8;
-            text-decoration: underline;
-            cursor: pointer;
-        }
-        .url-link:hover {
-            color: #1E40AF;
-        }
-        .view-file-btn {
-            background-color: #2874A6; /* Darker blue for View File button */
-            color: white;
-            padding: 6px 12px;
-            border-radius: 8px;
-            font-size: 0.875rem;
-            font-weight: 600;
-            transition: background-color 0.2s ease-in-out;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        }
-        .view-file-btn:hover {
-            background-color: #1F618D; /* Even darker blue on hover */
-        }
-        .view-file-btn:disabled {
-            background-color: #AAB7B8;
-            cursor: not-allowed;
-        }
+        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background-color: #f4f4f4; }
+        .header { text-align: center; margin-bottom: 20px; }
+        .tabs { display: flex; justify-content: center; gap: 20px; margin-bottom: 20px; }
+        .tab { padding: 10px 20px; cursor: pointer; background-color: #ddd; border-radius: 5px; }
+        .tab.active { background-color: #007bff; color: white; }
+        .filter { margin-bottom: 20px; text-align: center; }
+        .table-container { max-width: 1200px; margin: auto; }
+        table { width: 100%; border-collapse: collapse; background-color: white; }
+        th, td { padding: 10px; border: 1px solid #ddd; text-align: left; }
+        th { background-color: #007bff; color: white; }
+        .pagination { text-align: center; margin-top: 20px; }
+        .pagination button { padding: 10px 20px; margin: 0 5px; cursor: pointer; }
+        .error { color: red; text-align: center; }
     </style>
 </head>
-<body class="antialiased">
-    <div class="container mx-auto mt-5 p-8 rounded-2xl shadow-xl">
-        <div class="header flex items-center justify-between p-6 rounded-t-xl shadow-md">
-            <div class="flex items-center space-x-4">
-                <div class="logo w-14 h-14 rounded-xl flex items-center justify-center font-extrabold text-xl shadow-lg">NT</div>
-                <div>
-                    <h1 class="text-3xl font-bold">Order Monitor</h1>
-                    <p class="text-sm opacity-80 mt-1">NT Woods - Real-time Order Tracking</p>
-                </div>
-            </div>
-            <button class="refresh-btn p-3 rounded-xl transition-all duration-300 hover:scale-105" onclick="refreshData()">
-                <svg class="refresh-icon w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
-                </svg>
-            </button>
-        </div>
+<body>
+    <div class="header">
+        <h1>NT</h1>
+        <h2>Order Monitor</h2>
+        <h3>NT Woods - Real-time Order Tracking</h3>
+    </div>
 
-        <div class="content p-8">
-            <div class="section mb-10">
-                <h2 class="section-title text-2xl font-bold mb-6 flex items-center space-x-3">
-                    <svg class="section-icon w-8 h-8 p-1 rounded-xl shadow-lg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                    </svg>
-                    All Orders Overview
-                </h2>
+    <div class="tabs">
+        <div class="tab active" onclick="filterOrders('All')">All Orders</div>
+        <div class="tab" onclick="filterOrders('In-Transit')">In-Transit</div>
+        <div class="tab" onclick="filterOrders('Received')">Received</div>
+    </div>
 
-                <div class="filter-tabs flex rounded-xl p-2 mb-8 shadow-inner">
-                    <button class="filter-tab flex-1 py-3 px-5 rounded-lg text-sm font-semibold transition-all duration-300 active" onclick="setOrderTypeFilter('All', event)">All Orders</button>
-                    <button class="filter-tab flex-1 py-3 px-5 rounded-lg text-sm font-semibold transition-all duration-300" onclick="setOrderTypeFilter('In-Transit', event)">In-Transit</button>
-                    <button class="filter-tab flex-1 py-3 px-5 rounded-lg text-sm font-semibold transition-all duration-300" onclick="setOrderTypeFilter('Received', event)">Received</button>
-                </div>
+    <div class="filter">
+        <label>Received Date Range:</label>
+        <input type="date" id="startDate" onchange="applyDateFilter()">
+        <label> to </label>
+        <input type="date" id="endDate" onchange="applyDateFilter()">
+    </div>
 
-                <div class="bg-white rounded-xl shadow-lg overflow-hidden">
-                    <div class="table-body-scroll">
-                        <table class="min-w-full divide-y divide-gray-200">
-                            <thead class="table-header">
-                                <tr>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider rounded-tl-xl">PO Number</th>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Supplier Name</th>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Status</th>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Expected Dispatch</th>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Expected Delivery</th>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">PO URL</th>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Dispatch Detail</th>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Invoice</th>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">CRM</th>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider rounded-tr-xl">CRM Requests</th>
-                                </tr>
-                            </thead>
-                            <tbody id="orders-table-body" class="divide-y divide-gray-200">
-                                <!-- Order rows will be inserted here by JavaScript -->
-                            </tbody>
-                        </table>
-                    </div>
-                    <div class="p-4 flex justify-between items-center bg-gray-100 border-t border-gray-200">
-                        <button id="prev-page-btn" class="pagination-btn px-4 py-2 rounded-lg font-semibold text-sm transition-colors duration-200" onclick="changePage(-1)">Previous</button>
-                        <span id="page-info" class="text-sm text-gray-700"></span>
-                        <button id="next-page-btn" class="pagination-btn px-4 py-2 rounded-lg font-semibold text-sm transition-colors duration-200" onclick="changePage(1)">Next</button>
-                    </div>
-                </div>
+    <div class="table-container">
+        <h3>All Orders Overview</h3>
+        <div id="errorMessage" class="error"></div>
+        <table id="orderTable">
+            <thead>
+                <tr>
+                    <th>PO Number</th>
+                    <th>Supplier Name</th>
+                    <th>Status</th>
+                    <th>Expected Dispatch</th>
+                    <th>Expected Delivery</th>
+                    <th>Received On</th>
+                    <th>PO URL</th>
+                    <th>Dispatch Detail</th>
+                    <th>Invoice</th>
+                    <th>CRM</th>
+                    <th>CRM Requests</th>
+                </tr>
+            </thead>
+            <tbody id="orderTableBody"></tbody>
+        </table>
+    </div>
 
-                <div id="status-message" class="mt-8 text-center hidden">
-                    <!-- Status messages (loading, empty, error) will be displayed here -->
-                </div>
-            </div>
-        </div>
+    <div class="pagination">
+        <button onclick="previousPage()">Previous</button>
+        <button onclick="nextPage()">Next</button>
     </div>
 
     <script>
-        // Production API URL
         const API_URL = 'https://script.google.com/macros/s/AKfycbwvMSqEAQcp_du39XCOzvpNRjR8tsnk6YTPhcxfJClo0tjVtXvaUJUHerNJZVH0am5K/exec';
-        
-        let allOrders = [];
-        let filteredOrders = [];
-        let currentOrderTypeFilter = 'All'; // 'All', 'In-Transit', 'Received'
-
-        const rowsPerPage = 10; // Number of rows per page
+        let orders = [];
         let currentPage = 1;
+        const rowsPerPage = 10;
+        let filteredOrders = [];
+        let currentFilter = 'All';
 
-        // Function to fetch data from API
         async function fetchOrders() {
-            const refreshBtn = document.querySelector('.refresh-btn');
-            const statusMessageDiv = document.getElementById('status-message');
-            const ordersTableBody = document.getElementById('orders-table-body');
-            
-            // Show loading state
-            ordersTableBody.innerHTML = ''; // Clear table
-            statusMessageDiv.innerHTML = '<div class="loading-state p-10 rounded-xl shadow-md">Loading orders...</div>';
-            statusMessageDiv.classList.remove('hidden');
-            refreshBtn.classList.add('animate-spin'); // Add spinning animation
-
             try {
                 const response = await fetch(API_URL);
-                
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                
                 const result = await response.json();
-
-                if (result.success && result.data) {
-                    // Filter out empty orders (orders with no requester name or timestamp)
-                    // Also ensure crmName and crmRequestURL are present for new columns
-                    allOrders = result.data.filter(order => 
-                        order.requesterName && 
-                        order.requesterName.trim() !== '' && 
-                        order.timestamp && 
-                        order.timestamp.trim() !== ''
-                        // crmName and crmRequestURL can be empty/N/A, so no strict filter
-                    );
-                    applyFilterAndRender();
+                if (result.success) {
+                    orders = result.data;
+                    filteredOrders = orders;
+                    renderTable();
+                    document.getElementById('errorMessage').innerHTML = '';
                 } else {
-                    showStatusMessage('error', 'Failed to load orders. Please try again.');
+                    document.getElementById('errorMessage').innerHTML = 'Error fetching data: ' + result.error;
                 }
             } catch (error) {
-                console.error('Error fetching orders:', error);
-                showStatusMessage('error', 'Network error occurred. Please check your connection.');
-            } finally {
-                refreshBtn.classList.remove('animate-spin'); // Remove spinning animation
+                document.getElementById('errorMessage').innerHTML = 'Error fetching data: ' + error.message;
             }
         }
 
-        // Function to show status messages (loading, empty, error)
-        function showStatusMessage(type, message) {
-            const statusMessageDiv = document.getElementById('status-message');
-            statusMessageDiv.classList.remove('hidden');
-            let content = '';
-            let className = '';
-
-            if (type === 'loading') {
-                className = 'loading-state';
-                content = message;
-            } else if (type === 'empty') {
-                className = 'empty-state border-2 border-dashed';
-                content = `
-                    <svg class="empty-icon w-12 h-12 mx-auto mb-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path>
-                    </svg>
-                    <p>${message}</p>
-                `;
-            } else if (type === 'error') {
-                className = 'error-state border-2';
-                content = message;
-            }
-
-            statusMessageDiv.innerHTML = `<div class="${className} p-10 rounded-xl shadow-md">${content}</div>`;
+        function formatDate(dateStr) {
+            if (!dateStr) return '';
+            const date = new Date(dateStr);
+            const day = String(date.getDate()).padStart(2, '0');
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const year = String(date.getFullYear()).slice(-2);
+            return `${day}-${month}-${year}`;
         }
 
-        // Format date for display in dd-mmm-yyyy format
-        function formatDateTime(isoString) {
-            if (!isoString || isoString.trim() === '') return 'N/A';
-            try {
-                const date = new Date(isoString);
-                if (isNaN(date.getTime())) return 'N/A';
-                return date.toLocaleDateString('en-GB', { // Use 'en-GB' for dd/mm/yyyy base
-                    day: '2-digit',
-                    month: 'short', // 'short' for mmm (e.g., Jan)
-                    year: 'numeric'
-                }).replace(/ /g, '-'); // Replace spaces with hyphens for dd-mmm-yyyy
-            } catch (error) {
-                return 'N/A';
-            }
-        }
-
-        // Create clickable URL link
-        function createUrlLink(url, text = 'View') {
-            if (!url || url.trim() === '') {
-                return 'N/A';
-            }
-            return `<a href="${url}" target="_blank" class="url-link">${text}</a>`;
-        }
-
-        // Apply filtering logic and re-render the table
-        function applyFilterAndRender() {
-            if (currentOrderTypeFilter === 'All') {
-                filteredOrders = allOrders;
-            } else if (currentOrderTypeFilter === 'Received') {
-                filteredOrders = allOrders.filter(order => 
-                    order.acknowledgedTimestamp && order.acknowledgedTimestamp.trim() !== ''
-                );
-            } else if (currentOrderTypeFilter === 'In-Transit') {
-                filteredOrders = allOrders.filter(order => 
-                    !order.acknowledgedTimestamp || order.acknowledgedTimestamp.trim() === ''
-                );
-            }
-            currentPage = 1; // Reset to first page on filter change
-            renderTable();
-        }
-
-        // Render the order data table with pagination
         function renderTable() {
-            const ordersTableBody = document.getElementById('orders-table-body');
-            const statusMessageDiv = document.getElementById('status-message');
-            const pageInfoSpan = document.getElementById('page-info');
-            const prevPageBtn = document.getElementById('prev-page-btn');
-            const nextPageBtn = document.getElementById('next-page-btn');
-
-            ordersTableBody.innerHTML = ''; // Clear existing rows
-            statusMessageDiv.classList.add('hidden'); // Hide status message by default
-
-            if (filteredOrders.length === 0) {
-                showStatusMessage('empty', 'No orders match the current filter.');
-                pageInfoSpan.textContent = '';
-                prevPageBtn.disabled = true;
-                nextPageBtn.disabled = true;
-                return;
-            }
-
-            // Calculate start and end index for current page
-            const startIndex = (currentPage - 1) * rowsPerPage;
-            const endIndex = Math.min(startIndex + rowsPerPage, filteredOrders.length);
-            const paginatedOrders = filteredOrders.slice(startIndex, endIndex);
+            const start = (currentPage - 1) * rowsPerPage;
+            const end = start + rowsPerPage;
+            const paginatedOrders = filteredOrders.slice(start, end);
+            const tbody = document.getElementById('orderTableBody');
+            tbody.innerHTML = '';
 
             paginatedOrders.forEach(order => {
                 const row = document.createElement('tr');
-                row.className = 'table-row transition-colors duration-200';
-
-                // Determine order status based on acknowledgedTimestamp
-                let orderStatusDisplay = 'N/A';
-                if (order.acknowledgedTimestamp && order.acknowledgedTimestamp.trim() !== '') {
-                    orderStatusDisplay = 'Received';
-                } else {
-                    orderStatusDisplay = 'In-Transit';
-                }
-
-                // CRM Request Button HTML
-                const crmRequestButtonHtml = order.crmRequestURL && order.crmRequestURL.trim() !== ''
-                    ? `<button class="view-file-btn" onclick="window.open('${order.crmRequestURL}', '_blank')">View File</button>`
-                    : `N/A`;
-
                 row.innerHTML = `
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-800">${order.poNumber || 'N/A'}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-800">${order.supplierName || 'N/A'}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-800">${orderStatusDisplay}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-800">${formatDateTime(order.expectedDispatchDate)}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-800">${formatDateTime(order.expectedDeliveryDate)}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-800">${createUrlLink(order.poURL, 'View PO')}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-800">${createUrlLink(order.dispatchDetailURL, 'View Dispatch')}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-800">${createUrlLink(order.invoiceUrl, 'View Invoice')}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-800">${order.crmName || 'N/A'}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-800">${crmRequestButtonHtml}</td>
+                    <td>${order.poNumber || ''}</td>
+                    <td>${order.supplierName || ''}</td>
+                    <td>${order.orderType || ''}</td>
+                    <td>${formatDate(order.expectedDispatchDate)}</td>
+                    <td>${formatDate(order.expectedDeliveryDate)}</td>
+                    <td>${formatDate(order.acknowledgedTimestamp)}</td>
+                    <td>${order.poURL ? `<a href="${order.poURL}">PO</a>` : ''}</td>
+                    <td>${order.dispatchDetailURL ? `<a href="${order.dispatchDetailURL}">Dispatch Receipt</a>` : ''}</td>
+                    <td>${order.invoiceUrl ? `<a href="${order.invoiceUrl}">Invoice</a>` : ''}</td>
+                    <td>${order.crmName || ''}</td>
+                    <td>${order.crmRequestURL ? `<a href="${order.crmRequestURL}">CRM Request</a>` : ''}</td>
                 `;
-                ordersTableBody.appendChild(row);
+                tbody.appendChild(row);
             });
-
-            // Update pagination info and button states
-            const totalPages = Math.ceil(filteredOrders.length / rowsPerPage);
-            pageInfoSpan.textContent = `Page ${currentPage} of ${totalPages} (${filteredOrders.length} orders)`;
-            prevPageBtn.disabled = currentPage === 1;
-            nextPageBtn.disabled = currentPage === totalPages;
         }
 
-        // Change page
-        function changePage(direction) {
-            const totalPages = Math.ceil(filteredOrders.length / rowsPerPage);
-            currentPage += direction;
-            if (currentPage < 1) currentPage = 1;
-            if (currentPage > totalPages) currentPage = totalPages;
+        function filterOrders(status) {
+            currentFilter = status;
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            event.target.classList.add('active');
+            applyFilters();
+        }
+
+        function applyDateFilter() {
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
+            applyFilters(startDate, endDate);
+        }
+
+        function applyFilters(startDate = '', endDate = '') {
+            filteredOrders = orders.filter(order => {
+                const statusMatch = currentFilter === 'All' || order.orderType === currentFilter;
+                let dateMatch = true;
+                if (startDate && endDate && order.acknowledgedTimestamp) {
+                    const orderDate = new Date(order.acknowledgedTimestamp);
+                    const start = new Date(startDate);
+                    const end = new Date(endDate);
+                    dateMatch = orderDate >= start && orderDate <= end;
+                }
+                return statusMatch && dateMatch;
+            });
+            currentPage = 1;
             renderTable();
         }
 
-        // Set order type filter and update active tab
-        function setOrderTypeFilter(filter, event) {
-            currentOrderTypeFilter = filter;
-            
-            // Update active tab styling
-            const filterTabs = document.querySelectorAll('.filter-tab');
-            filterTabs.forEach(tab => tab.classList.remove('active'));
-            if (event && event.target) {
-                event.target.classList.add('active');
-            } else {
-                // If called without an event (e.g., initial load), find and set 'All' as active
-                document.querySelector('.filter-tabs button:first-child').classList.add('active');
+        function previousPage() {
+            if (currentPage > 1) {
+                currentPage--;
+                renderTable();
             }
-            
-            applyFilterAndRender();
         }
 
-        // Refresh data (re-fetch from API)
-        function refreshData() {
-            fetchOrders();
+        function nextPage() {
+            if (currentPage * rowsPerPage < filteredOrders.length) {
+                currentPage++;
+                renderTable();
+            }
         }
 
-        // Initialize app on DOMContentLoaded
-        document.addEventListener('DOMContentLoaded', function() {
-            // Set 'All Orders' filter as active initially
-            setOrderTypeFilter('All');
-            // Fetch initial data
-            fetchOrders();
-            // Auto-refresh every 30 seconds
-            setInterval(fetchOrders, 30000);
-        });
+        // Fetch data on load
+        fetchOrders();
     </script>
 </body>
 </html>

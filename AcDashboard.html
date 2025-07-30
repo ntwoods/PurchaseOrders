@@ -3,158 +3,547 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Accounts Dashboard</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        body {
-            background-color: #f3f4f6;
+    <title>Orders Dashboard</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+<style>
+    /* Import Poppins font from Google Fonts */
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap');
+
+    /* General Styles */
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    body {
+        font-family: 'Poppins', sans-serif;
+        /* Light blue background with a subtle gradient */
+        background: linear-gradient(135deg, #F0F8FF 0%, #E0FFFF 100%);
+        color: #333333; /* Darker text for readability on light background */
+        min-height: 100vh;
+        padding: 20px;
+        animation: fadeIn 0.5s ease-in;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+
+    .container {
+        max-width: 1400px;
+        margin: 0 auto;
+    }
+
+    /* Header Styles */
+    .header {
+        text-align: center;
+        margin-bottom: 40px;
+        padding: 30px 0;
+        /* Medium blue background for header */
+        background: linear-gradient(135deg, #4682B4, #6A96C9);
+        border-radius: 20px;
+        border: 1px solid #3A73AA; /* Slightly darker blue border */
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1); /* Lighter shadow */
+    }
+
+    .header h1 {
+        font-size: 2.5rem;
+        font-weight: 700;
+        /* Bright blue for main heading */
+        background: linear-gradient(135deg, #007BFF, #0056b3);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 10px;
+        text-shadow: 0 0 15px rgba(0, 123, 255, 0.3); /* Blue shadow */
+    }
+
+    .header p {
+        color: #E0FFFF; /* Lighter blue for sub-heading */
+        font-size: 1.1rem;
+        font-weight: 300;
+    }
+
+
+    /* Controls Section Styles */
+    .controls {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 30px;
+        flex-wrap: wrap;
+        gap: 20px;
+    }
+
+    .refresh-btn {
+        /* Primary blue for refresh button */
+        background: linear-gradient(135deg, #007BFF, #0056b3);
+        color: #FFFFFF;
+        border: none;
+        padding: 12px 24px;
+        border-radius: 10px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.95rem;
+    }
+
+    .refresh-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(0, 123, 255, 0.4);
+    }
+
+    .last-updated {
+        color: #666666; /* Grey for last updated text */
+        font-size: 0.9rem;
+    }
+
+    /* Loading, Error, Empty State Styles */
+    .loading {
+        text-align: center;
+        padding: 40px;
+        color: #007BFF; /* Blue for loading text */
+        font-size: 1.2rem;
+    }
+
+    .loading i {
+        animation: spin 1s linear infinite;
+        margin-right: 10px;
+    }
+
+    @keyframes spin {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+
+    .error {
+        text-align: center;
+        padding: 40px;
+        color: #DC3545; /* Red for error messages */
+        background: rgba(220, 53, 69, 0.1);
+        border-radius: 15px;
+        border: 1px solid rgba(220, 53, 69, 0.3);
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        color: #999999; /* Lighter grey for empty state text */
+    }
+
+    .empty-state i {
+        font-size: 4rem;
+        color: #CCCCCC; /* Light grey for empty state icon */
+        margin-bottom: 20px;
+    }
+
+    /* Table Styles */
+    .table-container {
+        /* Slightly darker blue for table background */
+        background: linear-gradient(135deg, #FFFFFF, #F8F8FF);
+        border-radius: 20px;
+        overflow: hidden;
+        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.1);
+        border: 1px solid #DDDDDD;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    thead {
+        /* Darker blue for table header background */
+        background: linear-gradient(135deg, #0056b3, #003F7F);
+    }
+
+    th {
+        padding: 20px 15px;
+        text-align: left;
+        font-weight: 600;
+        color: #FFFFFF; /* White text for table headers */
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        font-size: 0.9rem;
+        border-bottom: 2px solid #007BFF; /* Primary blue border */
+    }
+
+    tbody tr {
+        transition: all 0.3s ease;
+        border-bottom: 1px solid #EEEEEE; /* Light grey border for rows */
+    }
+
+    tbody tr:hover {
+        background: rgba(0, 123, 255, 0.05); /* Very light blue on hover */
+        transform: scale(1.01);
+    }
+
+    tbody tr.completed {
+        opacity: 0.8;
+        background: rgba(144, 238, 144, 0.2); /* Light green for completed rows */
+    }
+
+    td {
+        padding: 18px 15px;
+        color: #333333; /* Dark text for table data */
+        font-weight: 400;
+    }
+
+    .sr-no {
+        font-weight: 600;
+        color: #007BFF; /* Primary blue for serial number */
+        text-align: center;
+        width: 80px;
+    }
+
+    .po-number {
+        font-weight: 600;
+        color: #0056b3; /* Darker blue for PO number */
+        font-family: 'Poppins', sans-serif; /* Keep Poppins for this as well */
+    }
+
+    .supplier-name {
+        color: #666666; /* Grey for supplier name */
+    }
+
+    /* Action Buttons */
+    .action-btn {
+        /* Green for action button */
+        background: linear-gradient(135deg, #28a745, #20c997);
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 0.85rem;
+    }
+
+    .action-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 15px rgba(40, 167, 69, 0.4);
+    }
+
+    .action-btn.completed {
+        background: linear-gradient(135deg, #6c757d, #495057); /* Grey for completed action button */
+        cursor: not-allowed;
+    }
+
+    .action-btn.completed:hover {
+        transform: none;
+        box-shadow: none;
+    }
+
+    /* Invoice Button Specific Styles */
+    .invoice-btn {
+        /* Primary blue for invoice button */
+        background: linear-gradient(135deg, #007bff, #0056b3);
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 0.85rem;
+    }
+
+    .invoice-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 15px rgba(0, 123, 255, 0.4);
+    }
+
+    .invoice-btn:disabled {
+        background: linear-gradient(135deg, #6c757d, #495057); /* Grey for disabled invoice button */
+        cursor: not-allowed;
+    }
+
+    /* Responsive Adjustments */
+    @media (max-width: 768px) {
+        .header h1 {
+            font-size: 2rem;
         }
-        .table-header {
-            background-color: #1e3a8a;
-            color: white;
+
+        table {
+            font-size: 0.9rem;
         }
-        .table-row:nth-child(even) {
-            background-color: #eff6ff;
+
+        th, td {
+            padding: 12px 10px;
         }
-        .table-row:nth-child(odd) {
-            background-color: white;
-        }
-        .table-row:hover {
-            background-color: #dbeafe;
-        }
-        .btn-blue {
-            background-color: #2563eb;
-            transition: background-color 0.3s;
-        }
-        .btn-blue:hover {
-            background-color: #1e3a8a;
-        }
-    </style>
+    }
+</style>
 </head>
-<body class="flex flex-col items-center justify-center min-h-screen">
-    <div class="w-full max-w-7xl p-6 bg-white rounded-lg shadow-lg">
-        <h2 class="text-2xl font-bold text-center text-blue-900 mb-6">For Accounts Section</h2>
-        <p class="text-center text-gray-600 mb-4">Mark the purchase orders, whether you have entered them or not.</p>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1><i class="fas fa-id-badge"></i> For Accounts Section</h1>
+            <p>Mark the purchase orders, whether you have entered them or not.</p>
+        </div>
 
-        <div class="flex justify-between items-center mb-6">
-            <div class="flex space-x-4">
-                <div>
-                    <label for="startDate" class="block text-sm font-medium text-gray-700">Start Date</label>
-                    <input type="date" id="startDate" class="mt-1 p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
-                </div>
-                <div>
-                    <label for="endDate" class="block text-sm font-medium text-gray-700">End Date</label>
-                    <input type="date" id="endDate" class="mt-1 p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
-                </div>
+        <div class="controls">
+            <button class="refresh-btn" onclick="fetchOrders()">
+                <i class="fas fa-sync-alt"></i> Refresh Data
+            </button>
+            <div class="last-updated" id="lastUpdated"></div>
+        </div>
+
+        <div class="table-container">
+            <div id="loading" class="loading" style="display: none;">
+                <i class="fas fa-spinner"></i> Loading orders...
             </div>
-            <button id="refreshButton" class="btn-blue text-white font-semibold py-2 px-4 rounded-md">Refresh Data</button>
-        </div>
-
-        <div id="loading" class="text-center text-gray-600 mb-4">
-            Loading orders...
-        </div>
-
-        <div id="noOrders" class="hidden text-center text-gray-600">
-            <p class="font-semibold">No orders found</p>
-            <p>There are currently no orders to display.</p>
-        </div>
-
-        <div class="overflow-x-auto">
-            <table id="ordersTable" class="w-full hidden border-collapse">
-                <thead>
-                    <tr class="table-header">
-                        <th class="p-3 text-left">Sr. No.</th>
-                        <th class="p-3 text-left">PO No.</th>
-                        <th class="p-3 text-left">Supplier Name</th>
-                        <th class="p-3 text-left">Received On</th>
-                        <th class="p-3 text-left">Invoice</th>
-                        <th class="p-3 text-left">Action</th>
-                    </tr>
-                </thead>
-                <tbody id="ordersBody"></tbody>
-            </table>
+            
+            <div id="error" class="error" style="display: none;"></div>
+            
+            <div id="tableWrapper" style="display: none;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Sr. No.</th>
+                            <th>PO No.</th>
+                            <th>Supplier Name</th>
+                            <th>Invoice</th> <!-- New Invoice Column Header -->
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="ordersTableBody">
+                    </tbody>
+                </table>
+            </div>
+            
+            <div id="emptyState" class="empty-state" style="display: none;">
+                <i class="fas fa-inbox"></i>
+                <h3>No orders found</h3>
+                <p>There are currently no orders to display.</p>
+            </div>
         </div>
     </div>
 
-    <script>
-        function formatDate(timestamp) {
-            if (!timestamp) return '';
-            const date = new Date(timestamp);
-            const day = String(date.getDate()).padStart(2, '0');
-            const month = String(date.getMonth() + 1).padStart(2, '0');
-            const year = date.getFullYear();
-            return `${day}-${month}-${year}`;
+<script>
+    // API endpoint for fetching and updating orders
+    const API_URL = 'https://script.google.com/macros/s/AKfycbwYVf_pKrNX6WWyYF6lBSwsQwB7AIZcgAjoXU1PBR4vmTeb48huKWtagXHJXiDcjeSibw/exec';
+    
+    // Array to store all fetched orders
+    let orders = [];
+    
+    // Set to keep track of completed order purchase order numbers
+    let completedOrders = new Set();
+
+    /**
+     * Fetches orders from the API and updates the UI.
+     */
+    async function fetchOrders() {
+        const loadingEl = document.getElementById('loading');
+        const errorEl = document.getElementById('error');
+        const tableWrapperEl = document.getElementById('tableWrapper');
+        const emptyStateEl = document.getElementById('emptyState');
+        
+        // Show loading state and hide other sections
+        loadingEl.style.display = 'block';
+        errorEl.style.display = 'none';
+        tableWrapperEl.style.display = 'none';
+        emptyStateEl.style.display = 'none';
+        
+        try {
+            const response = await fetch(API_URL);
+            
+            // Check if the network request was successful
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            const data = await response.json();
+            
+            // Check if data is successfully received and in the correct format
+            if (data.success && data.data) {
+                orders = data.data; // Store fetched orders
+                renderOrders();      // Render orders in the table
+	    if (typeof setReadOnlyMode === "function") {
+		  setReadOnlyMode();
+		}			    
+                updateLastUpdated(); // Update last updated timestamp
+                
+                // Show empty state or table based on number of orders
+                if (orders.length === 0) {
+                    emptyStateEl.style.display = 'block';
+                } else {
+                    tableWrapperEl.style.display = 'block';
+                }
+            } else {
+                throw new Error('Invalid data format received from API');
+            }
+            
+        } catch (error) {
+            console.error('Error fetching orders:', error);
+            errorEl.textContent = `Error loading orders: ${error.message}`;
+            errorEl.style.display = 'block';
+        } finally {
+            // Hide loading state regardless of success or error
+            loadingEl.style.display = 'none';
+        }
+    }
+
+    /**
+     * Renders the orders array into the HTML table.
+     */
+    function renderOrders() {
+        const tbody = document.getElementById('ordersTableBody');
+        tbody.innerHTML = ''; // Clear existing table rows
+        
+        orders.forEach((order, index) => {
+            const row = document.createElement('tr');
+            // Check if the order is marked as completed
+            const isCompleted = completedOrders.has(order.purchaseOrderNumber);
+            
+            if (isCompleted) {
+                row.classList.add('completed');
+            }
+            
+            // Populate row with order data, including new Invoice button
+            row.innerHTML = `
+                <td class="sr-no">${index + 1}</td>
+                <td class="po-number">${order.purchaseOrderNumber}</td>
+                <td class="supplier-name">${order.supplierName}</td>
+                <td>
+		<div class="editable">
+		    ${order.invoiceUrl ? 
+                        `<button class="invoice-btn" 
+                                onclick="showInvoice('${order.invoiceUrl}')">
+                            <i class="fas fa-file-invoice"></i> Show Invoice
+                        </button>` 
+                        : 'N/A' // Display 'N/A' if invoiceUrl is not available
+                    }
+		</div>
+                </td>
+                <div class="editable">
+		<td>
+                    <button class="action-btn ${isCompleted ? 'completed' : ''}" 
+                            id="markDoneBtn-${order.purchaseOrderNumber}"
+                            onclick="markDone(this, '${order.purchaseOrderNumber}')"
+                            ${isCompleted ? 'disabled' : ''}>
+                        <i class="fas ${isCompleted ? 'fa-check' : 'fa-check-circle'}"></i>
+                        ${isCompleted ? 'Completed' : 'Mark Done'}
+                    </button>
+                </td>
+		</div>
+            `;
+            
+            tbody.appendChild(row);
+        });
+    }
+
+    /**
+     * Marks an order as done by sending a POST request to the API.
+     * @param {HTMLElement} buttonElement The button element that triggered the action.
+     * @param {string} poNumber The purchase order number to mark as done.
+     */
+    async function markDone(buttonElement, poNumber) {
+        // Prevent marking done if already completed
+        if (completedOrders.has(poNumber)) return;
+
+        // Find the order details based on PO number
+        const order = orders.find(o => o.purchaseOrderNumber === poNumber);
+        if (!order || !order.timestamp) {
+            // Use a custom modal or message box instead of alert
+            // For simplicity, a console error is used here. In a real app, use a proper UI notification.
+            console.error("Timestamp not found for the selected order.");
+            return;
         }
 
-        function fetchOrders() {
-            const startDate = document.getElementById('startDate').value;
-            const endDate = document.getElementById('endDate').value;
-            const loading = document.getElementById('loading');
-            const noOrders = document.getElementById('noOrders');
-            const ordersTable = document.getElementById('ordersTable');
-            const ordersBody = document.getElementById('ordersBody');
+        // Store original button content and class for revert
+        const originalButtonHtml = buttonElement.innerHTML;
+        const originalButtonClass = buttonElement.className;
 
-            loading.classList.remove('hidden');
-            noOrders.classList.add('hidden');
-            ordersTable.classList.add('hidden');
-            ordersBody.innerHTML = '';
+        // Show loading state on the button
+        buttonElement.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+        buttonElement.className = 'action-btn completed'; // Gray out and disable
+        buttonElement.disabled = true;
 
-            // Simulated backend fetch
-            fetch('/api/orders') // Replace with actual endpoint
-                .then(response => response.json())
-                .then(data => {
-                    loading.classList.add('hidden');
-                    if (data.length === 0) {
-                        noOrders.classList.remove('hidden');
-                        return;
-                    }
-
-                    const filteredData = data.filter(order => {
-                        if (!startDate && !endDate) return true;
-                        const orderDate = new Date(order.acknowledgedTimestamp);
-                        const start = startDate ? new Date(startDate) : null;
-                        const end = endDate ? new Date(endDate) : null;
-                        return (!start || orderDate >= start) && (!end || orderDate <= end);
-                    });
-
-                    if (filteredData.length === 0) {
-                        noOrders.classList.remove('hidden');
-                        return;
-                    }
-
-                    filteredData.forEach((order, index) => {
-                        const row = document.createElement('tr');
-                        row.className = 'table-row';
-                        row.innerHTML = `
-                            <td class="p-3">${index + 1}</td>
-                            <td class="p-3">${order.purchaseOrderNumber || ''}</td>
-                            <td class="p-3">${order.supplierName || ''}</td>
-                            <td class="p-3">${formatDate(order.acknowledgedTimestamp)}</td>
-                            <td class="p-3">
-                                ${order.invoiceUrl ? `<a href="${order.invoiceUrl}" class="text-blue-600 hover:underline" target="_blank">View Invoice</a>` : ''}
-                            </td>
-                            <td class="p-3">
-                                <a href="${order.googleSheetURL || '#'}" class="text-blue-600 hover:underline" target="_blank">View Details</a>
-                            </td>
-                        `;
-                        ordersBody.appendChild(row);
-                    });
-
-                    ordersTable.classList.remove('hidden');
+        try {
+            await fetch(API_URL, {
+                method: 'POST',
+                mode: 'no-cors', // Important for Apps Script web apps that don't send CORS headers
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    action: 'markDone',
+                    timestamp: order.timestamp,
+                    purchaseOrderNumber: poNumber
                 })
-                .catch(error => {
-                    console.error('Error fetching orders:', error);
-                    loading.classList.add('hidden');
-                    noOrders.classList.remove('hidden');
-                });
+            });
+
+            // Optimistically update UI assuming success
+            completedOrders.add(poNumber);
+
+            // Visual feedback for success on the button
+            buttonElement.innerHTML = '<i class="fas fa-check"></i> Done!';
+            buttonElement.className = 'action-btn completed';
+            buttonElement.disabled = true;
+
+            // Re-render the table after a short delay to reflect the true state
+            setTimeout(() => {
+                const row = buttonElement.closest('tr');
+                if (row) {
+                    row.classList.add('completed');
+                }
+                renderOrders(); 
+            }, 1500); // Wait for 1.5 seconds to show "Done!" before re-rendering
+		fetchOrders();
+        } catch (error) {
+            console.error('Fetch failed:', error);
+            // Use a custom modal or message box instead of alert
+            console.error('Network error — request not sent. Please try again.');
+            // Revert button to original state on error
+            buttonElement.innerHTML = originalButtonHtml;
+            buttonElement.className = originalButtonClass;
+            buttonElement.disabled = false;
         }
+    }
 
-        document.getElementById('refreshButton').addEventListener('click', fetchOrders);
-        document.getElementById('startDate').addEventListener('change', fetchOrders);
-        document.getElementById('endDate').addEventListener('change', fetchOrders);
+    /**
+     * Opens the invoice URL in a new tab.
+     * @param {string} invoiceUrl The URL of the invoice.
+     */
+    function showInvoice(invoiceUrl) {
+        window.open(invoiceUrl, '_blank');
+    }
 
-        // Initial fetch
-        fetchOrders();
-    </script>
+    /**
+
+    /**
+     * Updates the "Last updated" timestamp on the UI.
+     */
+    function updateLastUpdated() {
+        const now = new Date();
+        const timeString = now.toLocaleTimeString('en-US', { 
+            hour12: true, 
+            hour: 'numeric', 
+            minute: '2-digit' 
+        });
+        document.getElementById('lastUpdated').textContent = `Last updated: ${timeString}`;
+        document.getElementById('lastUpdated').style.color = '#ccc';
+        document.getElementById('lastUpdated').style.fontSize = '0.9rem';
+    }
+
+    // Auto-refresh orders every 30 seconds
+    setInterval(fetchOrders, 30000);
+
+    // Initial load of orders when the page loads
+    fetchOrders();
+</script>
+   <script src="https://ntwoods.github.io/ordertodispatch/js/viewOnly.js"></script>	
 </body>
 </html>

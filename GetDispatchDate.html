@@ -160,17 +160,17 @@
         }
 
         .requester-name {
-            font-size: 1.5rem;
-            font-weight: 700;
+            font-size: 1rem;
+            font-weight: 500;
             color: #212121; /* Dark grey for requester name */
             flex-grow: 1; /* Allow name to take available space */
             min-width: 150px; /* Ensure it doesn't shrink too much */
         }
 
         .po-number {
-            font-weight: 600;
+            font-weight: 500;
             color: #424242; /* Darker grey for PO number */
-            font-size: 1.05rem;
+            font-size: 0.75rem;
             background: #e3f2fd; /* Very light blue background */
             padding: 8px 15px;
             border-radius: 10px;
@@ -838,7 +838,7 @@
                                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
                                         <path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm-1 7V3.5L18.5 9H13z"/>
                                     </svg>
-                                    View PO
+                                    PO PDF
                                 </a>
                             ` : ''}
                             
@@ -847,7 +847,7 @@
                                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
                                         <path d="M20 2H4c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM8 17H6v-2h2v2zm0-4H6v-2h2v2zm0-4H6V7h2v2zm6 8h-4v-2h4v2zm0-4h-4v-2h4v2zm0-4h-4V7h4v2zm6 8h-4v-2h4v2zm0-4h-4v-2h4v2zm0-4h-4V7h4v2z"/>
                                     </svg>
-                                    View G-Sheet
+                                    G-Sheet
                                 </a>
                             ` : ''}
                             
@@ -856,7 +856,7 @@
                                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
                                         <path d="M19 13H5v-2h14v2zm-2-7H7V4h10v2zm3 14H4c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h16c1.1 0 2 .9 2 2v16c0 1.1-.9 2-2 2z"/>
                                     </svg>
-                                    Additional Purchase
+                                    Add. Pur.
                                 </a>
                             ` : ''}
                             
@@ -865,7 +865,7 @@
                                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
                                         <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>
                                     </svg>
-                                    CRM Request File
+                                    CRM Req.
                                 </a>
                             ` : ''}
                         </div>
@@ -913,7 +913,7 @@
                                         onclick="orderManager.submitDispatch(${index})"
                                         id="submit-btn-${index}"
                                     >
-                                        🚀 Submit Dispatch
+                                        🚀 Submit
                                     </button>
                                     <button 
                                         class="hold-btn" 
@@ -1011,7 +1011,7 @@
                     this.showMessage(`Error: ${error.message}`, 'error');
                 } finally {
                     submitBtn.disabled = false;
-                    submitBtn.innerHTML = '🚀 Submit Dispatch';
+                    submitBtn.innerHTML = '🚀 Submit';
                 }
             }
 
@@ -1086,12 +1086,6 @@
                 document.getElementById('refresh-status').textContent = 'Active (2 min)';
             }
 
-            playNotificationSound() {
-                const audio = document.getElementById('notification-sound');
-                if (audio) {
-                    audio.play().catch(e => console.log('Could not play notification sound'));
-                }
-            }
 
             showNotification(title, body) {
                 if (this.notificationPermission && 'Notification' in window) {
@@ -1100,11 +1094,6 @@
                         icon: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjQiIGhlaWdodD0iNjQiIHZpZXdCb3g9IjAgMCA2NCA2NCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiByeD0iMTIiIGZpbGw9IiMyMTk2ZjMiLz4KPHN2ZyB4PSIxNiIgeT0iMTYiIHdpZHRoPSIzMiIgaGVpZ2h0PSIzMiIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IndoaXRlIiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCI+CjxwYXRoIGQ9Im0xNiAxNiA0LTEwIDEwLTQtNCAxMC0xMC00eiIvPgo8cGF0aCBkPSJtMjEgMTEtOC44LTguOCIvPgo8cGF0aCBkPSJtMTYgMTYtNi03Ii8+Cjwvc3ZnPgo8L3N2Zz4K'
                     });
                 }
-            }
-
-            updateStatus() {
-                document.getElementById('order-count').textContent = this.orders.length;
-                document.getElementById('last-updated').textContent = new Date().toLocaleTimeString();
             }
 
             formatDate(dateString) {

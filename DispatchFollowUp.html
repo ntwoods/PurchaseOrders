@@ -522,39 +522,40 @@
         }
 
         // Calculate the follow-up deadline based on dispatch date and timestamp
-        function calculateDeadline(dispatchDate, dispatchDateTimeStamp) {
-            const dispatch = parseDate(dispatchDate);
-            const dispatchTimestamp = parseDate(dispatchDateTimeStamp);
-            
-            if (!dispatch || !dispatchTimestamp) {
-                console.log('Invalid dates for deadline calculation:', { dispatchDate, dispatchDateTimeStamp, dispatch, dispatchTimestamp });
-                return null;
-            }
-            
-            // Calculate difference in days (date level only - ignore time for diff)
-            const dispatchDateOnly = new Date(dispatch.getFullYear(), dispatch.getMonth(), dispatch.getDate());
-            const timestampDateOnly = new Date(dispatchTimestamp.getFullYear(), dispatchTimestamp.getMonth(), timestampDateOnly.getDate());
-            
-            const diffTime = dispatchDateOnly.getTime() - timestampDateOnly.getTime();
-            const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
-            
-            console.log('Date calculation for deadline:', {
-                dispatchDateOnly: dispatchDateOnly.toDateString(),
-                timestampDateOnly: timestampDateOnly.toDateString(),
-                diffDays,
-                halfDiff: Math.ceil(diffDays / 2)
-            });
-            
-            // Half the difference and round up (take ceiling)
-            const reminderDays = Math.ceil(diffDays / 2);
-            
-            // Add reminder days to the original dispatchDateTimeStamp (with time)
-            const deadline = new Date(dispatchTimestamp);
-            deadline.setDate(deadline.getDate() + reminderDays);
-            deadline.setHours(20, 0, 0, 0);
-            return deadline;
-        }
+// Calculate the follow-up deadline based on dispatch date and timestamp
+function calculateDeadline(dispatchDate, dispatchDateTimeStamp) {
+    const dispatch = parseDate(dispatchDate);
+    const dispatchTimestamp = parseDate(dispatchDateTimeStamp);
 
+    if (!dispatch || !dispatchTimestamp) {
+        console.log('Invalid dates for deadline calculation:', { dispatchDate, dispatchDateTimeStamp, dispatch, dispatchTimestamp });
+        return null;
+    }
+
+    // Calculate difference in days (date level only - ignore time for diff)
+    const dispatchDateOnly = new Date(dispatch.getFullYear(), dispatch.getMonth(), dispatch.getDate());
+    // FIX: Use dispatchTimestamp.getDate() here
+    const timestampDateOnly = new Date(dispatchTimestamp.getFullYear(), dispatchTimestamp.getMonth(), dispatchTimestamp.getDate());
+
+    const diffTime = dispatchDateOnly.getTime() - timestampDateOnly.getTime();
+    const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+
+    console.log('Date calculation for deadline:', {
+        dispatchDateOnly: dispatchDateOnly.toDateString(),
+        timestampDateOnly: timestampDateOnly.toDateString(),
+        diffDays,
+        halfDiff: Math.ceil(diffDays / 2)
+    });
+
+    // Half the difference and round up (take ceiling)
+    const reminderDays = Math.ceil(diffDays / 2);
+
+    // Add reminder days to the original dispatchDateTimeStamp (with time)
+    const deadline = new Date(dispatchTimestamp);
+    deadline.setDate(deadline.getDate() + reminderDays);
+    deadline.setHours(20, 0, 0, 0);
+    return deadline;
+}
         // Format time left for countdown timer
         function formatCountdown(timeLeft) {
             if (timeLeft <= 0) return null;

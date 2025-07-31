@@ -71,14 +71,14 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 15px;
-            padding-bottom: 10px;
+            margin-bottom: 10px; /* Reduced margin */
+            padding-bottom: 8px; /* Reduced padding */
             border-bottom: 2px solid #e3f2fd; /* Lighter blue border */
         }
 
         .order-id {
             font-weight: bold;
-            font-size: 1.2rem;
+            font-size: 1rem; /* Smaller font size */
             color: #212121; /* Dark grey for text */
         }
 
@@ -108,14 +108,14 @@
         }
 
         .order-details {
-            margin-bottom: 15px;
+            margin-bottom: 10px; /* Reduced margin */
             flex-grow: 1; /* Allows details section to grow and push actions to bottom */
         }
 
         .detail-group {
-            margin-bottom: 15px;
+            margin-bottom: 10px; /* Reduced margin */
             border-bottom: 1px dashed #e3f2fd;
-            padding-bottom: 10px;
+            padding-bottom: 8px; /* Reduced padding */
         }
 
         .detail-group:last-child {
@@ -126,7 +126,7 @@
         .detail-row {
             display: flex;
             align-items: flex-start; /* Align items to the start for multi-line values */
-            margin-bottom: 8px;
+            margin-bottom: 5px; /* Reduced margin */
         }
 
         .detail-row .detail-icon {
@@ -144,6 +144,12 @@
             flex-shrink: 0;
             white-space: nowrap; /* Prevent label from wrapping */
         }
+        
+        /* Specific style for bold supplier name */
+        .detail-label.bold-value { 
+            font-weight: bold;
+            color: #212121; /* Ensure good contrast */
+        }
 
         .detail-value {
             color: #212121; /* Dark grey */
@@ -152,61 +158,27 @@
         }
 
         .url-section {
-            margin-top: 15px;
-            margin-bottom: 15px;
+            margin-top: 10px; /* Reduced margin */
+            margin-bottom: 10px; /* Reduced margin */
             border-top: 1px dashed #e3f2fd;
-            padding-top: 15px;
-        }
-
-        .url-section .detail-row {
-            margin-bottom: 10px;
-        }
-
-        .url-section .detail-row:last-child {
-            margin-bottom: 0;
-        }
-
-        .countdown-section {
-            background: linear-gradient(135deg, #bbdefb 0%, #90caf9 100%); /* Blue gradient for countdown */
-            padding: 15px;
-            border-radius: 10px;
-            text-align: center;
-            margin-top: 15px;
-        }
-
-        .countdown-title {
-            font-size: 0.9rem;
-            font-weight: bold;
-            color: #1976d2; /* Darker blue */
-            margin-bottom: 8px;
-        }
-
-        .countdown-timer {
-            font-size: 1.5rem;
-            font-weight: bold;
-            color: #0d47a1; /* Even darker blue */
-            font-family: 'Courier New', monospace;
-        }
-
-        .countdown-overdue {
-            color: #fff;
-            background: #c62828; /* Dark red for overdue background */
-            padding: 10px;
-            border-radius: 8px;
-            font-size: 1.2rem;
-            font-weight: bold;
+            padding-top: 10px; /* Reduced padding */
+            display: flex; /* Use flexbox for buttons */
+            flex-wrap: wrap; /* Allow buttons to wrap */
+            gap: 10px; /* Space between buttons */
+            justify-content: flex-start; /* Align buttons to the start */
         }
 
         .view-po-btn {
             display: inline-block;
             background: linear-gradient(135deg, #2196f3 0%, #1976d2 100%); /* Blue gradient button */
             color: white;
-            padding: 6px 12px; /* Slightly smaller padding */
+            padding: 6px 10px; /* Smaller padding */
             text-decoration: none;
             border-radius: 15px; /* More rounded */
-            font-size: 0.85rem; /* Smaller font */
+            font-size: 0.8rem; /* Smaller font */
             font-weight: bold;
             transition: transform 0.2s ease;
+            white-space: nowrap; /* Prevent button text from wrapping */
         }
 
         .view-po-btn:hover {
@@ -214,10 +186,37 @@
             background: linear-gradient(135deg, #1976d2 0%, #1565c0 100%);
         }
 
+        .countdown-section {
+            padding: 8px 0; /* Reduced padding */
+            text-align: center;
+            margin-top: 10px; /* Reduced margin */
+        }
+
+        .countdown-title {
+            font-size: 0.85rem; /* Smaller font */
+            font-weight: bold;
+            color: #1976d2; /* Darker blue */
+            margin-bottom: 5px; /* Reduced margin */
+        }
+
+        .countdown-timer {
+            font-size: 1.2rem; /* Smaller font for timer */
+            font-weight: bold;
+            color: #c62828; /* Red for countdown timer */
+            font-family: 'Courier New', monospace;
+        }
+
+        .countdown-overdue {
+            color: #c62828; /* Dark red for overdue text */
+            font-size: 1.1rem; /* Smaller font for overdue */
+            font-weight: bold;
+            padding: 5px 0; /* Adjusted padding */
+        }
+
         /* Actions section styles */
         .actions-section {
-            margin-top: 20px; /* More space above actions */
-            padding: 15px;
+            margin-top: 15px; /* Adjusted margin */
+            padding: 10px; /* Reduced padding */
             background: linear-gradient(135deg, #90caf9 0%, #64b5f6 100%); /* Blue gradient for actions */
             border-radius: 10px;
         }
@@ -226,31 +225,32 @@
             font-size: 0.95rem;
             font-weight: bold;
             color: #0d47a1; /* Dark blue for title */
-            margin-bottom: 12px;
+            margin-bottom: 10px; /* Reduced margin */
             text-align: center;
         }
 
         .action-buttons {
             display: flex;
-            gap: 10px;
-            margin-bottom: 10px;
-            flex-wrap: wrap; /* Allow buttons to wrap */
-            justify-content: center;
+            gap: 8px; /* Reduced gap */
+            margin-bottom: 8px; /* Reduced margin */
+            flex-wrap: wrap; 
+            justify-content: center; /* Center align buttons */
         }
 
         .action-btn {
             flex: 1;
-            min-width: 100px; /* Adjusted min-width for smaller buttons */
-            max-width: 150px; /* Max width to prevent overstretching */
-            padding: 8px 12px; /* Adjusted padding */
+            min-width: 90px; /* Further reduced min-width */
+            max-width: 120px; /* Further reduced max-width */
+            padding: 6px 10px; /* Reduced padding */
             border: none;
             border-radius: 20px;
             font-weight: bold;
             cursor: pointer;
             transition: all 0.3s ease;
-            font-size: 0.85rem; /* Smaller font size */
-            color: white; /* All action buttons will have white text */
+            font-size: 0.8rem; /* Smaller font size */
+            color: white; 
             text-align: center;
+            white-space: nowrap; /* Prevent button text from wrapping */
         }
 
         .on-time-btn {
@@ -288,9 +288,9 @@
 
         .input-section {
             display: none;
-            margin-top: 10px;
-            padding: 10px;
-            background: rgba(255,255,255,0.3); /* Lighter background for input section */
+            margin-top: 8px; /* Reduced margin */
+            padding: 8px; /* Reduced padding */
+            background: rgba(255,255,255,0.3); 
             border-radius: 8px;
         }
 
@@ -299,32 +299,32 @@
         }
 
         .input-group {
-            margin-bottom: 10px;
+            margin-bottom: 8px; /* Reduced margin */
         }
 
         .input-label {
             display: block;
-            color: #0d47a1; /* Dark blue for labels */
+            color: #0d47a1; 
             font-weight: bold;
-            margin-bottom: 5px;
-            font-size: 0.85rem;
+            margin-bottom: 3px; /* Reduced margin */
+            font-size: 0.8rem; /* Smaller font */
         }
 
         .date-input,
         .text-input {
             width: 100%;
-            padding: 8px 12px;
-            border: 1px solid #90caf9; /* Light blue border */
+            padding: 6px 10px; /* Reduced padding */
+            border: 1px solid #90caf9; 
             border-radius: 5px;
-            font-size: 0.9rem;
-            background-color: #e3f2fd; /* Very light blue input field background */
+            font-size: 0.85rem; /* Smaller font */
+            background-color: #e3f2fd; 
             color: #212121;
         }
 
         .submit-btn {
             width: 100%;
-            padding: 8px 15px;
-            background: #1e88e5; /* Blue submit button */
+            padding: 6px 12px; /* Reduced padding */
+            background: #1e88e5; 
             color: white;
             border: none;
             border-radius: 5px;
@@ -332,6 +332,7 @@
             cursor: pointer;
             transition: background 0.3s ease;
             margin-top: 5px;
+            font-size: 0.85rem; /* Smaller font */
         }
 
         .submit-btn:hover {
@@ -339,7 +340,7 @@
         }
 
         .mark-hold-btn {
-            background: #4CAF50; /* Green for Mark Hold */
+            background: #4CAF50; 
             color: white;
         }
         .mark-hold-btn:hover {
@@ -347,7 +348,7 @@
         }
 
         .cancel-hold-btn {
-            background: #f44336; /* Red for Cancel Hold */
+            background: #f44336; 
             color: white;
         }
         .cancel-hold-btn:hover {
@@ -355,13 +356,13 @@
         }
 
         .action-feedback {
-            margin-top: 10px;
-            padding: 8px;
+            margin-top: 8px; /* Reduced margin */
+            padding: 6px; /* Reduced padding */
             border-radius: 5px;
             text-align: center;
             font-weight: bold;
             display: none;
-            font-size: 0.85rem;
+            font-size: 0.8rem; /* Smaller font */
         }
 
         .action-feedback.success {
@@ -375,8 +376,8 @@
         }
 
         .error-message {
-            background: #ffebee; /* Light red background for errors */
-            color: #c62828; /* Dark red text for errors */
+            background: #ffebee; 
+            color: #c62828; 
             padding: 15px;
             border-radius: 10px;
             text-align: center;
@@ -385,9 +386,9 @@
         }
 
         .refresh-btn {
-            background: #bbdefb; /* Light blue */
-            color: #1976d2; /* Medium blue */
-            border: 2px solid #64b5f6; /* Complementary blue border */
+            background: #bbdefb; 
+            color: #1976d2; 
+            border: 2px solid #64b5f6; 
             padding: 10px 20px;
             border-radius: 25px;
             cursor: pointer;
@@ -586,8 +587,7 @@
                         <div class="detail-group">
                             <div class="detail-row">
                                 <span class="detail-icon">👤</span>
-                                <span class="detail-label">Supplier:</span>
-                                <span class="detail-value">${order.supplierName || 'N/A'}</span>
+                                <span class="detail-value bold-value">${order.supplierName || 'N/A'}</span>
                             </div>
                             <div class="detail-row">
                                 <span class="detail-icon">📅</span>
@@ -596,7 +596,7 @@
                             </div>
                             <div class="detail-row">
                                 <span class="detail-icon">⏰</span>
-                                <span class="detail-label">Dispatch Confirmed on:</span>
+                                <span class="detail-label">Confirmed On:</span>
                                 <span class="detail-value">${formatDateTimeForDisplay(parseDate(order.dispatchDateTimeStamp))}</span>
                             </div>
                             ${order.deadline ? `
@@ -628,42 +628,18 @@
                         ` : ''}
 
                         <div class="url-section detail-group">
-                            <div class="detail-row">
-                                <span class="detail-icon">📋</span>
-                                <span class="detail-label">View PO:</span>
-                                <span class="detail-value">
-                                    ${order.googleSheetURL ? 
-                                        `<a href="${order.googleSheetURL}" target="_blank" class="view-po-btn">📄 View PO</a>` : 
-                                        'No URL'}
-                                </span>
-                            </div>
-                            <div class="detail-row">
-                                <span class="detail-icon">➕</span>
-                                <span class="detail-label">Add. Pur.:</span>
-                                <span class="detail-value">
-                                    ${order.additionalPurchaseURL ? 
-                                        `<a href="${order.additionalPurchaseURL}" target="_blank" class="view-po-btn">📄 Additional Pur.</a>` : 
-                                        'No URL'}
-                                </span>
-                            </div>                        
-                            <div class="detail-row">
-                                <span class="detail-icon">✉️</span>
-                                <span class="detail-label">CRM Request:</span>
-                                <span class="detail-value">
-                                    ${order.crmRequestURL ? 
-                                        `<a href="${order.crmRequestURL}" target="_blank" class="view-po-btn">📄 CRM Request</a>` : 
-                                        'No URL'}
-                                </span>
-                            </div>                        
-                            <div class="detail-row">
-                                <span class="detail-icon">🎵</span>
-                                <span class="detail-label">Order Sheet:</span>
-                                <span class="detail-value">
-                                    ${order.orderSheet ? 
-                                        `<a href="${order.orderSheet}" target="_blank" class="view-po-btn">🎼 Order Sheet</a>` : 
-                                        'No URL'}
-                                </span>
-                            </div>
+                            ${order.googleSheetURL ? `
+                                <a href="${order.googleSheetURL}" target="_blank" class="view-po-btn">📄 View PO</a>
+                            ` : ''}
+                            ${order.orderSheet ? `
+                                <a href="${order.orderSheet}" target="_blank" class="view-po-btn">🎼 Order Sheet</a>
+                            ` : ''}
+                            ${order.additionalPurchaseURL ? `
+                                <a href="${order.additionalPurchaseURL}" target="_blank" class="view-po-btn">➕ Add. Pur.</a>
+                            ` : ''}
+                            ${order.crmRequestURL ? `
+                                <a href="${order.crmRequestURL}" target="_blank" class="view-po-btn">✉️ CRM Request</a>
+                            ` : ''}
                         </div>
                     </div>
                     
@@ -675,13 +651,13 @@
                             <div class="actions-title">📋 Order Actions</div>
                             <div class="action-buttons">
                                 <button class="action-btn on-time-btn" onclick="handleOnTime('${order.timestamp}', '${order.id}')">
-                                    ✅ On Time
+                                    On Time
                                 </button>
                                 <button class="action-btn delayed-btn" onclick="toggleDelayedInput('${order.id}')">
-                                    ⏰ Delayed
+                                    Delayed
                                 </button>
                                 <button class="action-btn hold-btn" onclick="toggleHoldInput('${order.id}')">
-                                    ⏸️ Hold
+                                    Hold
                                 </button>
                             </div>
                             
@@ -708,10 +684,10 @@
                                 </div>
                                 <div class="action-buttons">
                                     <button class="action-btn mark-hold-btn" onclick="handleHold('${order.timestamp}', '${order.id}')">
-                                        ✔️ Mark Hold
+                                        Mark Hold
                                     </button>
                                     <button class="action-btn cancel-hold-btn" onclick="toggleHoldInput('${order.id}', true)">
-                                        ✖️ Cancel Hold
+                                        Cancel Hold
                                     </button>
                                 </div>
                             </div>
@@ -875,7 +851,7 @@
                 // Re-enable button after a short delay
                  setTimeout(() => {
                     button.disabled = false;
-                    button.textContent = '✅ On Time';
+                    button.textContent = 'On Time';
                 }, 2000);
             }
         }
@@ -1002,7 +978,7 @@
             } finally {
                 setTimeout(() => {
                     markHoldButton.disabled = false;
-                    markHoldButton.textContent = '✔️ Mark Hold';
+                    markHoldButton.textContent = 'Mark Hold';
                 }, 2000);
             }
         }

@@ -58,6 +58,8 @@
             backdrop-filter: blur(5px); /* Less blur */
             border: 1px solid rgba(187, 222, 251, 0.5); /* Border matching gradient */
             transition: transform 0.3s ease, box-shadow 0.3s ease;
+            display: flex; /* Use flexbox for internal layout */
+            flex-direction: column;
         }
 
         .order-card:hover {
@@ -76,7 +78,7 @@
 
         .order-id {
             font-weight: bold;
-            font-size: 1.1rem;
+            font-size: 1.2rem;
             color: #212121; /* Dark grey for text */
         }
 
@@ -107,25 +109,61 @@
 
         .order-details {
             margin-bottom: 15px;
+            flex-grow: 1; /* Allows details section to grow and push actions to bottom */
+        }
+
+        .detail-group {
+            margin-bottom: 15px;
+            border-bottom: 1px dashed #e3f2fd;
+            padding-bottom: 10px;
+        }
+
+        .detail-group:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
         }
 
         .detail-row {
             display: flex;
-            justify-content: space-between;
+            align-items: flex-start; /* Align items to the start for multi-line values */
             margin-bottom: 8px;
-            padding: 5px 0;
+        }
+
+        .detail-row .detail-icon {
+            margin-right: 8px;
+            font-size: 1.1rem;
+            color: #1976d2; /* Blue for icons */
+            flex-shrink: 0; /* Prevent icon from shrinking */
+            width: 20px; /* Fixed width for icons for alignment */
         }
 
         .detail-label {
             font-weight: 600;
             color: #424242; /* Darker grey */
+            margin-right: 5px; /* Space between label and value */
+            flex-shrink: 0;
+            white-space: nowrap; /* Prevent label from wrapping */
         }
 
         .detail-value {
             color: #212121; /* Dark grey */
-            text-align: right;
-            max-width: 60%;
-            word-wrap: break-word;
+            flex-grow: 1; /* Allow value to take remaining space */
+            word-wrap: break-word; /* Ensure long text wraps */
+        }
+
+        .url-section {
+            margin-top: 15px;
+            margin-bottom: 15px;
+            border-top: 1px dashed #e3f2fd;
+            padding-top: 15px;
+        }
+
+        .url-section .detail-row {
+            margin-bottom: 10px;
+        }
+
+        .url-section .detail-row:last-child {
+            margin-bottom: 0;
         }
 
         .countdown-section {
@@ -163,10 +201,10 @@
             display: inline-block;
             background: linear-gradient(135deg, #2196f3 0%, #1976d2 100%); /* Blue gradient button */
             color: white;
-            padding: 8px 16px;
+            padding: 6px 12px; /* Slightly smaller padding */
             text-decoration: none;
-            border-radius: 20px;
-            font-size: 0.9rem;
+            border-radius: 15px; /* More rounded */
+            font-size: 0.85rem; /* Smaller font */
             font-weight: bold;
             transition: transform 0.2s ease;
         }
@@ -178,17 +216,17 @@
 
         /* Actions section styles */
         .actions-section {
-            margin-top: 15px;
+            margin-top: 20px; /* More space above actions */
             padding: 15px;
             background: linear-gradient(135deg, #90caf9 0%, #64b5f6 100%); /* Blue gradient for actions */
             border-radius: 10px;
         }
 
         .actions-title {
-            font-size: 0.9rem;
+            font-size: 0.95rem;
             font-weight: bold;
             color: #0d47a1; /* Dark blue for title */
-            margin-bottom: 10px;
+            margin-bottom: 12px;
             text-align: center;
         }
 
@@ -196,20 +234,23 @@
             display: flex;
             gap: 10px;
             margin-bottom: 10px;
-            flex-wrap: wrap;
+            flex-wrap: wrap; /* Allow buttons to wrap */
+            justify-content: center;
         }
 
         .action-btn {
             flex: 1;
-            min-width: 120px;
-            padding: 10px 15px;
+            min-width: 100px; /* Adjusted min-width for smaller buttons */
+            max-width: 150px; /* Max width to prevent overstretching */
+            padding: 8px 12px; /* Adjusted padding */
             border: none;
             border-radius: 20px;
             font-weight: bold;
             cursor: pointer;
             transition: all 0.3s ease;
-            font-size: 0.9rem;
+            font-size: 0.85rem; /* Smaller font size */
             color: white; /* All action buttons will have white text */
+            text-align: center;
         }
 
         .on-time-btn {
@@ -320,6 +361,7 @@
             text-align: center;
             font-weight: bold;
             display: none;
+            font-size: 0.85rem;
         }
 
         .action-feedback.success {
@@ -541,123 +583,142 @@
                     </div>
                     
                     <div class="order-details">
-                        <div class="detail-row">
-                            <span class="detail-label">👤 Supplier:</span>
-                            <span class="detail-value">${order.supplierName || 'N/A'}</span>
+                        <div class="detail-group">
+                            <div class="detail-row">
+                                <span class="detail-icon">👤</span>
+                                <span class="detail-label">Supplier:</span>
+                                <span class="detail-value">${order.supplierName || 'N/A'}</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="detail-icon">📅</span>
+                                <span class="detail-label">Dispatch Date:</span>
+                                <span class="detail-value">${formatDateForDisplay(parseDate(order.dispatchDate))}</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="detail-icon">⏰</span>
+                                <span class="detail-label">Dispatch Confirmed on:</span>
+                                <span class="detail-value">${formatDateTimeForDisplay(parseDate(order.dispatchDateTimeStamp))}</span>
+                            </div>
+                            ${order.deadline ? `
+                            <div class="detail-row">
+                                <span class="detail-icon">🎯</span>
+                                <span class="detail-label">Follow Up Deadline:</span>
+                                <span class="detail-value">${formatDateTimeForDisplay(order.deadline)}</span>
+                            </div>
+                            ` : ''}
                         </div>
-                        <div class="detail-row">
-                            <span class="detail-label">📅 Dispatch Date:</span>
-                            <span class="detail-value">${formatDateForDisplay(parseDate(order.dispatchDate))}</span>
-                        </div>
-                        <div class="detail-row">
-                            <span class="detail-label">⏰ Dispatch Confirmed on:</span>
-                            <span class="detail-value">${formatDateTimeForDisplay(parseDate(order.dispatchDateTimeStamp))}</span>
-                        </div>
-                        ${order.crmRemark ? `
-                        <div class="detail-row">
-                            <span class="detail-label">💬 CRM Remark:</span>
-                            <span class="detail-value">${order.crmRemark}</span>
+
+                        ${order.crmRemark || order.responseRemark ? `
+                        <div class="detail-group">
+                            ${order.crmRemark ? `
+                            <div class="detail-row">
+                                <span class="detail-icon">💬</span>
+                                <span class="detail-label">CRM Remark:</span>
+                                <span class="detail-value">${order.crmRemark}</span>
+                            </div>
+                            ` : ''}
+                            ${order.responseRemark ? `
+                            <div class="detail-row">
+                                <span class="detail-icon">📝</span>
+                                <span class="detail-label">Purchase Remark:</span>
+                                <span class="detail-value">${order.responseRemark}</span>
+                            </div>
+                            ` : ''}
                         </div>
                         ` : ''}
-                        ${order.responseRemark ? `
-                        <div class="detail-row">
-                            <span class="detail-label">📝 Purchase Remark:</span>
-                            <span class="detail-value">${order.responseRemark}</span>
+
+                        <div class="url-section detail-group">
+                            <div class="detail-row">
+                                <span class="detail-icon">📋</span>
+                                <span class="detail-label">View PO:</span>
+                                <span class="detail-value">
+                                    ${order.googleSheetURL ? 
+                                        `<a href="${order.googleSheetURL}" target="_blank" class="view-po-btn">📄 View PO</a>` : 
+                                        'No URL'}
+                                </span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="detail-icon">➕</span>
+                                <span class="detail-label">Add. Pur.:</span>
+                                <span class="detail-value">
+                                    ${order.additionalPurchaseURL ? 
+                                        `<a href="${order.additionalPurchaseURL}" target="_blank" class="view-po-btn">📄 Additional Pur.</a>` : 
+                                        'No URL'}
+                                </span>
+                            </div>                        
+                            <div class="detail-row">
+                                <span class="detail-icon">✉️</span>
+                                <span class="detail-label">CRM Request:</span>
+                                <span class="detail-value">
+                                    ${order.crmRequestURL ? 
+                                        `<a href="${order.crmRequestURL}" target="_blank" class="view-po-btn">📄 CRM Request</a>` : 
+                                        'No URL'}
+                                </span>
+                            </div>                        
+                            <div class="detail-row">
+                                <span class="detail-icon">🎵</span>
+                                <span class="detail-label">Order Sheet:</span>
+                                <span class="detail-value">
+                                    ${order.orderSheet ? 
+                                        `<a href="${order.orderSheet}" target="_blank" class="view-po-btn">🎼 Order Sheet</a>` : 
+                                        'No URL'}
+                                </span>
+                            </div>
                         </div>
-                        ` : ''}                        
-                        ${order.deadline ? `
-                        <div class="detail-row">
-                            <span class="detail-label">🎯 Follow Up Deadline:</span>
-                            <span class="detail-value">${formatDateTimeForDisplay(order.deadline)}</span>
-                        </div>
-                        ` : ''}
-                        <div class="detail-row">
-                            <span class="detail-label">📋 View PO:</span>
-                            <span class="detail-value">
-                                ${order.googleSheetURL ? 
-                                    `<a href="${order.googleSheetURL}" target="_blank" class="view-po-btn">📄 View PO</a>` : 
-                                    'No URL'}
-                            </span>
-                        </div>
-                        <div class="detail-row">
-                            <span class="detail-label">📋 Add. Pur.:</span>
-                            <span class="detail-value">
-                                ${order.additionalPurchaseURL ? 
-                                    `<a href="${order.additionalPurchaseURL}" target="_blank" class="view-po-btn">📄 Additional Pur.</a>` : 
-                                    'No URL'}
-                            </span>
-                        </div>                        
-                        <div class="detail-row">
-                            <span class="detail-label">📋 CRM Request:</span>
-                            <span class="detail-value">
-                                ${order.crmRequestURL ? 
-                                    `<a href="${order.crmRequestURL}" target="_blank" class="view-po-btn">📄 CRM Request</a>` : 
-                                    'No URL'}
-                            </span>
-                        </div>                        
-                        <div class="detail-row">
-                            <span class="detail-label">🎼 Order Sheet:</span>
-                            <span class="detail-value">
-                                ${order.orderSheet ? 
-                                    `<a href="${order.orderSheet}" target="_blank" class="view-po-btn">🎼 Order Sheet</a>` : 
-                                    'No URL'}
-                            </span>
-                        </div>
-                       
                     </div>
                     
                     <div id="countdown-${order.id}" class="countdown-section">
                         ${order.deadline ? '' : '<div class="countdown-title">⚠️ Cannot calculate deadline</div>'}
                     </div>
-                <div class="editable">		                    
-                    <div class="actions-section">
-                        <div class="actions-title">📋 Order Actions</div>
-                        <div class="action-buttons">
-                            <button class="action-btn on-time-btn" onclick="handleOnTime('${order.timestamp}', '${order.id}')">
-                                ✅ On Time
-                            </button>
-                            <button class="action-btn delayed-btn" onclick="toggleDelayedInput('${order.id}')">
-                                ⏰ Delayed
-                            </button>
-                            <button class="action-btn hold-btn" onclick="toggleHoldInput('${order.id}')">
-                                ⏸️ Hold
-                            </button>
-                        </div>
-                        
-                        <div id="delayed-input-${order.id}" class="input-section">
-                            <div class="input-group">
-                                <label for="next-dispatch-${order.id}" class="input-label">Next Dispatch Date:</label>
-                                <input type="date" id="next-dispatch-${order.id}" class="date-input" required>
-                                <label for="delayed-reason-${order.id}" class="input-label">Delayed Reason:</label>
-                                <input type="text" id="delayed-reason-${order.id}" class="date-input" required>                                
-                            </div>
-                            <button class="submit-btn" onclick="handleDelayed('${order.timestamp}', '${order.id}')">
-                                Submit Delayed
-                            </button>
-                        </div>
-
-                        <div id="hold-input-${order.id}" class="input-section">
-                            <div class="input-group">
-                                <label for="hold-until-${order.id}" class="input-label">Hold Until:</label>
-                                <input type="date" id="hold-until-${order.id}" class="date-input">
-                            </div>
-                            <div class="input-group">
-                                <label for="hold-remark-${order.id}" class="input-label">Hold Remark:</label>
-                                <input type="text" id="hold-remark-${order.id}" class="text-input" placeholder="Enter remark">
-                            </div>
+                    <div class="editable">		                    
+                        <div class="actions-section">
+                            <div class="actions-title">📋 Order Actions</div>
                             <div class="action-buttons">
-                                <button class="action-btn mark-hold-btn" onclick="handleHold('${order.timestamp}', '${order.id}')">
-                                    ✔️ Mark Hold
+                                <button class="action-btn on-time-btn" onclick="handleOnTime('${order.timestamp}', '${order.id}')">
+                                    ✅ On Time
                                 </button>
-                                <button class="action-btn cancel-hold-btn" onclick="toggleHoldInput('${order.id}', true)">
-                                    ✖️ Cancel Hold
+                                <button class="action-btn delayed-btn" onclick="toggleDelayedInput('${order.id}')">
+                                    ⏰ Delayed
+                                </button>
+                                <button class="action-btn hold-btn" onclick="toggleHoldInput('${order.id}')">
+                                    ⏸️ Hold
                                 </button>
                             </div>
+                            
+                            <div id="delayed-input-${order.id}" class="input-section">
+                                <div class="input-group">
+                                    <label for="next-dispatch-${order.id}" class="input-label">Next Dispatch Date:</label>
+                                    <input type="date" id="next-dispatch-${order.id}" class="date-input" required>
+                                    <label for="delayed-reason-${order.id}" class="input-label">Delayed Reason:</label>
+                                    <input type="text" id="delayed-reason-${order.id}" class="date-input" required>                                
+                                </div>
+                                <button class="submit-btn" onclick="handleDelayed('${order.timestamp}', '${order.id}')">
+                                    Submit Delayed
+                                </button>
+                            </div>
+
+                            <div id="hold-input-${order.id}" class="input-section">
+                                <div class="input-group">
+                                    <label for="hold-until-${order.id}" class="input-label">Hold Until:</label>
+                                    <input type="date" id="hold-until-${order.id}" class="date-input">
+                                </div>
+                                <div class="input-group">
+                                    <label for="hold-remark-${order.id}" class="input-label">Hold Remark:</label>
+                                    <input type="text" id="hold-remark-${order.id}" class="text-input" placeholder="Enter remark">
+                                </div>
+                                <div class="action-buttons">
+                                    <button class="action-btn mark-hold-btn" onclick="handleHold('${order.timestamp}', '${order.id}')">
+                                        ✔️ Mark Hold
+                                    </button>
+                                    <button class="action-btn cancel-hold-btn" onclick="toggleHoldInput('${order.id}', true)">
+                                        ✖️ Cancel Hold
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div id="feedback-${order.id}" class="action-feedback"></div>
                         </div>
-                        
-                        <div id="feedback-${order.id}" class="action-feedback"></div>
                     </div>
-                </div>
                 </div>
             `;
         }

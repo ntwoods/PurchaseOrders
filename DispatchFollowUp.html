@@ -157,6 +157,30 @@
             word-wrap: break-word; /* Ensure long text wraps */
         }
 
+        .delayed-reason-text {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: -webkit-box;
+            -webkit-line-clamp: 2; /* Show up to 2 lines initially */
+            -webkit-box-orient: vertical;
+        }
+
+        .delayed-reason-text.expanded {
+            -webkit-line-clamp: unset;
+            max-height: none;
+        }
+
+        .read-more-btn {
+            background: none;
+            border: none;
+            color: #1976d2;
+            cursor: pointer;
+            font-size: 0.8rem;
+            padding: 0;
+            text-decoration: underline;
+            margin-left: 5px;
+        }
+
         .url-section {
             margin-top: 10px; /* Reduced margin */
             margin-bottom: 10px; /* Reduced margin */
@@ -445,7 +469,7 @@
             }
             // Handle DD/MM/YYYY format
             else if (dateStr.includes('/')) {
-                const [day, month, year] = dateStr.split('/');
+                const [day, month, year] = datePart.split('/');
                 date = new Date(`${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`);
             }
             // Handle YYYY-MM-DD format (e.g., 2025-06-20)
@@ -570,11 +594,28 @@
             }
         }
 
+        // Toggle "see more" for delayed reason
+        function toggleDelayedReason(orderId) {
+            const textElement = document.getElementById(`delayed-reason-text-${orderId}`);
+            const buttonElement = document.getElementById(`read-more-btn-${orderId}`);
+
+            if (textElement && buttonElement) {
+                textElement.classList.toggle('expanded');
+                if (textElement.classList.contains('expanded')) {
+                    buttonElement.textContent = 'see less';
+                } else {
+                    buttonElement.textContent = 'see more';
+                }
+            }
+        }
+
         // Create HTML structure for each order card
         function createOrderCard(order, index) {
             const isOverdue = order.deadline && new Date() > order.deadline;
             const statusClass = isOverdue ? 'status-overdue' : 'status-active';
             const statusText = isOverdue ? 'OVERDUE' : 'ACTIVE';
+            
+            const hasDelayedReason = order.delayedReason && order.delayedReason.trim() !== '';
             
             return `
                 <div class="order-card">
@@ -608,7 +649,7 @@
                             ` : ''}
                         </div>
 
-                        ${order.crmRemark || order.responseRemark ? `
+                        ${order.crmRemark || order.responseRemark || hasDelayedReason ? `
                         <div class="detail-group">
                             ${order.crmRemark ? `
                             <div class="detail-row">
@@ -622,6 +663,13 @@
                                 <span class="detail-icon">📝</span>
                                 <span class="detail-label">Purchase Remark:</span>
                                 <span class="detail-value">${order.responseRemark}</span>
+                            </div>
+                            ` : ''}
+                            ${hasDelayedReason ? `
+                            <div class="detail-row">
+                                <span class="detail-icon"> delaying Reason:</span>
+                                <span id="delayed-reason-text-${order.id}" class="detail-value delayed-reason-text">${order.delayedReason}</span>
+                                <button id="read-more-btn-${order.id}" class="read-more-btn" onclick="toggleDelayedReason('${order.id}')">see more</button>
                             </div>
                             ` : ''}
                         </div>

@@ -533,7 +533,7 @@
             
             // Calculate difference in days (date level only - ignore time for diff)
             const dispatchDateOnly = new Date(dispatch.getFullYear(), dispatch.getMonth(), dispatch.getDate());
-            const timestampDateOnly = new Date(dispatchTimestamp.getFullYear(), dispatchTimestamp.getMonth(), dispatchTimestamp.getDate());
+            const timestampDateOnly = new Date(dispatchTimestamp.getFullYear(), dispatchTimestamp.getMonth(), timestampDateOnly.getDate());
             
             const diffTime = dispatchDateOnly.getTime() - timestampDateOnly.getTime();
             const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));

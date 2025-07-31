@@ -62,39 +62,6 @@
             line-height: 1.5;
         }
             
-        /* Status bar styles */
-        .status-bar {
-            background: rgba(255, 255, 255, 0.9); /* Slightly transparent white */
-            backdrop-filter: blur(8px);
-            border-radius: 15px;
-            padding: 18px 25px;
-            margin-bottom: 35px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            color: #424242; /* Darker grey for status bar text */
-            box-shadow: 0 6px 20px rgba(0,0,0,0.08);
-            border: 1px solid rgba(227, 242, 253, 0.6);
-            flex-wrap: wrap; /* Allow items to wrap on smaller screens */
-            gap: 15px; /* Spacing between status items */
-        }
-
-        .status-item {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-size: 1rem;
-            font-weight: 500;
-        }
-
-        .status-indicator {
-            width: 14px;
-            height: 14px;
-            border-radius: 50%;
-            background: #2196f3; /* Blue indicator */
-            animation: pulse 2s infinite cubic-bezier(0.4, 0, 0.6, 1);
-        }
-
         @keyframes pulse {
             0%, 100% { opacity: 1; }
             50% { opacity: 0.6; }
@@ -619,24 +586,6 @@
             </h1>
             <p>Streamline your workflow: Call suppliers and effortlessly obtain tentative dispatch dates for each order.</p>
         </div>
-
-        <div class="status-bar">
-            <div class="status-item">
-                <div class="status-indicator"></div>
-                <span>Auto-refresh: <span id="refresh-status">Active</span></span>
-            </div>
-            <div class="status-item">
-                <span>Total Orders: <span id="order-count">0</span></span>
-            </div>
-            <div class="status-item">
-                <span>Last Updated: <span id="last-updated">--</span></span>
-            </div>
-        </div>
-
-        <div id="notification-prompt" class="notification-prompt" style="display: none;">
-            🔔 Click here to enable sound notifications for new orders
-        </div>
-
         <div id="loading" class="loading">
             <div class="spinner"></div>
             Loading orders...
@@ -647,11 +596,6 @@
 
         <div id="orders-container" class="orders-grid"></div>
     </div>
-
-    <audio id="notification-sound" preload="auto">
-        <source src="data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO5tiJNwgZaLvt559NEAxQp+PwtjMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmEaBjuU2fDGfSoHJHfH8N2QQAoUXrTp66hVFApGn+DyvmEaBjuU2fDGfSoHJHfH8N2QQAoUXrTp66hVFApGn+DyvmEaBjuU2fDGfSoHJHfH8N2QQAoUXrTp66hVFApGn+DyvmEaBjuU2fDGfSoHJHfH8N2QQAoUXrTp66hVFApGn+DyvmEaBjuU2fDGfSoHJHfH8N2QQAoUXrTp66hVFApGn+DyvmEaBjuU2fDGfSoHJHfH8N2QQAoUXrTp66hVFApGn+DyvmEaBjuU2fDGfSoHJHfH8N2QQAoUXrTp66hVFApGn+DyYmEaBjuU2fDGfSoHJHfH8N2QQAoUXrTp66hVFApGn+DyvmEaBjuU2fDGfSoHJHfH8N2QQAoUXrTp66hVFApGn+DyvmEaBjuU2fDGfSoHJHfH8N2QQAoUXrTp66hVFApGn+DyvmEaBjuU2fDGfSoHJHfH8N2QQAoUXrTp66hVFApGn+DyvmEaBjuU2fDGfSoHJHfH8N2QQAoUXrTp66hVFApGn+DyvmEaBjuU2fDGfSoHJHfH8N2QQAoUXrTp66hVFApGn+DyvmEaBCjS2fDGfSoHJHfH8N2QQAoUXrTp66hVFApGn+DyvmEaBjuU2fDGfSoHJHfH8N2QQAo=" type="audio/wav">
-    </audio>
-
     <script>
         class OrderManager {
             constructor() {

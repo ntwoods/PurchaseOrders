@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Order Management System</title>
     <style>
+        /* Base styles and resets */
         * {
             margin: 0;
             padding: 0;
@@ -12,92 +13,115 @@
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, #e0f2f7 0%, #bbdefb 100%); /* Light blue to a slightly darker light blue */
             min-height: 100vh;
             padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
 
         .container {
             max-width: 1200px;
+            width: 100%;
             margin: 0 auto;
+            padding: 0 15px; /* Add horizontal padding for smaller screens */
         }
 
+        /* Header styles */
         .header {
             text-align: center;
-            margin-bottom: 30px;
+            margin-bottom: 40px;
             color: #2196f3; /* Blue header text */
+            padding-top: 20px;
         }
 
         .header h1 {
-            font-size: 2.5rem;
-            margin-bottom: 10px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            font-size: 2.8rem;
+            margin-bottom: 12px;
+            text-shadow: 2px 2px 6px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            color: #1a73e8; /* Deeper blue for main heading */
         }
 
-        .po-number {
-            position: absolute;
-            top: 20px;
-            right: 25px;
-            font-weight: bold;
-            color: #424242; /* Darker grey for PO number */
-            font-size: 1rem;
-            background: #e3f2fd; /* Very light blue background */
-            padding: 6px 10px;
-            border-radius: 8px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        .header h1 svg {
+            width: 50px;
+            height: 50px;
+            fill: #1a73e8;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            color: #424242;
+            max-width: 600px;
+            margin: 0 auto;
+            line-height: 1.5;
         }
             
+        /* Status bar styles */
         .status-bar {
-            background: rgba(255, 255, 255, 0.8); /* Slightly transparent white */
-            backdrop-filter: blur(5px);
+            background: rgba(255, 255, 255, 0.9); /* Slightly transparent white */
+            backdrop-filter: blur(8px);
             border-radius: 15px;
-            padding: 15px;
-            margin-bottom: 30px;
+            padding: 18px 25px;
+            margin-bottom: 35px;
             display: flex;
             justify-content: space-between;
             align-items: center;
             color: #424242; /* Darker grey for status bar text */
-            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+            border: 1px solid rgba(227, 242, 253, 0.6);
+            flex-wrap: wrap; /* Allow items to wrap on smaller screens */
+            gap: 15px; /* Spacing between status items */
         }
 
         .status-item {
             display: flex;
             align-items: center;
             gap: 10px;
+            font-size: 1rem;
+            font-weight: 500;
         }
 
         .status-indicator {
-            width: 12px;
-            height: 12px;
+            width: 14px;
+            height: 14px;
             border-radius: 50%;
             background: #2196f3; /* Blue indicator */
-            animation: pulse 2s infinite;
+            animation: pulse 2s infinite cubic-bezier(0.4, 0, 0.6, 1);
         }
 
         @keyframes pulse {
-            0% { opacity: 1; }
-            50% { opacity: 0.7; }
-            100% { opacity: 1; }
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
         }
 
+        /* Orders grid layout */
         .orders-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
-            gap: 25px;
-            margin-bottom: 30px;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); /* More flexible min-width */
+            gap: 30px; /* Increased gap for better spacing */
+            margin-bottom: 40px;
+            width: 100%;
         }
 
+        /* Order card styles */
         .order-card {
             background: #ffffff; /* White card background */
-            border-radius: 20px;
-            padding: 25px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(227, 242, 253, 0.8); /* Light blue border */
-            transition: all 0.3s ease;
+            border-radius: 25px; /* More rounded corners */
+            padding: 30px; /* Increased padding */
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.12); /* Softer, larger shadow */
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(227, 242, 253, 0.9); /* Light blue border */
+            transition: all 0.4s ease-in-out;
             position: relative;
             overflow: hidden;
+            display: flex;
+            flex-direction: column;
         }
 
         .order-card::before {
@@ -106,137 +130,224 @@
             top: 0;
             left: 0;
             right: 0;
-            height: 4px;
+            height: 5px; /* Slightly thicker top border */
             background: linear-gradient(90deg, #2196f3, #1976d2); /* Blue gradient for top border */
+            border-top-left-radius: 25px;
+            border-top-right-radius: 25px;
         }
 
         .order-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+            transform: translateY(-8px); /* More pronounced lift effect */
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2); /* Deeper shadow on hover */
         }
 
+        /* Order header within card */
         .order-header {
-            margin-bottom: 20px;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e0e0e0; /* Subtle separator */
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .requester-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap; /* Allow wrapping for long names/PO numbers */
+            gap: 10px;
         }
 
         .requester-name {
-            font-size: 1.4rem;
-            font-weight: 600;
+            font-size: 1.5rem;
+            font-weight: 700;
             color: #212121; /* Dark grey for requester name */
-            margin-bottom: 8px;
+            flex-grow: 1; /* Allow name to take available space */
+            min-width: 150px; /* Ensure it doesn't shrink too much */
         }
 
-        .timestamp {
-            color: #616161; /* Medium grey for timestamp */
-            font-size: 0.9rem;
+        .po-number {
+            font-weight: 600;
+            color: #424242; /* Darker grey for PO number */
+            font-size: 1.05rem;
+            background: #e3f2fd; /* Very light blue background */
+            padding: 8px 15px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            white-space: nowrap; /* Prevent wrapping for PO number */
+        }
+
+        .order-details {
             display: flex;
-            align-items: center;
-            gap: 5px;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 15px;
         }
 
-        .order-actions {
-            margin: 20px 0;
+        .order-detail-item {
+            display: flex;
+            align-items: flex-start; /* Align icon and text at the top */
+            gap: 10px;
+            font-size: 0.95rem;
+            color: #616161; /* Medium grey for timestamp */
+            line-height: 1.4;
+        }
+
+        .order-detail-item svg {
+            flex-shrink: 0; /* Prevent icon from shrinking */
+            width: 18px;
+            height: 18px;
+            fill: #616161;
+            margin-top: 2px; /* Adjust icon vertical alignment */
+        }
+
+        .countdown-timer {
+            font-size: 1.05rem;
+            font-weight: 600;
+            color: #e65100; /* A shade of orange */
+            margin-top: 15px;
+            padding-top: 10px;
+            border-top: 1px dashed #e0e0e0;
+            text-align: center;
+        }
+
+        /* Action buttons container */
+        .order-actions-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); /* Flexible button grid */
+            gap: 15px; /* Spacing between buttons */
+            margin: 25px 0;
         }
 
         .view-po-btn {
             background: linear-gradient(45deg, #42a5f5, #2196f3); /* Blue gradient */
             color: white;
             border: none;
-            padding: 12px 20px;
-            border-radius: 10px;
+            padding: 14px 20px;
+            border-radius: 12px; /* More rounded buttons */
             cursor: pointer;
             font-size: 1rem;
-            font-weight: 500;
+            font-weight: 600;
             transition: all 0.3s ease;
-            width: 100%;
-            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            box-shadow: 0 4px 15px rgba(33, 150, 243, 0.2);
         }
 
         .view-po-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(33, 150, 243, 0.3);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(33, 150, 243, 0.4);
         }
 
+        .view-po-btn svg {
+            width: 20px;
+            height: 20px;
+            fill: white;
+        }
+
+        /* Dispatch section */
         .dispatch-section {
             border-top: 1px solid #e0e0e0; /* Light grey border */
-            padding-top: 20px;
+            padding-top: 25px;
+            margin-top: auto; /* Push to the bottom of the card */
         }
 
         .dispatch-label {
             font-weight: 600;
             color: #333;
-            margin-bottom: 10px;
+            margin-bottom: 12px;
             display: block;
+            font-size: 1.05rem;
+        }
+
+        .dispatch-input-wrapper {
+            position: relative;
+            margin-bottom: 20px;
         }
 
         .dispatch-input {
             width: 100%;
-            padding: 12px;
+            padding: 12px 15px;
             border: 2px solid #e0e0e0; /* Light grey border */
             border-radius: 10px;
             font-size: 1rem;
-            margin-bottom: 15px;
-            transition: border-color 0.3s ease;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+            appearance: none; /* Remove default date input styling */
+            padding-right: 40px; /* Space for calendar icon */
         }
 
         .dispatch-input:focus {
             outline: none;
             border-color: #2196f3; /* Blue border on focus */
-            box-shadow: 0 0 10px rgba(33, 150, 243, 0.2);
+            box-shadow: 0 0 12px rgba(33, 150, 243, 0.25);
+        }
+
+        .dispatch-input::-webkit-calendar-picker-indicator {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            width: 24px;
+            height: 24px;
+            opacity: 1; /* Ensure it's visible */
+            filter: invert(30%) sepia(80%) saturate(2000%) hue-rotate(190deg) brightness(90%) contrast(90%); /* Blue tint */
         }
 
         .button-group {
             display: flex;
-            gap: 10px;
-            margin-top: 15px;
+            gap: 15px; /* Spacing between buttons */
+            margin-top: 20px;
+            flex-wrap: wrap; /* Allow buttons to wrap */
+        }
+
+        .submit-btn, .hold-btn {
+            color: white;
+            border: none;
+            padding: 14px 25px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            flex: 1; /* Allow buttons to grow and shrink */
+            min-width: 140px; /* Minimum width for buttons */
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
         }
 
         .submit-btn {
             background: linear-gradient(45deg, #2196f3, #1976d2); /* Blue gradient */
-            color: white;
-            border: none;
-            padding: 12px 25px;
-            border-radius: 10px;
-            cursor: pointer;
-            font-size: 1rem;
-            font-weight: 600;
-            flex: 1;
-            transition: all 0.3s ease;
         }
 
         .submit-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(33, 150, 243, 0.3);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(33, 150, 243, 0.4);
         }
 
         .submit-btn:disabled {
             background: #bbdefb; /* Lighter blue when disabled */
             cursor: not-allowed;
             transform: none;
+            box-shadow: none;
         }
 
         .hold-btn {
             background: linear-gradient(45deg, #ffb300, #fb8c00); /* Orange gradient */
-            color: white;
-            border: none;
-            padding: 12px 25px;
-            border-radius: 10px;
-            cursor: pointer;
-            font-size: 1rem;
-            font-weight: 600;
-            flex: 1;
-            transition: all 0.3s ease;
         }
 
         .hold-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(255, 179, 0, 0.3);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(255, 179, 0, 0.4);
         }
 
         .hold-btn:disabled {
             background: #ffe082; /* Lighter orange when disabled */
             cursor: not-allowed;
             transform: none;
+            box-shadow: none;
         }
         
         .mark-hold-btn {
@@ -248,39 +359,36 @@
             cursor: pointer;
             font-size: 1rem;
             font-weight: 600;
-            flex: 1;
+            width: 100%; /* Full width for consistency */
+            margin-top: 15px;
             transition: all 0.3s ease;
-            margin-top: 10px; /* Added margin for spacing */
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
         }
 
-	.countdown-timer {
-	    font-size: 1rem;
-	    font-weight: 500;
-	    color: #e65100; /* A shade of orange */
-	    margin-top: 8px;
-	}	    
-
         .mark-hold-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(41, 182, 246, 0.3);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(41, 182, 246, 0.4);
         }
 
         .mark-hold-btn:disabled {
             background: #81d4fa; /* Lighter blue when disabled */
             cursor: not-allowed;
             transform: none;
+            box-shadow: none;
         }
 
+        /* Hold fields section */
         .hold-fields {
-            margin-top: 15px;
-            padding: 15px;
-            background: rgba(255, 193, 7, 0.1); /* Light orange background */
-            border-radius: 10px;
-            border: 1px solid rgba(255, 193, 7, 0.3); /* Orange border */
+            margin-top: 20px;
+            padding: 20px;
+            background: rgba(255, 193, 7, 0.08); /* Light orange background */
+            border-radius: 15px;
+            border: 1px solid rgba(255, 193, 7, 0.2); /* Orange border */
             display: none;
             opacity: 0;
-            transform: translateY(-10px);
-            transition: all 0.3s ease;
+            transform: translateY(-15px);
+            transition: all 0.4s ease-out;
+            box-shadow: inset 0 2px 10px rgba(255, 193, 7, 0.05);
         }
 
         .hold-fields.show {
@@ -292,108 +400,224 @@
         .hold-fields label {
             font-weight: 600;
             color: #333;
-            margin-bottom: 8px;
+            margin-bottom: 10px;
             display: block;
+            font-size: 0.95rem;
         }
 
         .hold-fields input {
             width: 100%;
-            padding: 10px;
+            padding: 12px 15px;
             border: 2px solid #e0e0e0; /* Light grey border */
-            border-radius: 8px;
+            border-radius: 10px;
             font-size: 0.95rem;
-            margin-bottom: 12px;
-            transition: border-color 0.3s ease;
+            margin-bottom: 15px;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
         }
 
         .hold-fields input:focus {
             outline: none;
             border-color: #ffb300; /* Orange border on focus */
-            box-shadow: 0 0 8px rgba(255, 179, 0, 0.2);
+            box-shadow: 0 0 10px rgba(255, 179, 0, 0.25);
         }
 
+        /* Loading, error, success messages */
         .loading {
             text-align: center;
             color: #424242; /* Dark grey loading text */
-            font-size: 1.2rem;
+            font-size: 1.3rem;
             margin: 50px 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            font-weight: 500;
         }
 
         .error {
-            background: rgba(255, 99, 71, 0.1); /* Light red background */
+            background: rgba(255, 99, 71, 0.15); /* Light red background */
             border: 1px solid #ff6347; /* Red border */
             color: #dc3545; /* Dark red text */
-            padding: 15px;
-            border-radius: 10px;
-            margin: 20px 0;
+            padding: 18px;
+            border-radius: 12px;
+            margin: 25px 0;
             text-align: center;
+            font-weight: 500;
         }
 
         .success {
-            background: rgba(40, 167, 69, 0.1); /* Light green background */
+            background: rgba(40, 167, 69, 0.15); /* Light green background */
             border: 1px solid #28a745; /* Green border */
             color: #28a745; /* Dark green text */
-            padding: 15px;
-            border-radius: 10px;
-            margin: 20px 0;
+            padding: 18px;
+            border-radius: 12px;
+            margin: 25px 0;
             text-align: center;
+            font-weight: 500;
         }
 
+        /* Notification prompt */
         .notification-prompt {
-            background: rgba(33, 150, 243, 0.1); /* Light blue background */
+            background: rgba(33, 150, 243, 0.15); /* Light blue background */
             border: 1px solid #2196f3; /* Blue border */
             color: #1976d2; /* Darker blue text */
-            padding: 15px;
-            border-radius: 10px;
-            margin-bottom: 20px;
+            padding: 18px;
+            border-radius: 12px;
+            margin-bottom: 25px;
             text-align: center;
             cursor: pointer;
             transition: all 0.3s ease;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
         }
 
         .notification-prompt:hover {
-            background: rgba(33, 150, 243, 0.2);
+            background: rgba(33, 150, 243, 0.25);
+            box-shadow: 0 4px 15px rgba(33, 150, 243, 0.1);
         }
 
-        @media (max-width: 768px) {
-            .orders-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .header h1 {
-                font-size: 2rem;
-            }
-            
-            .status-bar {
-                flex-direction: column;
-                gap: 10px;
-            }
-
-            .button-group {
-                flex-direction: column;
-            }
-        }
-
+        /* Spinner animation */
         .spinner {
             display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 3px solid rgba(33,150,243,.3); /* Light blue spinner border */
+            width: 25px;
+            height: 25px;
+            border: 4px solid rgba(33,150,243,.3); /* Light blue spinner border */
             border-radius: 50%;
             border-top-color: #2196f3; /* Blue spinner top color */
-            animation: spin 1s ease-in-out infinite;
+            animation: spin 0.8s ease-in-out infinite;
         }
 
         @keyframes spin {
             to { transform: rotate(360deg); }
+        }
+
+        /* Media queries for responsiveness */
+        @media (max-width: 992px) {
+            .orders-grid {
+                grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+                gap: 25px;
+            }
+            .header h1 {
+                font-size: 2.4rem;
+            }
+            .po-number {
+                font-size: 0.95rem;
+                padding: 6px 12px;
+            }
+            .order-card {
+                padding: 25px;
+            }
+            .requester-name {
+                font-size: 1.3rem;
+            }
+            .status-bar {
+                padding: 15px 20px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 15px;
+            }
+            .orders-grid {
+                grid-template-columns: 1fr; /* Single column on small screens */
+                gap: 20px;
+            }
+            .header h1 {
+                font-size: 2rem;
+                gap: 10px;
+            }
+            .header h1 svg {
+                width: 40px;
+                height: 40px;
+            }
+            .header p {
+                font-size: 1rem;
+            }
+            .status-bar {
+                flex-direction: column;
+                gap: 12px;
+                padding: 12px 15px;
+            }
+            .status-item {
+                font-size: 0.9rem;
+            }
+            .order-card {
+                padding: 20px;
+                border-radius: 20px;
+            }
+            .order-card::before {
+                height: 4px;
+                border-top-left-radius: 20px;
+                border-top-right-radius: 20px;
+            }
+            .requester-name {
+                font-size: 1.2rem;
+            }
+            .po-number {
+                font-size: 0.9rem;
+                padding: 5px 10px;
+            }
+            .order-details {
+                gap: 8px;
+            }
+            .order-detail-item {
+                font-size: 0.85rem;
+            }
+            .order-detail-item svg {
+                width: 16px;
+                height: 16px;
+            }
+            .countdown-timer {
+                font-size: 0.95rem;
+            }
+            .order-actions-container {
+                grid-template-columns: 1fr; /* Stack buttons on very small screens */
+                gap: 10px;
+            }
+            .view-po-btn, .submit-btn, .hold-btn, .mark-hold-btn {
+                padding: 12px 15px;
+                font-size: 0.95rem;
+                border-radius: 10px;
+            }
+            .dispatch-input, .hold-fields input {
+                padding: 10px 12px;
+                font-size: 0.9rem;
+                border-radius: 8px;
+            }
+            .dispatch-input::-webkit-calendar-picker-indicator {
+                right: 10px;
+            }
+            .hold-fields {
+                padding: 15px;
+                border-radius: 12px;
+            }
+            .loading, .error, .success, .notification-prompt {
+                font-size: 1rem;
+                padding: 15px;
+                border-radius: 10px;
+            }
+            .spinner {
+                width: 20px;
+                height: 20px;
+                border-width: 3px;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1>📦 Purchase Order Management</h1>
-            <p>Call Supplier & Get the tentative dispatch date for each Order</p>
+            <h1>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                    <path d="M19 11h-1V3c0-1.1-.9-2-2-2H6c-1.1 0-2 .9-2 2v8H3c-1.1 0-2 .9-2 2v6h22v-6c0-1.1-.9-2-2-2zM6 3h10v8H6V3zm15 15H3v-4h18v4z"/>
+                </svg>
+                Purchase Order Management
+            </h1>
+            <p>Streamline your workflow: Call suppliers and effortlessly obtain tentative dispatch dates for each order.</p>
         </div>
 
         <div class="status-bar">
@@ -425,7 +649,7 @@
     </div>
 
     <audio id="notification-sound" preload="auto">
-        <source src="data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO5tiJNwgZaLvt559NEAxQp+PwtjMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmEaBjuU2fDGfSoHJHfH8N2QQAoUXrTp66hVFApGn+DyvmEaBjuU2fDGfSoHJHfH8N2QQAoUXrTp66hVFApGn+DyvmEaBjuU2fDGfSoHJHfH8N2QQAoUXrTp66hVFApGn+DyvmEaBjuU2fDGfSoHJHfH8N2QQAoUXrTp66hVFApGn+DyvmEaBjuU2fDGfSoHJHfH8N2QQAoUXrTp66hVFApGn+DyvmEaBjuU2fDGfSoHJHfH8N2QQAoUXrTp66hVFApGn+DyvmEaBjuU2fDGfSoHJHfH8N2QQAoUXrTp66hVFApGn+DyvmEaBjuU2fDGfSoHJHfH8N2QQAoUXrTp66hVFApGn+DyYmEaBjuU2fDGfSoHJHfH8N2QQAoUXrTp66hVFApGn+DyvmEaBjuU2fDGfSoHJHfH8N2QQAoUXrTp66hVFApGn+DyvmEaBjuU2fDGfSoHJHfH8N2QQAoUXrTp66hVFApGn+DyvmEaBjuU2fDGfSoHJHfH8N2QQAoUXrTp66hVFApGn+DyvmEaBjuU2fDGfSoHJHfH8N2QQAoUXrTp66hVFApGn+DyvmEaBjuU2fDGfSoHJHfH8N2QQAoUXrTp66hVFApGn+DyvmEaBjuU2fDGfSoHJHfH8N2QQAoUXrTp66hVFApGn+DyvmEaBCjS2fDGfSoHJHfH8N2QQAoUXrTp66hVFApGn+DyvmEaBjuU2fDGfSoHJHfH8N2QQAo=" type="audio/wav">
+        <source src="data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO5tiJNwgZaLvt559NEAxQp+PwtjMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmEaBjuU2fDGfSoHJHfH8N2QQAoUXrTp66hVFApGn+DyvmEaBjuU2fDGfSoHJHfH8N2QQAoUXrTp66hVFApGn+DyvmEaBjuU2fDGfSoHJHfH8N2QQAoUXrTp66hVFApGn+DyvmEaBjuU2fDGfSoHJHfH8N2QQAoUXrTp66hVFApGn+DyvmEaBjuU2fDGfSoHJHfH8N2QQAoUXrTp66hVFApGn+DyvmEaBjuU2fDGfSoHJHfH8N2QQAoUXrTp66hVFApGn+DyvmEaBjuU2fDGfSoHJHfH8N2QQAoUXrTp66hVFApGn+DyYmEaBjuU2fDGfSoHJHfH8N2QQAoUXrTp66hVFApGn+DyvmEaBjuU2fDGfSoHJHfH8N2QQAoUXrTp66hVFApGn+DyvmEaBjuU2fDGfSoHJHfH8N2QQAoUXrTp66hVFApGn+DyvmEaBjuU2fDGfSoHJHfH8N2QQAoUXrTp66hVFApGn+DyvmEaBjuU2fDGfSoHJHfH8N2QQAoUXrTp66hVFApGn+DyvmEaBjuU2fDGfSoHJHfH8N2QQAoUXrTp66hVFApGn+DyvmEaBCjS2fDGfSoHJHfH8N2QQAoUXrTp66hVFApGn+DyvmEaBjuU2fDGfSoHJHfH8N2QQAo=" type="audio/wav">
     </audio>
 
     <script>
@@ -444,7 +668,7 @@
             init() {
                 this.setupNotifications();
                 this.loadOrders();
-		this.startCountdownTimer();		    		    
+                this.startCountdownTimer();		    		    
                 this.startAutoRefresh();
                 this.setupEventListeners();
             }
@@ -455,51 +679,53 @@
                     this.requestNotificationPermission();
                 });
             }
-	updateCountdown() {
-	    this.orders.forEach(order => {
-		const countdownElement = document.getElementById(`countdown-${order.timestamp}`);
-		if (countdownElement) {
-		    const deadline = this.calculateDeadline(order.timestamp);
-		    const now = new Date();
-		    const timeLeft = deadline.getTime() - now.getTime();
-	
-		    if (timeLeft <= 0) {
-			countdownElement.textContent = 'Deadline Passed!';
-			countdownElement.style.color = '#dc3545'; // Red color for passed deadline
-		    } else {
-			const days = Math.floor(timeLeft / (1000 * 60 * 60 * 24));
-			const hours = Math.floor((timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-			const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
-			const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
-	
-			countdownElement.textContent = `⏳ Deadline: ${days}d ${hours}h ${minutes}m ${seconds}s`;
-			countdownElement.style.color = '#e65100'; // Orange color for active countdown
-		    }
-		}
-	    });
-	}		
 
-		startCountdownTimer() {
-		    if (this.countdownInterval) {
-		        clearInterval(this.countdownInterval);
-		    }
-		    this.countdownInterval = setInterval(() => {
-		        this.updateCountdown();
-		    }, 1000); // Update every second
-		}
-		
-		calculateDeadline(timestamp) {
-		    const date = new Date(timestamp);
-		    date.setDate(date.getDate()); // Next day
-		    date.setHours(20, 0, 0, 0); // 8:00 PM
-		
-		    // If deadline is Sunday, shift to Monday 6:00 PM
-		    if (date.getDay() === 0) { // Sunday is 0
-		        date.setDate(date.getDate() + 1);
-		    }
-		    return date;
-		}
-		async setupNotifications() {
+            updateCountdown() {
+                this.orders.forEach(order => {
+                    const countdownElement = document.getElementById(`countdown-${order.timestamp}`);
+                    if (countdownElement) {
+                        const deadline = this.calculateDeadline(order.timestamp);
+                        const now = new Date();
+                        const timeLeft = deadline.getTime() - now.getTime();
+            
+                        if (timeLeft <= 0) {
+                            countdownElement.textContent = 'Deadline Passed!';
+                            countdownElement.style.color = '#dc3545'; // Red color for passed deadline
+                        } else {
+                            const days = Math.floor(timeLeft / (1000 * 60 * 60 * 24));
+                            const hours = Math.floor((timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                            const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+                            const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
+            
+                            countdownElement.textContent = `⏳ Deadline: ${days}d ${hours}h ${minutes}m ${seconds}s`;
+                            countdownElement.style.color = '#e65100'; // Orange color for active countdown
+                        }
+                    }
+                });
+            }		
+
+            startCountdownTimer() {
+                if (this.countdownInterval) {
+                    clearInterval(this.countdownInterval);
+                }
+                this.countdownInterval = setInterval(() => {
+                    this.updateCountdown();
+                }, 1000); // Update every second
+            }
+            
+            calculateDeadline(timestamp) {
+                const date = new Date(timestamp);
+                date.setDate(date.getDate()); // Next day
+                date.setHours(20, 0, 0, 0); // 8:00 PM
+            
+                // If deadline is Sunday, shift to Monday 6:00 PM
+                if (date.getDay() === 0) { // Sunday is 0
+                    date.setDate(date.getDate() + 1);
+                }
+                return date;
+            }
+
+            async setupNotifications() {
                 if ('Notification' in window) {
                     if (Notification.permission === 'granted') {
                         this.notificationPermission = true;
@@ -523,7 +749,7 @@
 
             async loadOrders() {
                 try {
-                    document.getElementById('loading').style.display = 'block';
+                    document.getElementById('loading').style.display = 'flex'; /* Use flex for centering spinner and text */
                     document.getElementById('error-message').style.display = 'none';
                     
                     // Replace with your actual Google Apps Script URL
@@ -542,10 +768,10 @@
                         this.previousOrderCount = newOrderCount;
                         this.orders = result.data;
                         this.renderOrders();
-			this.startCountdownTimer();			    
-		            if (typeof setReadOnlyMode === "function") {
-		                  setReadOnlyMode();
-		                }			    
+                        this.startCountdownTimer();			    
+                        if (typeof setReadOnlyMode === "function") {
+                            setReadOnlyMode();
+                        }			    
                         this.updateStatus();
                         
                         document.getElementById('loading').style.display = 'none';
@@ -563,116 +789,142 @@
                 const container = document.getElementById('orders-container');
                 
                 if (this.orders.length === 0) {
-                    container.innerHTML = '<div style="text-align: center; color: #424242; font-size: 1.2rem; grid-column: 1/-1;">📭 No pending orders found</div>'; /* Dark grey text */
+                    container.innerHTML = '<div style="text-align: center; color: #424242; font-size: 1.2rem; grid-column: 1/-1; padding: 50px 0;">📭 No pending orders found</div>'; /* Dark grey text */
                     return;
                 }
 
                 container.innerHTML = this.orders.map((order, index) => `
                     <div class="order-card">
                         <div class="order-header">
-                            <div class="requester-name">👤 ${order.supplierName}</div><div class="po-number">${order.purchaseOrderNumber}</div>
-		<div class="timestamp">
-		    🕒 Sent to Supplier: ${this.formatDate(order.timestamp)}
-		    ${order.crmRemark ? `<br>💬 CRM Remark: ${order.crmRemark}` : ""}
-		    ${order.responseRemark ? `<br>📝 Purchase Remark: ${order.responseRemark}` : ""}
-		    ${order.expectedBy ? `<br>🚚 Expected Delivery: ${new Date(order.expectedBy).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: '2-digit' })}` : ""}
-		</div>
-
-		<div class="countdown-timer" id="countdown-${order.timestamp}"></div>
-		</div>
-		<div class="order-actions-container">
-		  ${order.googleSheetURL ? `
-		    <div class="order-actions">
-		      <button class="view-po-btn" onclick="orderManager.viewPO('${order.googleSheetURL}')">
-		        📄 View PO
-		      </button>
-		    </div>
-		  ` : ''}
-		
-		  ${order.orderSheet ? `
-		    <a href="${order.orderSheet}" target="_blank">
-		      <div class="order-actions">
-		        <button class="view-po-btn">
-		          📄 View G-Sheet
-		        </button>
-		      </div>
-		    </a>
-		  ` : ''}
-		
-		  ${order.additionalPurchaseURL ? `
-		    <a href="${order.additionalPurchaseURL}" target="_blank">
-		      <div class="order-actions">
-		        <button class="view-po-btn">
-		          📄 View Additional Purchase
-		        </button>
-		      </div>
-		    </a>
-		  ` : ''}
-		
-		  ${order.crmRequestURL ? `
-		    <a href="${order.crmRequestURL}" target="_blank">
-		      <div class="order-actions">
-		        <button class="view-po-btn">
-		          📄 CRM Request File
-		        </button>
-		      </div>
-		    </a>
-		  ` : ''}
-		</div>
-
-			<div class="editable">	
-                        <div class="dispatch-section">
-                            <label class="dispatch-label" for="dispatch-date-${index}">
-                                📅 Dispatch Date *
-                            </label>
-                            <input 
-                                type="date" 
-                                id="dispatch-date-${index}" 
-                                class="dispatch-input"
-                                required
-                            >
-                            
-                            <div class="hold-fields" id="hold-fields-${index}">
-                                <label for="hold-until-${index}">⏰ Hold Until *</label>
-                                <input 
-                                    type="date" 
-                                    id="hold-until-${index}"
-                                    placeholder="Select hold until date"
-                                >
-                                
-                                <label for="hold-remark-${index}">📝 Hold Remark *</label>
-                                <input 
-                                    type="text" 
-                                    id="hold-remark-${index}"
-                                    placeholder="Enter reason for hold"
-                                >
-                                <button 
-                                    class="mark-hold-btn" 
-                                    onclick="orderManager.markHold(${index})"
-                                    id="mark-hold-btn-${index}"
-                                >
-                                    ✅ Mark Hold
-                                </button>
+                            <div class="requester-info">
+                                <div class="requester-name">👤 ${order.supplierName}</div>
+                                <div class="po-number">PO No.: ${order.purchaseOrderNumber}</div>
                             </div>
+                            <div class="order-details">
+                                <div class="order-detail-item">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm.9 15.2h-1.8V8.8h1.8v8.4zM12 7c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1z"/>
+                                    </svg>
+                                    <span>Sent to Supplier: ${this.formatDate(order.timestamp)}</span>
+                                </div>
+                                ${order.crmRemark ? `
+                                <div class="order-detail-item">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                                        <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V2zm-2 12H6v-2h12v2zm0-3H6V9h12v2zm0-3H6V6h12v2z"/>
+                                    </svg>
+                                    <span>CRM Remark: ${order.crmRemark}</span>
+                                </div>` : ""}
+                                ${order.responseRemark ? `
+                                <div class="order-detail-item">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                                        <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-2 10H7v-2h10v2zm0-3H7V7h10v3z"/>
+                                    </svg>
+                                    <span>Purchase Remark: ${order.responseRemark}</span>
+                                </div>` : ""}
+                                ${order.expectedBy ? `
+                                <div class="order-detail-item">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                                        <path d="M20 8h-3V4c0-1.1-.9-2-2-2H9c-1.1 0-2 .9-2 2v4H4c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zM9 4h6v4H9V4zm11 16H4V10h16v10z"/>
+                                    </svg>
+                                    <span>Expected Delivery: ${new Date(order.expectedBy).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: '2-digit' })}</span>
+                                </div>` : ""}
+                            </div>
+                            <div class="countdown-timer" id="countdown-${order.timestamp}"></div>
+                        </div>
+                        
+                        <div class="order-actions-container">
+                            ${order.googleSheetURL ? `
+                                <a href="${order.googleSheetURL}" target="_blank" class="view-po-btn">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                                        <path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm-1 7V3.5L18.5 9H13z"/>
+                                    </svg>
+                                    View PO
+                                </a>
+                            ` : ''}
                             
-                            <div class="button-group">
-                                <button 
-                                    class="submit-btn" 
-                                    onclick="orderManager.submitDispatch(${index})"
-                                    id="submit-btn-${index}"
-                                >
-                                    🚀 Submit Dispatch
-                                </button>
-                                <button 
-                                    class="hold-btn" 
-                                    onclick="orderManager.toggleHoldFields(${index})"
-                                    id="hold-btn-${index}"
-                                >
-                                    ⏸️ Hold
-                                </button>
+                            ${order.orderSheet ? `
+                                <a href="${order.orderSheet}" target="_blank" class="view-po-btn">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                                        <path d="M20 2H4c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM8 17H6v-2h2v2zm0-4H6v-2h2v2zm0-4H6V7h2v2zm6 8h-4v-2h4v2zm0-4h-4v-2h4v2zm0-4h-4V7h4v2zm6 8h-4v-2h4v2zm0-4h-4v-2h4v2zm0-4h-4V7h4v2z"/>
+                                    </svg>
+                                    View G-Sheet
+                                </a>
+                            ` : ''}
+                            
+                            ${order.additionalPurchaseURL ? `
+                                <a href="${order.additionalPurchaseURL}" target="_blank" class="view-po-btn">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                                        <path d="M19 13H5v-2h14v2zm-2-7H7V4h10v2zm3 14H4c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h16c1.1 0 2 .9 2 2v16c0 1.1-.9 2-2 2z"/>
+                                    </svg>
+                                    Additional Purchase
+                                </a>
+                            ` : ''}
+                            
+                            ${order.crmRequestURL ? `
+                                <a href="${order.crmRequestURL}" target="_blank" class="view-po-btn">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>
+                                    </svg>
+                                    CRM Request File
+                                </a>
+                            ` : ''}
+                        </div>
+
+                        <div class="editable">	
+                            <div class="dispatch-section">
+                                <label class="dispatch-label" for="dispatch-date-${index}">
+                                    📅 Dispatch Date *
+                                </label>
+                                <div class="dispatch-input-wrapper">
+                                    <input 
+                                        type="date" 
+                                        id="dispatch-date-${index}" 
+                                        class="dispatch-input"
+                                        required
+                                    >
+                                </div>
+                                
+                                <div class="hold-fields" id="hold-fields-${index}">
+                                    <label for="hold-until-${index}">⏰ Hold Until *</label>
+                                    <input 
+                                        type="date" 
+                                        id="hold-until-${index}"
+                                        placeholder="Select hold until date"
+                                    >
+                                    
+                                    <label for="hold-remark-${index}">📝 Hold Remark *</label>
+                                    <input 
+                                        type="text" 
+                                        id="hold-remark-${index}"
+                                        placeholder="Enter reason for hold"
+                                    >
+                                    <button 
+                                        class="mark-hold-btn" 
+                                        onclick="orderManager.markHold(${index})"
+                                        id="mark-hold-btn-${index}"
+                                    >
+                                        ✅ Mark Hold
+                                    </button>
+                                </div>
+                                
+                                <div class="button-group">
+                                    <button 
+                                        class="submit-btn" 
+                                        onclick="orderManager.submitDispatch(${index})"
+                                        id="submit-btn-${index}"
+                                    >
+                                        🚀 Submit Dispatch
+                                    </button>
+                                    <button 
+                                        class="hold-btn" 
+                                        onclick="orderManager.toggleHoldFields(${index})"
+                                        id="hold-btn-${index}"
+                                    >
+                                        ⏸️ Hold
+                                    </button>
+                                </div>
                             </div>
                         </div>
-			</div>
                     </div>
                 `).join('');
             }
@@ -687,7 +939,7 @@
                     holdFields.classList.remove('show');
                     holdBtn.textContent = '⏸️ Hold';
                     holdBtn.style.background = 'linear-gradient(45deg, #ffb300, #fb8c00)'; /* Orange gradient */
-                    submitBtn.style.display = 'block'; // Show submit button
+                    submitBtn.style.display = 'flex'; // Show submit button (using flex for button group)
                 } else {
                     // Show hold fields
                     holdFields.classList.add('show');

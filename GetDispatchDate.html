@@ -576,6 +576,7 @@
 		    ${order.crmRemark ? `<br>💬 CRM Remark: ${order.crmRemark}` : ""}
 		    ${order.responseRemark ? `<br>📝 Purchase Remark: ${order.responseRemark}` : ""}
 		    ${order.expectedBy ? `<br>🚚 Expected Delivery: ${new Date(order.expectedBy).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: '2-digit' })}` : ""}
+      		    ${order.category ? `<br>🧾 Category: ${order.category}` : ""}
 		</div>
 
 		<div class="countdown-timer" id="countdown-${order.timestamp}"></div>

@@ -652,6 +652,12 @@
                             <span class="detail-value">${formatDateTimeForDisplay(order.deadline)}</span>
                         </div>
                         ` : ''}
+                        ${order.category ? `
+                        <div class="detail-row">
+                            <span class="detail-label">Category:</span>
+                            <span class="detail-value">${order.category}</span>
+                        </div>
+                        ` : ''}                        
                         <div class="detail-row delayed-reason-container">
                             <span class="detail-label">🪵 Delayed Reason:</span>
                             <div class="delayed-reason-content">

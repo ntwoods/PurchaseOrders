@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Orders Management Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
         /* General styles */
         * {
@@ -13,8 +14,8 @@
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f4f8; /* A simple off-white/light blue */
             min-height: 100vh;
             padding: 20px;
         }
@@ -26,19 +27,42 @@
 
         .header {
             text-align: center;
-            color: white;
+            color: #2c3e50;
             margin-bottom: 30px;
         }
 
         .header h1 {
             font-size: 2.5rem;
             margin-bottom: 10px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            font-weight: 700;
+            color: #2980b9;
+        }
+
+        .header p {
+            color: #34495e;
+        }
+
+        .refresh-btn {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .refresh-btn:hover {
+            background-color: #2980b9;
+            box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
         }
 
         .loading {
             text-align: center;
-            color: white;
+            color: #34495e;
             font-size: 1.2rem;
             margin: 50px 0;
         }
@@ -50,18 +74,18 @@
         }
 
         .order-card {
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 15px;
+            background: #ffffff;
+            border-radius: 12px;
             padding: 20px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255,255,255,0.3);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
             transition: transform 0.3s ease, box-shadow 0.3s ease;
+            display: flex;
+            flex-direction: column;
         }
 
         .order-card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
         }
 
         .order-header {
@@ -70,31 +94,31 @@
             align-items: center;
             margin-bottom: 15px;
             padding-bottom: 10px;
-            border-bottom: 2px solid #f0f0f0;
+            border-bottom: 1px solid #e0e0e0;
         }
 
         .order-id {
             font-weight: bold;
             font-size: 1.1rem;
-            color: #333;
+            color: #2c3e50;
         }
 
         .status-badge {
-            padding: 5px 12px;
-            border-radius: 20px;
+            padding: 4px 10px;
+            border-radius: 15px;
             font-size: 0.8rem;
-            font-weight: bold;
+            font-weight: 600;
             text-transform: uppercase;
         }
 
         .status-active {
-            background: #e3f2fd;
-            color: #1976d2;
+            background-color: #e8f5e9;
+            color: #4caf50;
         }
 
         .status-overdue {
-            background: #ffebee;
-            color: #d32f2f;
+            background-color: #ffebee;
+            color: #f44336;
             animation: pulse 2s infinite;
         }
 
@@ -105,30 +129,115 @@
         }
 
         .order-details {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
             margin-bottom: 15px;
         }
 
         .detail-row {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 8px;
-            padding: 5px 0;
+            display: grid;
+            grid-template-columns: auto 1fr;
+            gap: 10px;
+            align-items: flex-start;
         }
 
         .detail-label {
             font-weight: 600;
-            color: #555;
+            color: #7f8c8d;
         }
 
         .detail-value {
-            color: #333;
+            color: #34495e;
             text-align: right;
-            max-width: 60%;
             word-wrap: break-word;
         }
+        
+        /* New styles for supplier name without label */
+        .supplier-name {
+            font-weight: bold;
+            color: #34495e;
+        }
+        
+        /* New styles for PO/Order Sheet buttons with text */
+        .document-buttons {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            justify-content: flex-end;
+            margin-top: 10px;
+        }
 
+        .view-po-btn, .order-sheet-btn {
+            background-color: #3498db;
+            color: white;
+            padding: 8px 12px;
+            text-decoration: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: bold;
+            transition: transform 0.2s ease, background-color 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px; /* Add gap for text and icon */
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .view-po-btn:hover, .order-sheet-btn:hover {
+            transform: scale(1.05);
+            background-color: #2980b9;
+        }
+        
+        /* New styles for delayed reason with toggle */
+        .delayed-reason-container {
+            display: grid;
+            grid-template-columns: auto 1fr;
+            gap: 10px;
+            align-items: flex-start;
+        }
+
+        .delayed-reason-content {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            text-align: left;
+        }
+
+        .delayed-reason-text {
+            color: #34495e;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: -webkit-box;
+            -webkit-line-clamp: 3; /* Show up to 3 lines by default */
+            -webkit-box-orient: vertical;
+            white-space: normal;
+            font-size: 0.9rem;
+        }
+
+        .delayed-reason-text.expanded {
+            -webkit-line-clamp: unset; /* Remove truncation */
+            overflow: visible;
+        }
+
+        .toggle-reason-btn {
+            background: none;
+            border: none;
+            color: #3498db;
+            text-decoration: underline;
+            cursor: pointer;
+            padding: 0;
+            margin-top: 5px;
+            font-size: 0.8rem;
+            align-self: flex-start;
+        }
+
+        .toggle-reason-btn:hover {
+            color: #2980b9;
+        }
+        
         .countdown-section {
-            background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
+            background-color: #eaf2f8; /* Lighter blue shade */
             padding: 15px;
             border-radius: 10px;
             text-align: center;
@@ -137,109 +246,107 @@
 
         .countdown-title {
             font-size: 0.9rem;
-            font-weight: bold;
-            color: #333;
+            font-weight: 600;
+            color: #34495e;
             margin-bottom: 8px;
         }
 
         .countdown-timer {
             font-size: 1.5rem;
-            font-weight: bold;
-            color: #d32f2f;
-            font-family: 'Courier New', monospace;
+            font-weight: 700;
+            color: #e74c3c;
+            font-family: 'Inter', sans-serif;
         }
 
         .countdown-overdue {
-            color: #fff;
-            background: #d32f2f;
+            color: white;
+            background-color: #e74c3c;
             padding: 10px;
             border-radius: 8px;
             font-size: 1.2rem;
-            font-weight: bold;
-        }
-
-        .view-po-btn {
-            display: inline-block;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 8px 16px;
-            text-decoration: none;
-            border-radius: 20px;
-            font-size: 0.9rem;
-            font-weight: bold;
-            transition: transform 0.2s ease;
-        }
-
-        .view-po-btn:hover {
-            transform: scale(1.05);
+            font-weight: 700;
         }
 
         .actions-section {
             margin-top: 15px;
             padding: 15px;
-            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            background-color: #ecf0f1; /* Light gray */
             border-radius: 10px;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
         }
 
         .actions-title {
             font-size: 0.9rem;
-            font-weight: bold;
-            color: white;
+            font-weight: 600;
+            color: #34495e;
             margin-bottom: 10px;
             text-align: center;
         }
 
         .action-buttons {
-            display: flex;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
             gap: 10px;
             margin-bottom: 10px;
         }
 
         .action-btn {
-            flex: 1;
-            padding: 10px 15px;
+            padding: 10px 5px; /* Reduced padding for compactness */
             border: none;
-            border-radius: 20px;
-            font-weight: bold;
+            border-radius: 8px;
+            font-weight: 600;
             cursor: pointer;
             transition: all 0.3s ease;
             font-size: 0.9rem;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            white-space: nowrap; /* Prevent text from wrapping */
         }
 
         .on-time-btn {
-            background: #4caf50;
+            background-color: #2ecc71; /* Green */
             color: white;
         }
 
         .on-time-btn:hover {
-            background: #45a049;
+            background-color: #27ae60;
             transform: translateY(-2px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.15);
         }
 
         .delayed-btn {
-            background: #ff9800;
+            background-color: #f39c12; /* Orange */
             color: white;
         }
 
         .delayed-btn:hover {
-            background: #f57c00;
+            background-color: #e67e22;
             transform: translateY(-2px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.15);
         }
         
         .hold-btn {
-            background: #2196f3; /* Blue */
+            background-color: #3498db; /* Blue */
             color: white;
         }
 
         .hold-btn:hover {
-            background: #1976d2; /* Darker blue */
+            background-color: #2980b9;
             transform: translateY(-2px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.15);
         }
 
         .action-btn:disabled {
             opacity: 0.6;
             cursor: not-allowed;
             transform: none;
+            box-shadow: none;
         }
 
         .delayed-input-section,
@@ -247,7 +354,7 @@
             display: none;
             margin-top: 10px;
             padding: 10px;
-            background: rgba(255,255,255,0.2);
+            background-color: #bdc3c7;
             border-radius: 8px;
         }
 
@@ -262,8 +369,8 @@
 
         .input-label {
             display: block;
-            color: white;
-            font-weight: bold;
+            color: #34495e;
+            font-weight: 600;
             margin-bottom: 5px;
             font-size: 0.85rem;
         }
@@ -272,9 +379,15 @@
         .text-input {
             width: 100%;
             padding: 8px 12px;
-            border: none;
+            border: 1px solid #ccc;
             border-radius: 5px;
             font-size: 0.9rem;
+        }
+        
+        .date-input:focus, .text-input:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 5px rgba(52, 152, 219, 0.5);
         }
 
         .submit-delayed-btn,
@@ -285,34 +398,34 @@
             color: white;
             border: none;
             border-radius: 5px;
-            font-weight: bold;
+            font-weight: 600;
             cursor: pointer;
             transition: background 0.3s ease;
-            margin-top: 5px; /* Added margin for buttons */
+            margin-top: 5px;
         }
 
         .submit-delayed-btn {
-            background: #d32f2f;
+            background-color: #e74c3c;
         }
 
         .submit-delayed-btn:hover {
-            background: #c62828;
+            background-color: #c0392b;
         }
         
         .submit-hold-btn {
-            background: #4CAF50; /* Green */
+            background-color: #2ecc71;
         }
 
         .submit-hold-btn:hover {
-            background: #45a049;
+            background-color: #27ae60;
         }
 
         .cancel-hold-btn {
-            background: #f44336; /* Red */
+            background-color: #e74c3c;
         }
 
         .cancel-hold-btn:hover {
-            background: #d32f2f;
+            background-color: #c0392b;
         }
 
         .action-feedback {
@@ -320,46 +433,30 @@
             padding: 8px;
             border-radius: 5px;
             text-align: center;
-            font-weight: bold;
+            font-weight: 600;
             display: none;
         }
 
         .action-feedback.success {
-            background: #4caf50;
-            color: white;
+            background-color: #e8f5e9;
+            color: #4caf50;
         }
 
         .action-feedback.error {
-            background: #f44336;
-            color: white;
+            background-color: #ffebee;
+            color: #f44336;
         }
 
         .error-message {
-            background: #ffebee;
-            color: #d32f2f;
+            background-color: #ffebee;
+            color: #f44336;
             padding: 15px;
             border-radius: 10px;
             text-align: center;
             margin: 20px 0;
-            border-left: 4px solid #d32f2f;
+            border-left: 4px solid #f44336;
         }
 
-        .refresh-btn {
-            background: rgba(255,255,255,0.2);
-            color: white;
-            border: 2px solid white;
-            padding: 10px 20px;
-            border-radius: 25px;
-            cursor: pointer;
-            font-weight: bold;
-            transition: all 0.3s ease;
-            margin-top: 10px;
-        }
-
-        .refresh-btn:hover {
-            background: white;
-            color: #667eea;
-        }
     </style>
 </head>
 <body>
@@ -514,6 +611,10 @@
             const statusClass = isOverdue ? 'status-overdue' : 'status-active';
             const statusText = isOverdue ? 'OVERDUE' : 'ACTIVE';
             
+            const delayedReasonText = order.delayedRemark || 'N/A';
+            // A simple check to see if the text is long enough to be truncated
+            const isTruncated = delayedReasonText.length > 100;
+            
             return `
                 <div class="order-card">
                     <div class="order-header">
@@ -523,8 +624,7 @@
                     
                     <div class="order-details">
                         <div class="detail-row">
-                            <span class="detail-label">👤 Supplier:</span>
-                            <span class="detail-value">${order.supplierName || 'N/A'}</span>
+                            <span class="supplier-name">${order.supplierName || 'N/A'}</span>
                         </div>
                         <div class="detail-row">
                             <span class="detail-label">📅 Dispatch Date:</span>
@@ -552,25 +652,20 @@
                             <span class="detail-value">${formatDateTimeForDisplay(order.deadline)}</span>
                         </div>
                         ` : ''}
-                        <div class="detail-row">
+                        <div class="detail-row delayed-reason-container">
                             <span class="detail-label">🪵 Delayed Reason:</span>
-                            <span class="detail-value">${order.delayedRemark || 'N/A'}</span>
+                            <div class="delayed-reason-content">
+                                <span id="delayed-reason-text-${order.id}" class="delayed-reason-text">${delayedReasonText}</span>
+                                ${isTruncated ? `<button class="toggle-reason-btn" onclick="toggleDelayedReason('${order.id}')" id="toggle-reason-btn-${order.id}">... see more</button>` : ''}
+                            </div>
                         </div>                      
-                        <div class="detail-row">
-                            <span class="detail-label">📋 View PO:</span>
-                            <span class="detail-value">
-                                ${order.googleSheetURL ? 
-                                    `<a href="${order.googleSheetURL}" target="_blank" class="view-po-btn">📄 View PO</a>` : 
-                                    'No URL'}
-                            </span>
-                        </div>
-                        <div class="detail-row">
-                            <span class="detail-label">📋 Order Sheet:</span>
-                            <span class="detail-value">
-                                ${order.orderSheet ? 
-                                    `<a href="${order.orderSheet}" target="_blank" class="view-po-btn">📄 Order Sheet</a>` : 
-                                    'No URL'}
-                            </span>
+                        <div class="document-buttons">
+                            ${order.googleSheetURL ? 
+                                `<a href="${order.googleSheetURL}" target="_blank" class="view-po-btn" title="View PO">📄 View PO</a>` : 
+                                ''}
+                            ${order.orderSheet ? 
+                                `<a href="${order.orderSheet}" target="_blank" class="order-sheet-btn" title="Order Sheet">📋 Order Sheet</a>` : 
+                                ''}
                         </div>                        
                     </div>
                     
@@ -747,7 +842,20 @@
             const ss = String(date.getSeconds()).padStart(2, '0');
             return `${dd}/${mm}/${year} ${hh}:${min}:${ss}`;
         }
-
+        
+        // Toggle Delayed Reason text visibility
+        function toggleDelayedReason(orderId) {
+            const textElement = document.getElementById(`delayed-reason-text-${orderId}`);
+            const buttonElement = document.getElementById(`toggle-reason-btn-${orderId}`);
+            
+            if (textElement.classList.contains('expanded')) {
+                textElement.classList.remove('expanded');
+                buttonElement.textContent = '... see more';
+            } else {
+                textElement.classList.add('expanded');
+                buttonElement.textContent = '... see less';
+            }
+        }
         
         // Handle On Time action
         async function handleOnTime(timestamp, orderId) {
@@ -938,7 +1046,7 @@
         }
     </script>
 <script src="https://ntwoods.github.io/ordertodispatch/js/viewOnly.js"></script>    
-        <script>
+    <script>
       // Wait until DOM is loaded, then check and apply readonly mode
       document.addEventListener('DOMContentLoaded', () => {
         if (typeof setReadOnlyMode === "function") {

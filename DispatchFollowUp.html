@@ -611,146 +611,143 @@ function calculateDeadline(dispatchDate, dispatchDateTimeStamp) {
         }
 
         // Create HTML structure for each order card
-        function createOrderCard(order, index) {
-            const isOverdue = order.deadline && new Date() > order.deadline;
-            const statusClass = isOverdue ? 'status-overdue' : 'status-active';
-            const statusText = isOverdue ? 'OVERDUE' : 'ACTIVE';
-            
-            const hasDelayedReason = order.delayedReason && order.delayedReason.trim() !== '';
-            
-            return `
-                <div class="order-card">
-                    <div class="order-header">
-                        <div class="order-id">${order.purchaseOrderNumber}</div>
-                        <div id="status-${order.id}" class="status-badge ${statusClass}">${statusText}</div>
-                    </div>
-                    
-                    <div class="order-details">
-                        <div class="detail-group">
-                            <div class="detail-row">
-                                <span class="detail-icon">👤</span>
-                                <span class="detail-value bold-value">${order.supplierName || 'N/A'}</span>
-                            </div>
-                            <div class="detail-row">
-                                <span class="detail-icon">📅</span>
-                                <span class="detail-label">Dispatch Date:</span>
-                                <span class="detail-value">${formatDateForDisplay(parseDate(order.dispatchDate))}</span>
-                            </div>
-                            <div class="detail-row">
-                                <span class="detail-icon">⏰</span>
-                                <span class="detail-label">Confirmed On:</span>
-                                <span class="detail-value">${formatDateTimeForDisplay(parseDate(order.dispatchDateTimeStamp))}</span>
-                            </div>
-                            ${order.deadline ? `
-                            <div class="detail-row">
-                                <span class="detail-icon">🎯</span>
-                                <span class="detail-label">Follow Up Deadline:</span>
-                                <span class="detail-value">${formatDateTimeForDisplay(order.deadline)}</span>
-                            </div>
-                            ` : ''}
-                        </div>
+function createOrderCard(order, index) {
+    const isOverdue = order.deadline && new Date() > order.deadline;
+    const statusClass = isOverdue ? 'status-overdue' : 'status-active';
+    const statusText = isOverdue ? 'OVERDUE' : 'ACTIVE';
 
-                        ${order.crmRemark || order.responseRemark || hasDelayedReason ? `
-                        <div class="detail-group">
-                            ${order.crmRemark ? `
-                            <div class="detail-row">
-                                <span class="detail-icon">💬</span>
-                                <span class="detail-label">CRM Remark:</span>
-                                <span class="detail-value">${order.crmRemark}</span>
-                            </div>
-                            ` : ''}
-                            ${order.responseRemark ? `
-                            <div class="detail-row">
-                                <span class="detail-icon">📝</span>
-                                <span class="detail-label">Purchase Remark:</span>
-                                <span class="detail-value">${order.responseRemark}</span>
-                            </div>
-                            ` : ''}
-                        <div class="detail-row">
-                            <span class="detail-icon">💬</span>
-                            <span class="detail-label">Delaying Reason:</span>
-                            <span id="delayed-reason-text-${order.id}" class="detail-value delayed-reason-text">
-                                ${order.delayedReason}
-                            </span>
-                            ${hasDelayedReason ? `
-                            <button id="read-more-btn-${order.id}" class="read-more-btn" onclick="toggleDelayedReason('${order.id}')">
-                                see more
+    const hasDelayedReason = order.delayedReason && order.delayedReason.trim() !== '';
+
+    return `
+        <div class="order-card">
+            <div class="order-header">
+                <div class="order-id">${order.purchaseOrderNumber}</div>
+                <div id="status-${order.id}" class="status-badge ${statusClass}">${statusText}</div>
+            </div>
+
+            <div class="order-details">
+                <div class="detail-group">
+                    <div class="detail-row">
+                        <span class="detail-icon">👤</span>
+                        <span class="detail-value bold-value">${order.supplierName || 'N/A'}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-icon">📅</span>
+                        <span class="detail-label">Dispatch Date:</span>
+                        <span class="detail-value">${formatDateForDisplay(parseDate(order.dispatchDate))}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-icon">⏰</span>
+                        <span class="detail-label">Confirmed On:</span>
+                        <span class="detail-value">${formatDateTimeForDisplay(parseDate(order.dispatchDateTimeStamp))}</span>
+                    </div>
+                    ${order.deadline ? `
+                    <div class="detail-row">
+                        <span class="detail-icon">🎯</span>
+                        <span class="detail-label">Follow Up Deadline:</span>
+                        <span class="detail-value">${formatDateTimeForDisplay(order.deadline)}</span>
+                    </div>
+                    ` : ''}
+                </div>
+
+                ${order.crmRemark || order.responseRemark || hasDelayedReason ? `
+                <div class="detail-group">
+                    ${order.crmRemark ? `
+                    <div class="detail-row">
+                        <span class="detail-icon">💬</span>
+                        <span class="detail-label">CRM Remark:</span>
+                        <span class="detail-value">${order.crmRemark}</span>
+                    </div>
+                    ` : ''}
+                    ${order.responseRemark ? `
+                    <div class="detail-row">
+                        <span class="detail-icon">📝</span>
+                        <span class="detail-label">Purchase Remark:</span>
+                        <span class="detail-value">${order.responseRemark}</span>
+                    </div>
+                    ` : ''}
+                    ${hasDelayedReason ? `
+                    <div class="detail-row">
+                        <span class="detail-icon">💬</span>
+                        <span class="detail-label">Delaying Reason:</span>
+                        <span id="delayed-reason-text-${order.id}" class="detail-value delayed-reason-text">${order.delayedReason}</span>
+                        <button id="read-more-btn-${order.id}" class="read-more-btn" onclick="toggleDelayedReason('${order.id}')">see more</button>
+                    </div>
+                    ` : ''}
+                </div>
+                ` : ''}
+
+                <div class="url-section detail-group">
+                    ${order.googleSheetURL ? `
+                        <a href="${order.googleSheetURL}" target="_blank" class="view-po-btn">📄 View PO</a>
+                    ` : ''}
+                    ${order.orderSheet ? `
+                        <a href="${order.orderSheet}" target="_blank" class="view-po-btn">🎼 Order Sheet</a>
+                    ` : ''}
+                    ${order.additionalPurchaseURL ? `
+                        <a href="${order.additionalPurchaseURL}" target="_blank" class="view-po-btn">➕ Add. Pur.</a>
+                    ` : ''}
+                    ${order.crmRequestURL ? `
+                        <a href="${order.crmRequestURL}" target="_blank" class="view-po-btn">✉️ CRM Request</a>
+                    ` : ''}
+                </div>
+            </div>
+
+            <div id="countdown-${order.id}" class="countdown-section">
+                ${order.deadline ? '' : '<div class="countdown-title">⚠️ Cannot calculate deadline</div>'}
+            </div>
+            <div class="editable">
+                <div class="actions-section">
+                    <div class="actions-title">📋 Order Actions</div>
+                    <div class="action-buttons">
+                        <button class="action-btn on-time-btn" onclick="handleOnTime('${order.timestamp}', '${order.id}')">
+                            On Time
+                        </button>
+                        <button class="action-btn delayed-btn" onclick="toggleDelayedInput('${order.id}')">
+                            Delayed
+                        </button>
+                        <button class="action-btn hold-btn" onclick="toggleHoldInput('${order.id}')">
+                            Hold
+                        </button>
+                    </div>
+
+                    <div id="delayed-input-${order.id}" class="input-section">
+                        <div class="input-group">
+                            <label for="next-dispatch-${order.id}" class="input-label">Next Dispatch Date:</label>
+                            <input type="date" id="next-dispatch-${order.id}" class="date-input" required>
+                            <label for="delayed-reason-${order.id}" class="input-label">Delayed Reason:</label>
+                            <input type="text" id="delayed-reason-${order.id}" class="date-input" required>
+                        </div>
+                        <button class="submit-btn" onclick="handleDelayed('${order.timestamp}', '${order.id}')">
+                            Submit Delayed
+                        </button>
+                    </div>
+
+                    <div id="hold-input-${order.id}" class="input-section">
+                        <div class="input-group">
+                            <label for="hold-until-${order.id}" class="input-label">Hold Until:</label>
+                            <input type="date" id="hold-until-${order.id}" class="date-input">
+                        </div>
+                        <div class="input-group">
+                            <label for="hold-remark-${order.id}" class="input-label">Hold Remark:</label>
+                            <input type="text" id="hold-remark-${order.id}" class="text-input" placeholder="Enter remark">
+                        </div>
+                        <div class="action-buttons">
+                            <button class="action-btn mark-hold-btn" onclick="handleHold('${order.timestamp}', '${order.id}')">
+                                Mark Hold
+                            </button>
+                            <button class="action-btn cancel-hold-btn" onclick="toggleHoldInput('${order.id}', true)">
+                                Cancel Hold
                             </button>
                         </div>
-                            ` : ''}
+                    </div>
 
-                        <div class="url-section detail-group">
-                            ${order.googleSheetURL ? `
-                                <a href="${order.googleSheetURL}" target="_blank" class="view-po-btn">📄 View PO</a>
-                            ` : ''}
-                            ${order.orderSheet ? `
-                                <a href="${order.orderSheet}" target="_blank" class="view-po-btn">🎼 Order Sheet</a>
-                            ` : ''}
-                            ${order.additionalPurchaseURL ? `
-                                <a href="${order.additionalPurchaseURL}" target="_blank" class="view-po-btn">➕ Add. Pur.</a>
-                            ` : ''}
-                            ${order.crmRequestURL ? `
-                                <a href="${order.crmRequestURL}" target="_blank" class="view-po-btn">✉️ CRM Request</a>
-                            ` : ''}
-                        </div>
-                    </div>
-                    
-                    <div id="countdown-${order.id}" class="countdown-section">
-                        ${order.deadline ? '' : '<div class="countdown-title">⚠️ Cannot calculate deadline</div>'}
-                    </div>
-                    <div class="editable">		                    
-                        <div class="actions-section">
-                            <div class="actions-title">📋 Order Actions</div>
-                            <div class="action-buttons">
-                                <button class="action-btn on-time-btn" onclick="handleOnTime('${order.timestamp}', '${order.id}')">
-                                    On Time
-                                </button>
-                                <button class="action-btn delayed-btn" onclick="toggleDelayedInput('${order.id}')">
-                                    Delayed
-                                </button>
-                                <button class="action-btn hold-btn" onclick="toggleHoldInput('${order.id}')">
-                                    Hold
-                                </button>
-                            </div>
-                            
-                            <div id="delayed-input-${order.id}" class="input-section">
-                                <div class="input-group">
-                                    <label for="next-dispatch-${order.id}" class="input-label">Next Dispatch Date:</label>
-                                    <input type="date" id="next-dispatch-${order.id}" class="date-input" required>
-                                    <label for="delayed-reason-${order.id}" class="input-label">Delayed Reason:</label>
-                                    <input type="text" id="delayed-reason-${order.id}" class="date-input" required>                                
-                                </div>
-                                <button class="submit-btn" onclick="handleDelayed('${order.timestamp}', '${order.id}')">
-                                    Submit Delayed
-                                </button>
-                            </div>
-
-                            <div id="hold-input-${order.id}" class="input-section">
-                                <div class="input-group">
-                                    <label for="hold-until-${order.id}" class="input-label">Hold Until:</label>
-                                    <input type="date" id="hold-until-${order.id}" class="date-input">
-                                </div>
-                                <div class="input-group">
-                                    <label for="hold-remark-${order.id}" class="input-label">Hold Remark:</label>
-                                    <input type="text" id="hold-remark-${order.id}" class="text-input" placeholder="Enter remark">
-                                </div>
-                                <div class="action-buttons">
-                                    <button class="action-btn mark-hold-btn" onclick="handleHold('${order.timestamp}', '${order.id}')">
-                                        Mark Hold
-                                    </button>
-                                    <button class="action-btn cancel-hold-btn" onclick="toggleHoldInput('${order.id}', true)">
-                                        Cancel Hold
-                                    </button>
-                                </div>
-                            </div>
-                            
-                            <div id="feedback-${order.id}" class="action-feedback"></div>
-                        </div>
-                    </div>
+                    <div id="feedback-${order.id}" class="action-feedback"></div>
                 </div>
-            `;
-        }
-
+            </div>
+        </div>
+    `;
+}
         // Load orders from the Google Apps Script API
         async function loadOrders() {
             const loadingEl = document.getElementById('loading');

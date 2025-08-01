@@ -669,7 +669,7 @@ function createOrderCard(order, index) {
                     ${hasDelayedReason ? `
                     <div class="detail-row">
                         <span class="detail-icon">💬</span>
-                        <span class="detail-label">Delaying Reason:</span>
+                        <span class="detail-label">:</span>
                         <span id="delayed-reason-text-${order.id}" class="detail-value delayed-reason-text">${order.delayedReason}</span>
                         <button id="read-more-btn-${order.id}" class="read-more-btn" onclick="toggleDelayedReason('${order.id}')">see more</button>
                     </div>

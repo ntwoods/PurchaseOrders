@@ -383,7 +383,8 @@
         }
 
         .date-field,
-        select {
+        select,
+        .text-field {
             width: 100%;
             padding: 8px 12px;
             border: 1px solid #e2e8f0;
@@ -407,7 +408,8 @@
         }
 
         .date-field:focus,
-        select:focus {
+        select:focus,
+        .text-field:focus {
             outline: none;
             border-color: #d4af37;
             box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.1);
@@ -690,7 +692,7 @@
                                 📝 Remark
                             </label>
                             <div class="input-wrapper">
-                                <input type="text" id="remark${index}" class="date-field" placeholder="Enter remarks here...">
+                                <input type="text" id="remark${index}" class="text-field" placeholder="Enter remarks here...">
                             </div>
                         </div>
 			</div>
@@ -703,6 +705,24 @@
                             </label> 
                             <div class="input-wrapper">
                                 <input type="date" id="expectedDeliveryDate${index}" class="date-field" required>
+                            </div>
+                        </div>
+
+                        <div class="form-item">
+                            <label for="driverName${index}">
+                                👤 Driver Name
+                            </label>
+                            <div class="input-wrapper">
+                                <input type="text" id="driverName${index}" class="text-field" placeholder="Enter driver's name">
+                            </div>
+                        </div>
+
+                        <div class="form-item">
+                            <label for="driverMobile${index}">
+                                📱 Driver Mob.
+                            </label>
+                            <div class="input-wrapper">
+                                <input type="tel" id="driverMobile${index}" class="text-field" placeholder="Enter driver's mobile number">
                             </div>
                         </div>
 
@@ -843,6 +863,8 @@
         async function submitOrderForm(orderIndex) {
             const order = orders[orderIndex];
             const expectedDeliveryDate = document.getElementById(`expectedDeliveryDate${orderIndex}`).value;
+            const driverName = document.getElementById(`driverName${orderIndex}`).value;
+            const driverMobile = document.getElementById(`driverMobile${orderIndex}`).value;
             const billToShipTo = document.getElementById(`billToShipTo${orderIndex}`).value;
             const dispatchFiles = document.getElementById(`dispatchDetails${orderIndex}`).files;
             const invoiceFiles = document.getElementById(`invoice${orderIndex}`).files;
@@ -879,6 +901,8 @@
             const payload = {
                 timestamp: order.timestamp,
                 expectedDeliveryDate,
+                driverName,
+                driverMobile,
                 billToShipTo,
                 dispatchFileArray,
 		remark,		    

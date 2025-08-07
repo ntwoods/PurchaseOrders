@@ -87,6 +87,17 @@
             transform: translateY(-5px);
             box-shadow: 0 8px 25px rgba(0,0,0,0.15);
         }
+        
+        /* New CSS for red highlight */
+        .order-card.overdue-highlight {
+            border: 2px solid #e74c3c;
+            animation: red-glow 1.5s ease-in-out infinite alternate;
+        }
+        
+        @keyframes red-glow {
+            from { box-shadow: 0 0 5px rgba(231, 76, 60, 0.5); }
+            to { box-shadow: 0 0 15px rgba(231, 76, 60, 0.8); }
+        }
 
         .order-header {
             display: flex;
@@ -586,8 +597,9 @@
             const now = new Date();
             const timeLeft = order.deadline.getTime() - now.getTime();
             const countdownElement = document.getElementById(`countdown-${orderId}`);
+            const orderCardElement = document.getElementById(`card-${orderId}`); // Get the card element
             
-            if (!countdownElement) return;
+            if (!countdownElement || !orderCardElement) return;
             
             if (timeLeft <= 0) {
                 countdownElement.innerHTML = '<div class="countdown-overdue">⚠️ OVERDUE</div>';
@@ -596,12 +608,14 @@
                     statusBadge.textContent = 'OVERDUE';
                     statusBadge.className = 'status-badge status-overdue';
                 }
+                orderCardElement.classList.add('overdue-highlight'); // Add red highlight class
             } else {
                 const formattedTime = formatCountdown(timeLeft);
                 countdownElement.innerHTML = `
                     <div class="countdown-title">⏰ Time Left to Follow-up</div>
                     <div class="countdown-timer">${formattedTime}</div>
                 `;
+                orderCardElement.classList.remove('overdue-highlight'); // Remove highlight if not overdue
             }
         }
 
@@ -610,13 +624,14 @@
             const isOverdue = order.deadline && new Date() > order.deadline;
             const statusClass = isOverdue ? 'status-overdue' : 'status-active';
             const statusText = isOverdue ? 'OVERDUE' : 'ACTIVE';
+            const highlightClass = isOverdue ? 'overdue-highlight' : ''; // Added highlight class
             
             const delayedReasonText = order.delayedRemark || 'N/A';
             // A simple check to see if the text is long enough to be truncated
             const isTruncated = delayedReasonText.length > 100;
             
             return `
-                <div class="order-card">
+                <div class="order-card ${highlightClass}" id="card-${order.id}">
                     <div class="order-header">
                         <div class="order-id">${order.purchaseOrderNumber}</div>
                         <div id="status-${order.id}" class="status-badge ${statusClass}">${statusText}</div>

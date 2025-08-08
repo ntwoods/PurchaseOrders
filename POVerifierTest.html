@@ -202,23 +202,7 @@
 	#specEditorModal .cancel-btn:hover {
 	    background: #da190b;
 	    transform: translateY(-2px);
-	}
-
-        /* Category filter info styles */
-        .category-filter-info {
-            background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
-            border: 1px solid #2196f3;
-            border-radius: 10px;
-            padding: 15px;
-            margin-bottom: 20px;
-            color: #1a237e;
-            font-size: 0.9rem;
-            text-align: center;
-        }
-
-        .category-filter-info strong {
-            color: #1976d2;
-        }
+	}	    
 
         .stat-card {
             background: linear-gradient(135deg, #90caf9 0%, #64b5f6 100%); /* Blue shades */
@@ -570,12 +554,7 @@
 	    <div class="modal-content">
 	        <span class="close-button" onclick="closeSpecEditorModal()">&times;</span>
 	        <h2>Review and Edit Specifications</h2>
-
-	        <!-- NEW: Category filter info -->
-	        <div class="category-filter-info" id="categoryFilterInfo" style="display: none;">
-	            <strong>📋 Filtered View:</strong> Showing only categories with assigned suppliers (<span id="filteredCategoryCount">0</span> of <span id="totalCategoryCount">0</span> categories)
-	        </div>
-
+	
 	        <div class="request-details-header" style="margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid #eee;">
 	            <p style="font-size: 0.9em; color: #555;">Timestamp: <span id="specEditorTimestamp" style="font-weight: bold;"></span></p>
 	            <p style="font-size: 0.9em; color: #555;">Requester: <span id="specEditorRequester" style="font-weight: bold;"></span></p>
@@ -583,13 +562,12 @@
 	        </div>
 	        <div id="specCategoryContainer">
 	            <h3 id="currentCategoryTitle"></h3>
-	            <textarea id="specsTextarea" rows="10" placeholder="Enter specifications for this category..."></textarea> 
-	            <div class="spec-navigation">
+	            <textarea id="specsTextarea" rows="10" placeholder="Enter specifications for this category..."></textarea> <div class="spec-navigation">
 	                <button id="prevCategoryBtn" class="btn">Previous</button>
 	                <button id="nextCategoryBtn" class="btn">Next</button>
 	            </div>
 	        </div>
-		    <button id="saveSpecsAndConfirmBtn" class="btn btn-success">Save Specs & Confirm PO</button>
+		<button id="saveSpecsAndConfirmBtn" class="btn btn-success">Save Specs & Confirm PO</button>
 	        <button class="btn cancel-btn" onclick="closeSpecEditorModal()">Cancel</button>
 	    </div>
 	</div>
@@ -605,6 +583,7 @@
         </div>
     </div>
 
+
     <div id="confirmCancelModal" class="modal">
         <div class="modal-content">
             <h3>Mark as Cancel?</h3>
@@ -616,6 +595,7 @@
         </div>
     </div>
 
+
 <script>
 // Global variable to store edited specifications before final submission
 let temporaryEditedSpecs = {};
@@ -625,7 +605,6 @@ let temporaryEditedSpecs = {};
     let categoriesWithSpecs = [];
     let currentCategoryIndex = 0;
     let currentRequestIndex = null; // Used by confirmMarkDone
-    let totalCategoriesCount = 0; // NEW: Track total categories for display
 
 // ... (other helper functions like showToast, closeModal, loadRequests, displayCurrentCategorySpecs)	
     const API_URL = 'https://script.google.com/macros/s/AKfycbxnXt8Ti_RvyfVMRFGbZ-qCUAK-FhmRlN0-B1CDxdKGcVizExq6-MSNMHNCQIDekiiL/exec';
@@ -639,6 +618,7 @@ let temporaryEditedSpecs = {};
         function createCustomOrder() {
             document.getElementById("customOrderModal").style.display = "block";
         }
+
 
         function closeModal() {
             document.getElementById('confirmModal').style.display = 'none';
@@ -674,7 +654,6 @@ let temporaryEditedSpecs = {};
                 alert("Error: " + err.message);
             }
         }
-        
         async function loadRequests() {
             showLoading();
             
@@ -805,14 +784,13 @@ let temporaryEditedSpecs = {};
                         ❌ Cancel
                     </button>
                 </div>
-		        </div>
+		</div>
             `;
             
             // Countdown initiation removed
             
             return card;
         }
-
 
         function showError(message) {
             document.getElementById('loading').style.display = 'none';
@@ -958,7 +936,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });	
 	
-async function openSpecEditorModal(requestData, filteredCategoriesWithSpecs = null) {
+async function openSpecEditorModal(requestData, allCategories = null) {
     // Ensure categoriesWithSpecs is always initialized as an array
     categoriesWithSpecs = []; // Important: Initialize globally or within this function if not global
 
@@ -967,116 +945,106 @@ async function openSpecEditorModal(requestData, filteredCategoriesWithSpecs = nu
     currentRequesterName = requestData.requesterName;
     currentSourceUrl = requestData.sourceUrl;
 
-    // Check if filtered categories are provided and are a valid non-empty array
-    // MODIFICATION START
-    if (filteredCategoriesWithSpecs !== null) { // Check if it was explicitly provided, even if empty
-        if (Array.isArray(filteredCategoriesWithSpecs) && filteredCategoriesWithSpecs.length > 0) {
-            categoriesWithSpecs = filteredCategoriesWithSpecs; // 
-            currentCategoryIndex = 0; // Reset index to the first category
+    // Check if all categories are provided and are a valid non-empty array
+    if (Array.isArray(allCategories) && allCategories.length > 0) {
+        categoriesWithSpecs = allCategories;
+        currentCategoryIndex = 0; // Reset index to the first category
 
-            // Display the first filtered category's specs
-            displayCurrentCategorySpecs(); // [cite: 295]
-            document.getElementById('specsTextarea').disabled = false; // [cite: 295]
-            document.getElementById('saveSpecsAndConfirmBtn').disabled = false; // [cite: 295]
-            // Enable/disable navigation buttons based on current categoriesWithSpecs
-            document.getElementById('prevCategoryBtn').disabled = currentCategoryIndex === 0; // [cite: 296]
-            document.getElementById('nextCategoryBtn').disabled = categoriesWithSpecs.length === 1 || currentCategoryIndex === categoriesWithSpecs.length - 1; // [cite: 296]
-            showToast(`Displaying ${categoriesWithSpecs.length} categories with suppliers.`, "info"); // 
-        } else {
-            // If filteredCategoriesWithSpecs was provided but is empty, indicate no specs
-            document.getElementById('currentCategoryTitle').textContent = 'No Categories with Suppliers Found';
-            document.getElementById('specsTextarea').value = 'No specifications found for categories with suppliers.';
+        // Display the first filtered category's specs
+        displayCurrentCategorySpecs();
+        document.getElementById('specsTextarea').disabled = false;
+        document.getElementById('saveSpecsAndConfirmBtn').disabled = false;
+        // Enable/disable navigation buttons based on current categoriesWithSpecs
+        document.getElementById('prevCategoryBtn').disabled = currentCategoryIndex === 0;
+        document.getElementById('nextCategoryBtn').disabled = categoriesWithSpecs.length === 1 || currentCategoryIndex === categoriesWithSpecs.length - 1;
+        showToast(`Displaying all ${categoriesWithSpecs.length} categories.`, "info");
+
+    } else {
+        // If no valid filtered categories, proceed to fetch all categories (as a fallback or default behavior)
+        document.getElementById('currentCategoryTitle').textContent = 'Loading...';
+        document.getElementById('specsTextarea').value = 'Loading specifications...';
+        document.getElementById('specsTextarea').disabled = true;
+        document.getElementById('saveSpecsAndConfirmBtn').disabled = true;
+        document.getElementById('prevCategoryBtn').disabled = true;
+        document.getElementById('nextCategoryBtn').disabled = true;
+
+        const params = new URLSearchParams();
+        params.append('action', 'getSpecificationsForAllCategories');
+        params.append('sourceUrl', requestData.sourceUrl);
+        const fetchUrl = `${API_URL}?${params.toString()}`;
+
+        try {
+            const response = await fetch(fetchUrl, { method: 'GET' });
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(`HTTP error! status: ${response.status}. Response: ${errorText}`);
+            }
+            const specsResult = await response.json();
+
+            if (specsResult && typeof specsResult === 'object') {
+                categoriesWithSpecs = Object.keys(specsResult).map(category => ({
+                    category: category,
+                    specifications: Array.isArray(specsResult[category]) ? specsResult[category] : [String(specsResult[category])]
+                }));
+                currentCategoryIndex = 0; // Reset index for all categories
+
+                if (categoriesWithSpecs.length > 0) {
+                    displayCurrentCategorySpecs();
+                    document.getElementById('specsTextarea').disabled = false;
+                    document.getElementById('saveSpecsAndConfirmBtn').disabled = false;
+                    document.getElementById('prevCategoryBtn').disabled = currentCategoryIndex === 0;
+                    document.getElementById('nextCategoryBtn').disabled = categoriesWithSpecs.length === 1 || currentCategoryIndex === categoriesWithSpecs.length - 1;
+                    showToast(`Loaded all ${categoriesWithSpecs.length} categories.`, "info");
+                } else {
+                    document.getElementById('currentCategoryTitle').textContent = 'No Categories Found';
+                    document.getElementById('specsTextarea').value = 'No specifications found for this PO.';
+                    document.getElementById('specsTextarea').disabled = true;
+                    document.getElementById('saveSpecsAndConfirmBtn').disabled = true;
+                    document.getElementById('prevCategoryBtn').disabled = true;
+                    document.getElementById('nextCategoryBtn').disabled = true;
+                    showToast("No specifications found for this purchase order.", "info");
+                }
+            } else {
+                console.error("Invalid specs result from backend:", specsResult);
+                showToast("Error loading specs: Invalid data format received from server.", "error");
+                document.getElementById('specsTextarea').value = 'Error loading specifications: Invalid data.';
+            }
+        } catch (error) {
+            console.error("Failed to fetch specifications:", error);
+            showToast("Error loading specifications: " + error.message, "error");
+            document.getElementById('specsTextarea').value = 'Error loading specifications: ' + error.message;
             document.getElementById('specsTextarea').disabled = true;
             document.getElementById('saveSpecsAndConfirmBtn').disabled = true;
             document.getElementById('prevCategoryBtn').disabled = true;
             document.getElementById('nextCategoryBtn').disabled = true;
-            showToast("No specifications found for categories with suppliers in this purchase order.", "info");
-        }
-    } else { // MODIFICATION END - This else block is now the true fallback
-        // If no filtered categories were provided at all, proceed to fetch all categories (as a fallback or default behavior)
-        document.getElementById('currentCategoryTitle').textContent = 'Loading...'; // [cite: 298]
-        document.getElementById('specsTextarea').value = 'Loading specifications...'; // [cite: 298]
-        document.getElementById('specsTextarea').disabled = true; // [cite: 298]
-        document.getElementById('saveSpecsAndConfirmBtn').disabled = true; // [cite: 298]
-        document.getElementById('prevCategoryBtn').disabled = true; // [cite: 298]
-        document.getElementById('nextCategoryBtn').disabled = true; // [cite: 299]
-        const params = new URLSearchParams(); // [cite: 299]
-        params.append('action', 'getSpecificationsForAllCategories'); // [cite: 299]
-        params.append('sourceUrl', requestData.sourceUrl); // [cite: 299]
-        const fetchUrl = `${API_URL}?${params.toString()}`; // [cite: 300]
-        try {
-            const response = await fetch(fetchUrl, { method: 'GET' }); // [cite: 301]
-            if (!response.ok) { // [cite: 301]
-                const errorText = await response.text(); // [cite: 302]
-                throw new Error(`HTTP error! status: ${response.status}. Response: ${errorText}`); // [cite: 302]
-            }
-            const specsResult = await response.json(); // [cite: 303]
-            if (specsResult && typeof specsResult === 'object') { // [cite: 303]
-                categoriesWithSpecs = Object.keys(specsResult).map(category => ({ // [cite: 304]
-                    category: category, // [cite: 304]
-                    specifications: Array.isArray(specsResult[category]) ? specsResult[category] : [String(specsResult[category])] // [cite: 304]
-                }));
-                currentCategoryIndex = 0; // Reset index for all categories // [cite: 304]
-
-                if (categoriesWithSpecs.length > 0) { // [cite: 305]
-                    displayCurrentCategorySpecs(); // [cite: 305]
-                    document.getElementById('specsTextarea').disabled = false; // [cite: 305]
-                    document.getElementById('saveSpecsAndConfirmBtn').disabled = false; // [cite: 305]
-                    document.getElementById('prevCategoryBtn').disabled = currentCategoryIndex === 0; // [cite: 305]
-                    document.getElementById('nextCategoryBtn').disabled = categoriesWithSpecs.length === 1 || // [cite: 306]
-                        currentCategoryIndex === categoriesWithSpecs.length - 1; // [cite: 306]
-                    showToast(`Loaded all ${categoriesWithSpecs.length} categories.`, "info"); // [cite: 307]
-                } else {
-                    document.getElementById('currentCategoryTitle').textContent = 'No Categories Found'; // [cite: 308]
-                    document.getElementById('specsTextarea').value = 'No specifications found for this PO.'; // [cite: 308]
-                    document.getElementById('specsTextarea').disabled = true; // [cite: 308]
-                    document.getElementById('saveSpecsAndConfirmBtn').disabled = true; // [cite: 308]
-                    document.getElementById('prevCategoryBtn').disabled = true; // [cite: 309]
-                    document.getElementById('nextCategoryBtn').disabled = true; // [cite: 309]
-                    showToast("No specifications found for this purchase order.", "info"); // [cite: 309]
-                }
-            } else {
-                console.error("Invalid specs result from backend:", specsResult); // [cite: 310]
-                showToast("Error loading specs: Invalid data format received from server.", "error"); // [cite: 310]
-                document.getElementById('specsTextarea').value = 'Error loading specifications: Invalid data.'; // [cite: 311]
-            }
-        } catch (error) {
-            console.error("Failed to fetch specifications:", error); // [cite: 312]
-            showToast("Error loading specifications: " + error.message, "error"); // [cite: 312]
-            document.getElementById('specsTextarea').value = 'Error loading specifications: ' + error.message; // [cite: 312]
-            document.getElementById('specsTextarea').disabled = true; // [cite: 313]
-            document.getElementById('saveSpecsAndConfirmBtn').disabled = true; // [cite: 313]
-            document.getElementById('prevCategoryBtn').disabled = true; // [cite: 313]
-            document.getElementById('nextCategoryBtn').disabled = true; // [cite: 313]
         }
     }
-    specEditorModal.style.display = 'flex'; // [cite: 314]
+    specEditorModal.style.display = 'flex';
 }
 	// Add this new function to your existing JavaScript in POverifier (1).html
-function handleProceedAnyway(index) {
-    closeModal(); // This will close the confirmModal
-
-    if (currentRequestDataForSpecs) {
-        const storedSpecs = sessionStorage.getItem('filteredSpecsForEditor');
-        let filteredSpecsForEditor = null;
-        if (storedSpecs) {
-            try {
-                filteredSpecsForEditor = JSON.parse(storedSpecs);
-            } catch (e) {
-                console.error("Error parsing filteredSpecsForEditor from sessionStorage:", e);
-                showToast("Error: Could not retrieve saved specifications.", "error");
-            }
-        }
-        sessionStorage.removeItem('filteredSpecsForEditor'); // Clean up sessionStorage after use
-
-        // Pass the potentially null/empty filteredSpecsForEditor,
-        // openSpecEditorModal will handle it
-        openSpecEditorModal(currentRequestDataForSpecs, filteredSpecsForEditor);
-    } else {
-        console.error("Error: currentRequestDataForSpecs is not defined. Cannot open spec editor.");
-        showToast("Error opening spec editor. Please refresh.", "error");
-    }
-}	    
+	function handleProceedAnyway(index) {
+	    closeModal(); // Close the confirm modal
+	
+	    if (currentRequestDataForSpecs) {
+	        const storedSpecs = sessionStorage.getItem('filteredSpecsForEditor');
+	        let filteredSpecsForEditor = null;
+	
+	        if (storedSpecs) {
+	            try {
+	                filteredSpecsForEditor = JSON.parse(storedSpecs);
+	            } catch (e) {
+	                console.error("Error parsing filteredSpecsForEditor:", e);
+	                showToast("Error: Could not parse specifications.", "error");
+	            }
+	        }
+	
+	        // ✅ Pass the filtered specs (only categories with suppliers)
+	        openSpecEditorModal(currentRequestDataForSpecs, filteredSpecsForEditor);
+	    } else {
+	        showToast("Error: Missing PO request data. Please refresh.", "error");
+	    }
+	}
+	
 async function markAsDone(index) {
     if (!requestsData || index === undefined || requestsData[index] === undefined) {
         console.error("Request data not found for index:", index);
@@ -1087,80 +1055,42 @@ async function markAsDone(index) {
     currentRequestIndex = index;
     const request = requestsData[index];
 
-    const modal = document.getElementById('confirmModal');
-    const modalContent = modal.querySelector('.modal-content');
-    modalContent.innerHTML = `
-        <div class="loader" style="width: 40px; height: 40px; margin: 20px auto;"></div>
-        <h3>Checking Supplier Information...</h3>
-        <p>Please wait while we verify the purchase order details.</p>
-    `;
-    modal.style.display = 'block';
+    // No need to check for missing suppliers. Directly prepare to open the spec editor.
+    currentRequestDataForSpecs = {
+        timestamp: request.timestamp,
+        requesterName: request.requesterName,
+        sourceUrl: request.googleSheetURL
+    };
+    
+    // Fetch all categories for the spec editor
+    const params = new URLSearchParams();
+    params.append('action', 'getSpecificationsForAllCategories');
+    params.append('sourceUrl', currentRequestDataForSpecs.sourceUrl);
+    const fetchUrl = `${API_URL}?${params.toString()}`;
 
     try {
-        const result = await checkMissingSuppliers(request.googleSheetURL);
-        const { missingOrders, completedOrders, filteredSpecsForEditor } = result; // Get the new data
+        const response = await fetch(fetchUrl, { method: 'GET' });
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`HTTP error! status: ${response.status}. Response: ${errorText}`);
+        }
+        const specsResult = await response.json();
 
-        currentRequestDataForSpecs = {
-            timestamp: request.timestamp,
-            requesterName: request.requesterName,
-            sourceUrl: request.googleSheetURL
-        };
+        if (specsResult && typeof specsResult === 'object') {
+            const allCategories = Object.keys(specsResult).map(category => ({
+                category: category,
+                specifications: Array.isArray(specsResult[category]) ? specsResult[category] : [String(specsResult[category])]
+            }));
 
-        if (Array.isArray(missingOrders) && missingOrders.length > 0) {
-	            // Display missing supplier information
-	            let completedSection = '';
-	            if (completedOrders.length > 0) {
-	                completedSection = `
-	                    <div style="margin-top: 20px;">
-	                        <h4 style="color: #27ae60; margin-bottom: 10px;">✅ Orders with Suppliers (${completedOrders.length})</h4>
-	                        <div style="max-height: 150px; overflow-y: auto; text-align: left; font-size: 0.85rem; background: #f8f9fa; padding: 10px; border-radius: 5px;">
-	                            <ul style="margin: 0; padding-left: 20px;">
-	                            ${completedOrders.map(o => `<li style="margin-bottom: 3px;">${o}</li>`).join('')}
-	                            </ul>
-	                        </div>
-	                    </div>
-	                `;
-	            }
-
-            modalContent.innerHTML = `
-                <h3>⚠️ Missing Supplier Information</h3>
-                <div>
-                    <h4 style="color: #e74c3c; margin-bottom: 10px;">❌ Missing Suppliers (${missingOrders.length})</h4>
-                    <div style="max-height: 200px; overflow-y: auto; text-align: left; font-size: 0.9rem; background: #fff5f5; padding: 10px; border-radius: 5px; border: 1px solid #e74c3c;">
-                        <ul style="margin: 0; padding-left: 20px;">
-                        ${missingOrders.map(o => `<li style="margin-bottom: 3px;">${o}</li>`).join('')}
-                        </ul>
-                    </div>
-                </div>
-                ${completedOrders.length > 0 ? `
-                    <div style="margin-top: 20px;">
-                        <h4 style="color: #27ae60; margin-bottom: 10px;">✅ Orders with Suppliers (${completedOrders.length})</h4>
-                        <div style="max-height: 150px; overflow-y: auto; text-align: left; font-size: 0.85rem; background: #f8f9fa; padding: 10px; border-radius: 5px;">
-                            <ul style="margin: 0; padding-left: 20px;">
-                            ${completedOrders.map(o => `<li style="margin-bottom: 3px;">${o}</li>`).join('')}
-                            </ul>
-                        </div>
-                    </div>
-                ` : ''}
-                <p style="margin-top: 15px;">Please update the Google Sheet with supplier names. Or proceed anyway if intentional.</p>
-                <div class="modal-actions">
-                    <a href="${request.googleSheetURL}" target="_blank" class="btn btn-primary">📊 Open Sheet</a>
-                    <button class="btn btn-success" onclick="handleProceedAnyway(${index})">Proceed Anyway</button>
-                    <button class="btn" onclick="closeModal()" style="background: #90caf9; color: white;">Cancel</button>
-                </div>
-            `;
-            // Add this line to store filteredSpecsForEditor for when "Proceed Anyway" is clicked
-            // This makes it accessible to handleProceedAnyway
-            sessionStorage.setItem('filteredSpecsForEditor', JSON.stringify(filteredSpecsForEditor));
+            // Open the spec editor with all categories
+            openSpecEditorModal(currentRequestDataForSpecs, allCategories);
         } else {
-            closeModal();
-            // Pass the filtered data directly
-            openSpecEditorModal(currentRequestDataForSpecs, filteredSpecsForEditor);
+            console.error("Invalid specs result from backend:", specsResult);
+            showToast("Error loading specs: Invalid data format received from server.", "error");
         }
     } catch (error) {
-        console.error('Error during supplier check:', error);
-        showToast(`Error checking suppliers: ${error.message}`, "error");
-        closeModal();
+        console.error("Failed to fetch specifications:", error);
+        showToast("Error loading specifications: " + error.message, "error");
     }
 }
         function markAsCancel(index) {
@@ -1442,4 +1372,4 @@ document.getElementById('saveSpecsAndConfirmBtn').addEventListener('click', () =
     </script>
     <script src="https://ntwoods.github.io/ordertodispatch/js/viewOnly.js"></script>	
 </body>
-</html>	
+</html>

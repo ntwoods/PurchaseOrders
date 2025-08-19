@@ -833,7 +833,9 @@ function createRequestCard(request) {
 
             <div class="field-group">
                 <span class="field-label">Req Dt.:</span>
-                <div class="field-value">${request.timeStamp || 'N/A'}</div>
+                <div class="field-value">
+                  ${request.timeStamp ? new Date(request.timeStamp).toLocaleDateString('en-GB') : 'N/A'}
+                </div>
             </div>
             
             <div class="field-group">

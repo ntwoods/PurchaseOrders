@@ -832,6 +832,11 @@ function createRequestCard(request) {
             ${productHtml}
 
             <div class="field-group">
+                <span class="field-label">Req Dt.:</span>
+                <div class="field-value">${request.timeStamp || 'N/A'}</div>
+            </div>
+            
+            <div class="field-group">
                 <span class="field-label">Priority:</span>
                 <div class="field-value">${request.priority || 'N/A'}</div>
             </div>

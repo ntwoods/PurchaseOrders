@@ -103,6 +103,18 @@
             font-weight: 600;
             text-transform: uppercase;
             font-size: 0.9em;
+            cursor: pointer;
+            user-select: none;
+        }
+        th .sort-arrow {
+            margin-left: 5px;
+            transition: transform 0.3s ease;
+        }
+        th.asc .sort-arrow {
+            transform: rotate(180deg);
+        }
+        th.desc .sort-arrow {
+            transform: rotate(0deg);
         }
         tr:nth-child(even) {
             background-color: #f5faff;
@@ -117,27 +129,6 @@
         }
         td a:hover {
             text-decoration: underline;
-        }
-        .pagination {
-            text-align: center;
-            margin-top: 20px;
-        }
-        .pagination button {
-            padding: 10px 20px;
-            margin: 0 10px;
-            cursor: pointer;
-            background-color: #007bff;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            transition: background-color 0.3s ease;
-        }
-        .pagination button:hover {
-            background-color: #005cbf;
-        }
-        .pagination button:disabled {
-            background-color: #b3d7ff;
-            cursor: not-allowed;
         }
         .error {
             color: #d32f2f;
@@ -173,35 +164,29 @@
         <table id="orderTable">
             <thead>
                 <tr>
-                    <th>PO Number</th>
-                    <th>Supplier Name</th>
-                    <th>Status</th>
-                    <th>Expected Dispatch</th>
-                    <th>Expected Delivery</th>
-                    <th>Received On</th>
-                    <th>PO URL</th>
-                    <th>Dispatch Detail</th>
-                    <th>Invoice</th>
-                    <th>CRM</th>
-                    <th>CRM Requests</th>
+                    <th onclick="sortTable(0)">PO Number <span class="sort-arrow"></span></th>
+                    <th onclick="sortTable(1)">Supplier Name <span class="sort-arrow"></span></th>
+                    <th onclick="sortTable(2)">Status <span class="sort-arrow"></span></th>
+                    <th onclick="sortTable(3)">Expected Dispatch <span class="sort-arrow"></span></th>
+                    <th onclick="sortTable(4)">Expected Delivery <span class="sort-arrow"></span></th>
+                    <th onclick="sortTable(5)">Received On <span class="sort-arrow"></span></th>
+                    <th onclick="sortTable(6)">PO URL <span class="sort-arrow"></span></th>
+                    <th onclick="sortTable(7)">Dispatch Detail <span class="sort-arrow"></span></th>
+                    <th onclick="sortTable(8)">Invoice <span class="sort-arrow"></span></th>
+                    <th onclick="sortTable(9)">CRM <span class="sort-arrow"></span></th>
+                    <th onclick="sortTable(10)">CRM Requests <span class="sort-arrow"></span></th>
                 </tr>
             </thead>
             <tbody id="orderTableBody"></tbody>
         </table>
     </div>
 
-    <div class="pagination">
-        <button onclick="previousPage()" id="prevButton">Previous</button>
-        <button onclick="nextPage()" id="nextButton">Next</button>
-    </div>
-
     <script>
         const API_URL = 'https://script.google.com/macros/s/AKfycbwvMSqEAQcp_du39XCOzvpNRjR8tsnk6YTPhcxfJClo0tjVtXvaUJUHerNJZVH0am5K/exec';
         let orders = [];
-        let currentPage = 1;
-        const rowsPerPage = 10;
         let filteredOrders = [];
         let currentFilter = 'All';
+        let sortDirection = {};
 
         async function fetchOrders() {
             try {
@@ -231,13 +216,12 @@
         }
 
         function renderTable() {
-            const start = (currentPage - 1) * rowsPerPage;
-            const end = start + rowsPerPage;
-            const paginatedOrders = filteredOrders.slice(start, end);
             const tbody = document.getElementById('orderTableBody');
             tbody.innerHTML = '';
-
-            paginatedOrders.forEach(order => {
+            
+            const columns = ['poNumber', 'supplierName', 'orderType', 'expectedDispatchDate', 'expectedDeliveryDate', 'acknowledgedTimestamp', 'poURL', 'dispatchDetailURL', 'invoiceUrl', 'crmName', 'crmRequestURL'];
+            
+            filteredOrders.forEach(order => {
                 const row = document.createElement('tr');
                 row.innerHTML = `
                     <td>${order.poNumber || ''}</td>
@@ -254,10 +238,6 @@
                 `;
                 tbody.appendChild(row);
             });
-
-            // Update pagination buttons
-            document.getElementById('prevButton').disabled = currentPage === 1;
-            document.getElementById('nextButton').disabled = currentPage * rowsPerPage >= filteredOrders.length;
         }
 
         function filterOrders(status) {
@@ -279,7 +259,8 @@
                 if (currentFilter === 'All') {
                     statusMatch = true;
                 } else if (currentFilter === 'In-Transit') {
-                    statusMatch = order.orderType === 'In-Transit';
+                    // Corrected logic: In-Transit are orders without an acknowledged timestamp
+                    statusMatch = !order.acknowledgedTimestamp;
                 } else if (currentFilter === 'Received') {
                     statusMatch = !!order.acknowledgedTimestamp;
                 }
@@ -289,30 +270,54 @@
                     const orderDate = new Date(order.acknowledgedTimestamp);
                     const start = new Date(startDate);
                     const end = new Date(endDate);
-                    dateMatch = orderDate >= start && orderDate <= end && order.acknowledgedTimestamp !== '';
-                } else if (startDate && endDate) {
-                    // If date filter is applied, exclude orders with empty acknowledgedTimestamp
+                    // Set end date to end of day to include the entire day
+                    end.setHours(23, 59, 59, 999);
+                    dateMatch = orderDate >= start && orderDate <= end;
+                } else if (startDate || endDate) {
+                    // If date filter is applied, but acknowledgedTimestamp is missing, it's not a match.
                     dateMatch = false;
                 }
-
                 return statusMatch && dateMatch;
             });
-            currentPage = 1;
             renderTable();
         }
+        
+        function sortTable(columnIndex) {
+            const columns = ['poNumber', 'supplierName', 'orderType', 'expectedDispatchDate', 'expectedDeliveryDate', 'acknowledgedTimestamp', 'poURL', 'dispatchDetailURL', 'invoiceUrl', 'crmName', 'crmRequestURL'];
+            const columnKey = columns[columnIndex];
+            const isDateColumn = ['expectedDispatchDate', 'expectedDeliveryDate', 'acknowledgedTimestamp'].includes(columnKey);
 
-        function previousPage() {
-            if (currentPage > 1) {
-                currentPage--;
-                renderTable();
-            }
-        }
+            // Toggle sort direction
+            sortDirection[columnKey] = (sortDirection[columnKey] === 'asc') ? 'desc' : 'asc';
 
-        function nextPage() {
-            if (currentPage * rowsPerPage < filteredOrders.length) {
-                currentPage++;
-                renderTable();
-            }
+            filteredOrders.sort((a, b) => {
+                let valA = a[columnKey] || '';
+                let valB = b[columnKey] || '';
+
+                if (isDateColumn) {
+                    valA = valA ? new Date(valA) : new Date(0); // Use epoch for empty dates
+                    valB = valB ? new Date(valB) : new Date(0);
+                    return sortDirection[columnKey] === 'asc' ? valA - valB : valB - valA;
+                } else {
+                    if (typeof valA === 'string' && typeof valB === 'string') {
+                        return sortDirection[columnKey] === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
+                    }
+                    return sortDirection[columnKey] === 'asc' ? valA - valB : valB - valA;
+                }
+            });
+
+            // Update table headers with sort indicators
+            const headers = document.querySelectorAll('th');
+            headers.forEach((header, index) => {
+                header.classList.remove('asc', 'desc');
+                header.querySelector('.sort-arrow').innerHTML = '';
+                if (index === columnIndex) {
+                    header.classList.add(sortDirection[columnKey]);
+                    header.querySelector('.sort-arrow').innerHTML = sortDirection[columnKey] === 'asc' ? '▲' : '▼';
+                }
+            });
+
+            renderTable();
         }
 
         // Fetch data on load

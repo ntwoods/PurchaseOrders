@@ -667,7 +667,7 @@
                 // Extract PO numbers only when column U (index 0) is blank/null
                 // and then get value from AL column (index 17)
                 poNumbers = data.table.rows
-                    .filter(row => (row.c[12] === null || row.c[12].v === null || row.c[12].v === '') && (row.c[0] === "Done") // Filter for blank U
+                    .filter(row => (row.c[12] === null || row.c[12].v === null || row.c[12].v === '') && (row.c[0] === "Done")) // Filter for blank U
                     .map(row => row.c[29]?.v) // Get value from AL
                     .filter(value => value !== undefined && value !== null && value !== '') // Remove undefined/null/empty
                     .map(String); // Ensure values are strings for consistency

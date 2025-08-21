@@ -772,7 +772,7 @@ function createCard(request, index) {
         return deadline;
       } else {
         // Add 30 minutes to timestamp for all other cases
-        return new Date(date.getTime() + 30 * 60 * 1000);
+        return new Date(date.getTime() + 3 * 60 * 60 * 1000);
       }
     }
 
@@ -875,4 +875,5 @@ function createCard(request, index) {
 <script src="https://ntwoods.github.io/ordertodispatch/js/viewOnly.js"></script>
 </body>
 </html>
+
 

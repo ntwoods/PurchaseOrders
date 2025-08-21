@@ -18,9 +18,8 @@
 
     body {
         font-family: 'Poppins', sans-serif;
-        /* Light blue background with a subtle gradient */
         background: linear-gradient(135deg, #F0F8FF 0%, #E0FFFF 100%);
-        color: #333333; /* Darker text for readability on light background */
+        color: #333333;
         min-height: 100vh;
         padding: 20px;
         animation: fadeIn 0.5s ease-in;
@@ -41,29 +40,23 @@
         text-align: center;
         margin-bottom: 40px;
         padding: 30px 0;
-        /* Medium blue background for header */
-        background: linear-gradient(135deg, #4682B4, #6A96C9);
+        background: linear-gradient(135deg, #007BFF, #0056b3);
         border-radius: 20px;
-        border: 1px solid #3A73AA; /* Slightly darker blue border */
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1); /* Lighter shadow */
+        border: 1px solid #0056b3;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        color: white; /* Changed header text to white for visibility */
     }
 
     .header h1 {
         font-size: 2.5rem;
         font-weight: 700;
-        /* Bright blue for main heading */
-        background: linear-gradient(135deg, #007BFF, #0056b3);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
         margin-bottom: 10px;
-        text-shadow: 0 0 15px rgba(0, 123, 255, 0.3); /* Blue shadow */
     }
 
     .header p {
-        color: #E0FFFF; /* Lighter blue for sub-heading */
         font-size: 1.1rem;
         font-weight: 300;
+        color: #E0FFFF;
     }
 
 
@@ -77,8 +70,21 @@
         gap: 20px;
     }
 
+    .search-container {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .search-container input {
+        padding: 12px;
+        border: 1px solid #ddd;
+        border-radius: 10px;
+        font-size: 1rem;
+        width: 250px;
+    }
+
     .refresh-btn {
-        /* Primary blue for refresh button */
         background: linear-gradient(135deg, #007BFF, #0056b3);
         color: #FFFFFF;
         border: none;
@@ -99,7 +105,7 @@
     }
 
     .last-updated {
-        color: #666666; /* Grey for last updated text */
+        color: #666666;
         font-size: 0.9rem;
     }
 
@@ -107,7 +113,7 @@
     .loading {
         text-align: center;
         padding: 40px;
-        color: #007BFF; /* Blue for loading text */
+        color: #007BFF;
         font-size: 1.2rem;
     }
 
@@ -124,7 +130,7 @@
     .error {
         text-align: center;
         padding: 40px;
-        color: #DC3545; /* Red for error messages */
+        color: #DC3545;
         background: rgba(220, 53, 69, 0.1);
         border-radius: 15px;
         border: 1px solid rgba(220, 53, 69, 0.3);
@@ -133,18 +139,17 @@
     .empty-state {
         text-align: center;
         padding: 60px 20px;
-        color: #999999; /* Lighter grey for empty state text */
+        color: #999999;
     }
 
     .empty-state i {
         font-size: 4rem;
-        color: #CCCCCC; /* Light grey for empty state icon */
+        color: #CCCCCC;
         margin-bottom: 20px;
     }
 
     /* Table Styles */
     .table-container {
-        /* Slightly darker blue for table background */
         background: linear-gradient(135deg, #FFFFFF, #F8F8FF);
         border-radius: 20px;
         overflow: hidden;
@@ -158,7 +163,6 @@
     }
 
     thead {
-        /* Darker blue for table header background */
         background: linear-gradient(135deg, #0056b3, #003F7F);
     }
 
@@ -166,54 +170,58 @@
         padding: 20px 15px;
         text-align: left;
         font-weight: 600;
-        color: #FFFFFF; /* White text for table headers */
+        color: #FFFFFF;
         text-transform: uppercase;
         letter-spacing: 1px;
         font-size: 0.9rem;
-        border-bottom: 2px solid #007BFF; /* Primary blue border */
+        border-bottom: 2px solid #007BFF;
+        cursor: pointer; /* Added cursor pointer for clickable headers */
+    }
+
+    th .sort-arrow {
+        margin-left: 5px;
     }
 
     tbody tr {
         transition: all 0.3s ease;
-        border-bottom: 1px solid #EEEEEE; /* Light grey border for rows */
+        border-bottom: 1px solid #EEEEEE;
     }
 
     tbody tr:hover {
-        background: rgba(0, 123, 255, 0.05); /* Very light blue on hover */
+        background: rgba(0, 123, 255, 0.05);
         transform: scale(1.01);
     }
 
     tbody tr.completed {
         opacity: 0.8;
-        background: rgba(144, 238, 144, 0.2); /* Light green for completed rows */
+        background: rgba(144, 238, 144, 0.2);
     }
 
     td {
         padding: 18px 15px;
-        color: #333333; /* Dark text for table data */
+        color: #333333;
         font-weight: 400;
     }
 
     .sr-no {
         font-weight: 600;
-        color: #007BFF; /* Primary blue for serial number */
+        color: #007BFF;
         text-align: center;
         width: 80px;
     }
 
     .po-number {
         font-weight: 600;
-        color: #0056b3; /* Darker blue for PO number */
-        font-family: 'Poppins', sans-serif; /* Keep Poppins for this as well */
+        color: #0056b3;
+        font-family: 'Poppins', sans-serif;
     }
 
     .supplier-name {
-        color: #666666; /* Grey for supplier name */
+        color: #666666;
     }
 
     /* Action Buttons */
     .action-btn {
-        /* Green for action button */
         background: linear-gradient(135deg, #28a745, #20c997);
         color: white;
         border: none;
@@ -234,7 +242,7 @@
     }
 
     .action-btn.completed {
-        background: linear-gradient(135deg, #6c757d, #495057); /* Grey for completed action button */
+        background: linear-gradient(135deg, #6c757d, #495057);
         cursor: not-allowed;
     }
 
@@ -245,7 +253,6 @@
 
     /* Invoice Button Specific Styles */
     .invoice-btn {
-        /* Primary blue for invoice button */
         background: linear-gradient(135deg, #007bff, #0056b3);
         color: white;
         border: none;
@@ -266,7 +273,7 @@
     }
 
     .invoice-btn:disabled {
-        background: linear-gradient(135deg, #6c757d, #495057); /* Grey for disabled invoice button */
+        background: linear-gradient(135deg, #6c757d, #495057);
         cursor: not-allowed;
     }
 
@@ -294,6 +301,9 @@
         </div>
 
         <div class="controls">
+            <div class="search-container">
+                <input type="text" id="searchInput" placeholder="Search by PO No. or Supplier" onkeyup="filterTable()">
+            </div>
             <button class="refresh-btn" onclick="fetchOrders()">
                 <i class="fas fa-sync-alt"></i> Refresh Data
             </button>
@@ -311,11 +321,11 @@
                 <table>
                     <thead>
                         <tr>
-                            <th>Sr. No.</th>
-                            <th>PO No.</th>
-                            <th>Supplier Name</th>
-                            <th>Invoice</th> <!-- New Invoice Column Header -->
-                            <th>Action</th>
+                            <th onclick="sortTable(0)">Sr. No. <span class="sort-arrow"></span></th>
+                            <th onclick="sortTable(1)">PO No. <span class="sort-arrow"></span></th>
+                            <th onclick="sortTable(2)">Supplier Name <span class="sort-arrow"></span></th>
+                            <th onclick="sortTable(3)">Invoice <span class="sort-arrow"></span></th>
+                            <th onclick="sortTable(4)">Action <span class="sort-arrow"></span></th>
                         </tr>
                     </thead>
                     <tbody id="ordersTableBody">
@@ -332,25 +342,18 @@
     </div>
 
 <script>
-    // API endpoint for fetching and updating orders
     const API_URL = 'https://script.google.com/macros/s/AKfycbwYVf_pKrNX6WWyYF6lBSwsQwB7AIZcgAjoXU1PBR4vmTeb48huKWtagXHJXiDcjeSibw/exec';
     
-    // Array to store all fetched orders
     let orders = [];
-    
-    // Set to keep track of completed order purchase order numbers
     let completedOrders = new Set();
+    let sortDirection = {};
 
-    /**
-     * Fetches orders from the API and updates the UI.
-     */
     async function fetchOrders() {
         const loadingEl = document.getElementById('loading');
         const errorEl = document.getElementById('error');
         const tableWrapperEl = document.getElementById('tableWrapper');
         const emptyStateEl = document.getElementById('emptyState');
         
-        // Show loading state and hide other sections
         loadingEl.style.display = 'block';
         errorEl.style.display = 'none';
         tableWrapperEl.style.display = 'none';
@@ -359,23 +362,19 @@
         try {
             const response = await fetch(API_URL);
             
-            // Check if the network request was successful
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
             
             const data = await response.json();
             
-            // Check if data is successfully received and in the correct format
             if (data.success && data.data) {
-                orders = data.data; // Store fetched orders
-                renderOrders();      // Render orders in the table
-	    if (typeof setReadOnlyMode === "function") {
-		  setReadOnlyMode();
-		}			    
-                updateLastUpdated(); // Update last updated timestamp
+                orders = data.data;
+                completedOrders = new Set(orders.filter(o => o.account_status === 'COMPLETED').map(o => o.purchaseOrderNumber));
                 
-                // Show empty state or table based on number of orders
+                filterTable(); // Initially filter/render all data
+                updateLastUpdated();
+                
                 if (orders.length === 0) {
                     emptyStateEl.style.display = 'block';
                 } else {
@@ -384,97 +383,96 @@
             } else {
                 throw new Error('Invalid data format received from API');
             }
-            
         } catch (error) {
             console.error('Error fetching orders:', error);
             errorEl.textContent = `Error loading orders: ${error.message}`;
             errorEl.style.display = 'block';
         } finally {
-            // Hide loading state regardless of success or error
             loadingEl.style.display = 'none';
         }
     }
 
-    /**
-     * Renders the orders array into the HTML table.
-     */
-    function renderOrders() {
+    function renderOrders(filteredData) {
         const tbody = document.getElementById('ordersTableBody');
-        tbody.innerHTML = ''; // Clear existing table rows
+        tbody.innerHTML = '';
         
-        orders.forEach((order, index) => {
+        if (filteredData.length === 0) {
+            document.getElementById('emptyState').style.display = 'block';
+            document.getElementById('tableWrapper').style.display = 'none';
+            return;
+        } else {
+            document.getElementById('emptyState').style.display = 'none';
+            document.getElementById('tableWrapper').style.display = 'block';
+        }
+        
+        filteredData.forEach((order, index) => {
             const row = document.createElement('tr');
-            // Check if the order is marked as completed
             const isCompleted = completedOrders.has(order.purchaseOrderNumber);
             
             if (isCompleted) {
                 row.classList.add('completed');
             }
             
-            // Populate row with order data, including new Invoice button
             row.innerHTML = `
                 <td class="sr-no">${index + 1}</td>
                 <td class="po-number">${order.purchaseOrderNumber}</td>
                 <td class="supplier-name">${order.supplierName}</td>
                 <td>
-		<div class="editable">
-		    ${order.invoiceUrl ? 
-                        `<button class="invoice-btn" 
-                                onclick="showInvoice('${order.invoiceUrl}')">
-                            <i class="fas fa-file-invoice"></i> Show Invoice
-                        </button>` 
-                        : 'N/A' // Display 'N/A' if invoiceUrl is not available
-                    }
-		</div>
+                    <div class="editable">
+                        ${order.invoiceUrl ? 
+                            `<button class="invoice-btn" onclick="showInvoice('${order.invoiceUrl}')">
+                                <i class="fas fa-file-invoice"></i> Show Invoice
+                            </button>` 
+                            : 'N/A'
+                        }
+                    </div>
                 </td>
-                <div class="editable">
-		<td>
-                    <button class="action-btn ${isCompleted ? 'completed' : ''}" 
-                            id="markDoneBtn-${order.purchaseOrderNumber}"
-                            onclick="markDone(this, '${order.purchaseOrderNumber}')"
-                            ${isCompleted ? 'disabled' : ''}>
-                        <i class="fas ${isCompleted ? 'fa-check' : 'fa-check-circle'}"></i>
-                        ${isCompleted ? 'Completed' : 'Mark Done'}
-                    </button>
+                <td>
+                    <div class="editable">
+                        <button class="action-btn ${isCompleted ? 'completed' : ''}" 
+                                id="markDoneBtn-${order.purchaseOrderNumber}"
+                                onclick="markDone(this, '${order.purchaseOrderNumber}')"
+                                ${isCompleted ? 'disabled' : ''}>
+                            <i class="fas ${isCompleted ? 'fa-check' : 'fa-check-circle'}"></i>
+                            ${isCompleted ? 'Completed' : 'Mark Done'}
+                        </button>
+                    </div>
                 </td>
-		</div>
             `;
             
             tbody.appendChild(row);
         });
     }
 
-    /**
-     * Marks an order as done by sending a POST request to the API.
-     * @param {HTMLElement} buttonElement The button element that triggered the action.
-     * @param {string} poNumber The purchase order number to mark as done.
-     */
+    function filterTable() {
+        const searchText = document.getElementById('searchInput').value.toLowerCase();
+        let filteredData = orders.filter(order => 
+            order.purchaseOrderNumber.toLowerCase().includes(searchText) || 
+            order.supplierName.toLowerCase().includes(searchText)
+        );
+        renderOrders(filteredData);
+    }
+
     async function markDone(buttonElement, poNumber) {
-        // Prevent marking done if already completed
         if (completedOrders.has(poNumber)) return;
 
-        // Find the order details based on PO number
         const order = orders.find(o => o.purchaseOrderNumber === poNumber);
         if (!order || !order.timestamp) {
-            // Use a custom modal or message box instead of alert
-            // For simplicity, a console error is used here. In a real app, use a proper UI notification.
             console.error("Timestamp not found for the selected order.");
             return;
         }
 
-        // Store original button content and class for revert
         const originalButtonHtml = buttonElement.innerHTML;
         const originalButtonClass = buttonElement.className;
 
-        // Show loading state on the button
         buttonElement.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
-        buttonElement.className = 'action-btn completed'; // Gray out and disable
+        buttonElement.className = 'action-btn completed';
         buttonElement.disabled = true;
 
         try {
             await fetch(API_URL, {
                 method: 'POST',
-                mode: 'no-cors', // Important for Apps Script web apps that don't send CORS headers
+                mode: 'no-cors',
                 headers: {
                     'Content-Type': 'application/json'
                 },
@@ -485,47 +483,32 @@
                 })
             });
 
-            // Optimistically update UI assuming success
             completedOrders.add(poNumber);
-
-            // Visual feedback for success on the button
+            
             buttonElement.innerHTML = '<i class="fas fa-check"></i> Done!';
             buttonElement.className = 'action-btn completed';
             buttonElement.disabled = true;
 
-            // Re-render the table after a short delay to reflect the true state
             setTimeout(() => {
                 const row = buttonElement.closest('tr');
                 if (row) {
                     row.classList.add('completed');
                 }
-                renderOrders(); 
-            }, 1500); // Wait for 1.5 seconds to show "Done!" before re-rendering
-		fetchOrders();
+                filterTable(); // Re-render table with search filter applied
+            }, 1500);
         } catch (error) {
             console.error('Fetch failed:', error);
-            // Use a custom modal or message box instead of alert
             console.error('Network error — request not sent. Please try again.');
-            // Revert button to original state on error
             buttonElement.innerHTML = originalButtonHtml;
             buttonElement.className = originalButtonClass;
             buttonElement.disabled = false;
         }
     }
 
-    /**
-     * Opens the invoice URL in a new tab.
-     * @param {string} invoiceUrl The URL of the invoice.
-     */
     function showInvoice(invoiceUrl) {
         window.open(invoiceUrl, '_blank');
     }
 
-    /**
-
-    /**
-     * Updates the "Last updated" timestamp on the UI.
-     */
     function updateLastUpdated() {
         const now = new Date();
         const timeString = now.toLocaleTimeString('en-US', { 
@@ -534,8 +517,42 @@
             minute: '2-digit' 
         });
         document.getElementById('lastUpdated').textContent = `Last updated: ${timeString}`;
-        document.getElementById('lastUpdated').style.color = '#ccc';
-        document.getElementById('lastUpdated').style.fontSize = '0.9rem';
+    }
+
+    function sortTable(columnIndex) {
+        const columns = ['serial', 'purchaseOrderNumber', 'supplierName', 'invoice', 'action']; // Mapped column names
+        const columnKey = columns[columnIndex];
+        
+        sortDirection[columnKey] = (sortDirection[columnKey] === 'asc') ? 'desc' : 'asc';
+        
+        orders.sort((a, b) => {
+            let valA = a[columnKey] || '';
+            let valB = b[columnKey] || '';
+
+            if (columnKey === 'purchaseOrderNumber' || columnKey === 'supplierName') {
+                valA = String(valA).toLowerCase();
+                valB = String(valB).toLowerCase();
+                return sortDirection[columnKey] === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
+            } else if (columnKey === 'serial') {
+                valA = orders.indexOf(a);
+                valB = orders.indexOf(b);
+                return sortDirection[columnKey] === 'asc' ? valA - valB : valB - valA;
+            } else {
+                return 0; // No specific sorting for other columns
+            }
+        });
+
+        const headers = document.querySelectorAll('th');
+        headers.forEach((header, index) => {
+            const arrowSpan = header.querySelector('.sort-arrow');
+            if (index === columnIndex) {
+                arrowSpan.textContent = sortDirection[columnKey] === 'asc' ? '▲' : '▼';
+            } else {
+                arrowSpan.textContent = '';
+            }
+        });
+
+        filterTable(); // Re-render the table with the new sort order
     }
 
     // Auto-refresh orders every 30 seconds
@@ -544,6 +561,6 @@
     // Initial load of orders when the page loads
     fetchOrders();
 </script>
-   <script src="https://ntwoods.github.io/ordertodispatch/js/viewOnly.js"></script>	
+   <script src="https://ntwoods.github.io/ordertodispatch/js/viewOnly.js"></script>
 </body>
 </html>

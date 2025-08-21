@@ -601,8 +601,7 @@
         const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycby7Iwfzy98sI8UFYs6lCZZF_ESoaTzFd3UWwZJWepffBD6rueQ9TdzgLq7oE98npIwpdQ/exec';
         // IMPORTANT: Replace this with your actual Google Sheet URL for PO numbers
         // Ensure this sheet is published to the web for the Google Visualization API to access it.
-        const GOOGLE_SHEET_PO_URL = 'https://docs.google.com/spreadsheets/d/1MPBE5EED1iN8np3oVqcn3VSAYl7M-OUXaLj9_YJogh0/gviz/tq?tqx=out:json&sheet=Requests&range=I:AL';
-
+        const GOOGLE_SHEET_PO_URL = 'https://docs.google.com/spreadsheets/d/1MPBE5EED1iN8np3oVqcn3VSAYl7M-OUXaLj9_YJogh0/gviz/tq?tqx=out:json&sheet=Requests&range=A:AL';
 
         // Initialize the application
         document.addEventListener('DOMContentLoaded', function() {
@@ -667,12 +666,12 @@
                 // Extract PO numbers only when column U (index 0) is blank/null
                 // and then get value from AL column (index 17)
                 poNumbers = data.table.rows
-                    .filter(row => (row.c[12] === null || row.c[12].v === null || row.c[12].v === '') && (row.c[0] === "Done")) // Filter for blank U
-                    .map(row => row.c[29]?.v) // Get value from AL
-                    .filter(value => value !== undefined && value !== null && value !== '') // Remove undefined/null/empty
-                    .map(String); // Ensure values are strings for consistency
-        
-                poNumbers = [...new Set(poNumbers)].sort(); // Remove duplicates and sort
+                    .filter(row => row.c[8]?.v === "Done" && (!row.c[20] || row.c[20].v === "")) // I = Done, U blank
+                    .map(row => row.c[37]?.v) // AL value
+                    .filter(value => value !== undefined && value !== null && value !== '')
+                    .map(String);
+                
+                poNumbers = [...new Set(poNumbers)].sort();
                 filteredPoNumbers = [...poNumbers];
                 populateSearchResults();
             } catch (error) {

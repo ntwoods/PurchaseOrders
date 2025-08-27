@@ -3,477 +3,250 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Category Tracker</title>
+    <title>Category Manager</title>
+    <!-- Tailwind CSS CDN for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Use Inter font from Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        :root {
-            --blue-light: #e6f7ff; /* A lighter, softer blue */
-            --blue-medium: #b3d9ff; /* Muted, modern blue */
-            --blue-dark: #2a5a8a;  /* Deep navy blue for headings */
-            --blue-accent: #007bff; /* Bright, active blue */
-            --white: #ffffff;
-            --text-dark: #333333;
-            --shadow: rgba(0, 0, 0, 0.08);
-            --transition-speed: 0.3s;
-        }
-
         body {
             font-family: 'Inter', sans-serif;
-            background-color: var(--blue-light);
-            color: var(--text-dark);
-            margin: 0;
-            padding: 20px;
-            display: flex;
-            justify-content: center;
-            min-height: 100vh;
+            @apply bg-zinc-900 text-gray-100;
         }
-
-        .container {
-            max-width: 800px;
-            width: 100%;
-            background-color: var(--white);
-            padding: 30px;
-            border-radius: 16px;
-            box-shadow: 0 12px 30px var(--shadow);
-            display: flex;
-            flex-direction: column;
-            gap: 25px;
-            margin-top: 20px;
+        .scroll-container::-webkit-scrollbar {
+            width: 8px;
         }
-
-        h1 {
-            font-size: 2.5rem;
-            font-weight: 600;
-            color: var(--blue-dark);
-            text-align: center;
-            margin: 0 0 10px 0;
+        .scroll-container::-webkit-scrollbar-track {
+            background: #27272a; /* zinc-800 */
         }
-        
-        #loading-message {
-            text-align: center;
-            font-style: italic;
-            color: var(--blue-medium);
-            font-size: 1rem;
+        .scroll-container::-webkit-scrollbar-thumb {
+            background-color: #52525b; /* zinc-600 */
+            border-radius: 4px;
         }
-
-        #categories-container {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-
-        .category-item {
-            display: flex;
-            flex-direction: column;
-            padding: 18px;
-            border: 1px solid var(--blue-medium);
-            border-radius: 10px;
-            background-color: #f7f9fc;
-            transition: all var(--transition-speed) ease;
-        }
-
-        .category-item:hover {
-            box-shadow: 0 6px 16px var(--shadow);
-            transform: translateY(-4px);
-            background-color: var(--white);
-        }
-        
-        .category-name {
-            font-weight: 600;
-            color: var(--blue-dark);
-            font-size: 1.2rem;
-            margin-bottom: 12px;
-        }
-        
-        .fields-wrapper {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-            width: 100%;
-        }
-        
-        @media (min-width: 600px) {
-            .fields-wrapper {
-                flex-direction: row;
-                justify-content: space-between;
-            }
-        }
-
-        .input-group {
-            display: flex;
-            align-items: center;
-            width: 100%;
-            border: 1px solid var(--blue-medium);
-            border-radius: 8px;
-            background-color: var(--white);
-            transition: border-color var(--transition-speed);
-        }
-
-        .input-group:focus-within {
-            border-color: var(--blue-accent);
-            box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.2);
-        }
-
-        .input-group svg {
-            margin: 0 12px;
-            color: var(--blue-dark);
-        }
-
-        input[type="text"],
-        input[type="date"] {
-            flex-grow: 1;
-            padding: 12px 0;
-            border: none;
-            background: none;
-            font-size: 1rem;
-            color: var(--text-dark);
-            outline: none;
-            width: 100%;
-        }
-        
-        input[type="text"]::placeholder {
-            color: #999;
-        }
-
-        #submit-btn {
-            padding: 15px 30px;
-            font-size: 1.2rem;
-            font-weight: 600;
-            color: var(--white);
-            background-color: var(--blue-dark);
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: background-color var(--transition-speed) ease, transform var(--transition-speed) ease;
-            align-self: center;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-        }
-
-        #submit-btn:hover {
-            background-color: var(--blue-accent);
-            transform: translateY(-3px);
-            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.25);
-        }
-        
-        /* Reminder window styling */
-        #reminder-window {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            width: 300px;
-            background-color: var(--white);
-            border-radius: 12px;
-            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
-            padding: 20px;
-            display: none;
-            flex-direction: column;
-            gap: 12px;
-            z-index: 1000;
-        }
-        
-        #reminder-window.show {
-            display: flex;
-        }
-        
-        #reminder-window-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid #eee;
-            padding-bottom: 10px;
-        }
-        
-        #reminder-window-header h3 {
-            margin: 0;
-            color: var(--blue-dark);
-            font-size: 1.2rem;
-        }
-        
-        #reminder-close-btn {
-            background: none;
-            border: none;
-            font-size: 1.8rem;
-            line-height: 1;
-            color: #ccc;
-            cursor: pointer;
-            transition: color var(--transition-speed);
-        }
-        
-        #reminder-close-btn:hover {
-            color: var(--blue-dark);
-        }
-        
-        .reminder-item {
-            padding: 12px;
-            background-color: var(--blue-light);
-            border-radius: 8px;
-            font-size: 0.95rem;
-        }
-        
-        .reminder-category {
-            font-weight: 600;
-        }
-        
-        .reminder-date {
-            color: var(--blue-dark);
-            font-size: 0.85rem;
-        }
-
-        .message-box {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            padding: 20px 40px;
-            background-color: var(--blue-dark);
-            color: var(--white);
-            border-radius: 8px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-            display: none;
-            text-align: center;
-            z-index: 2000;
-        }
-        
-        /* Responsive design for smaller screens */
-        @media (max-width: 600px) {
-            body {
-                padding: 10px;
-            }
-            .container {
-                padding: 20px;
-            }
-            .category-name {
-                font-size: 1.1rem;
-            }
-            .fields-wrapper {
-                flex-direction: column;
-                gap: 10px;
-            }
-            .input-group {
-                width: 100%;
-            }
-            #reminder-window {
-                width: calc(100% - 40px);
-                right: 10px;
-                left: 10px;
-            }
+        .scroll-container::-webkit-scrollbar-thumb:hover {
+            background-color: #71717a; /* zinc-500 */
         }
     </style>
 </head>
-<body>
-    <div class="container">
-        <h1>Missing Supplier Categories</h1>
-        <p id="loading-message">Fetching categories...</p>
-        <div id="categories-container">
-            <!-- Categories will be dynamically injected here by JavaScript -->
+<body class="flex items-center justify-center min-h-screen p-4">
+
+    <!-- Main Container -->
+    <div class="w-full max-w-2xl bg-zinc-800 rounded-2xl shadow-xl p-6 md:p-8 space-y-6 transform transition-all duration-300">
+        
+        <div class="flex flex-col items-center justify-center space-y-2">
+            <h1 class="text-3xl font-bold text-center text-green-400">Category Manager</h1>
+            <p class="text-center text-sm text-gray-400">Manage categories by approving or rejecting them.</p>
         </div>
-        <button id="submit-btn">Submit</button>
+
+        <!-- Status Message -->
+        <div id="status-message" class="text-center text-sm font-medium transition-all duration-300 h-6"></div>
+
+        <!-- Table Container -->
+        <div class="w-full h-80 overflow-y-auto scroll-container border border-zinc-700 rounded-xl">
+            <table class="min-w-full divide-y divide-zinc-700">
+                <thead class="sticky top-0 bg-zinc-700/80 backdrop-blur-sm z-10">
+                    <tr>
+                        <th scope="col" class="py-3.5 px-4 text-left text-sm font-semibold text-gray-100 rounded-tl-xl">Category Name</th>
+                        <th scope="col" class="py-3.5 px-4 text-right text-sm font-semibold text-gray-100 rounded-tr-xl">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="category-table-body" class="divide-y divide-zinc-700">
+                    <!-- Categories will be injected here by JavaScript -->
+                    <tr>
+                        <td colspan="2" class="p-4 text-center text-sm text-gray-400">Loading categories...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
     </div>
 
-    <div id="reminder-window">
-        <div id="reminder-window-header">
-            <h3>Reminders</h3>
-            <button id="reminder-close-btn">&times;</button>
-        </div>
-        <div id="reminders-list">
-            <!-- Reminders will be dynamically injected here -->
+    <!-- Modal for Remarks -->
+    <div id="remark-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 hidden transition-opacity duration-300 opacity-0">
+        <div class="bg-zinc-800 rounded-2xl p-6 w-96 max-w-[90%] shadow-2xl space-y-4">
+            <h2 class="text-xl font-bold text-gray-100">Provide a Remark</h2>
+            <p class="text-sm text-gray-400">Please explain why you are rejecting this category.</p>
+            <textarea id="remark-input" class="w-full p-3 bg-zinc-700 border border-zinc-600 rounded-lg text-sm text-gray-100 resize-none outline-none focus:ring-2 focus:ring-green-500" rows="4" placeholder="Enter your reason here..."></textarea>
+            <div class="flex justify-end gap-3">
+                <button id="modal-cancel-btn" class="px-4 py-2 text-sm font-medium rounded-lg text-gray-400 hover:text-gray-100 hover:bg-zinc-700 transition-colors duration-200">Cancel</button>
+                <button id="modal-submit-btn" class="px-5 py-2 text-sm font-medium rounded-lg text-white bg-red-600 hover:bg-red-700 transition-colors duration-200 shadow-md">Submit</button>
+            </div>
         </div>
     </div>
-    
-    <div id="message-box" class="message-box"></div>
 
+    <!-- JavaScript for fetching data and handling logic -->
     <script>
-        // Use the provided API URL for fetching data.
-        const apiUrl = 'https://script.google.com/macros/s/AKfycbx1hTTvXO2qyf83Eu6KCn-psClzdnTbFcxGlpS4O3XFP-84XSeoX7AQuHlqJi2TP5h4/exec';
-        
-        // This will be the URL for your doPost function in a separate Google Sheet.
-        // For simplicity, we'll use the same URL for both GET and POST requests,
-        // as Google Apps Script can handle both with a single script.
-        const postUrl = 'https://script.google.com/macros/s/AKfycbx1hTTvXO2qyf83Eu6KCn-psClzdnTbFcxGlpS4O3XFP-84XSeoX7AQuHlqJi2TP5h4/exec';
-
-        const categoriesContainer = document.getElementById('categories-container');
-        const loadingMessage = document.getElementById('loading-message');
-        const submitBtn = document.getElementById('submit-btn');
-        const reminderWindow = document.getElementById('reminder-window');
-        const reminderList = document.getElementById('reminders-list');
-        const reminderCloseBtn = document.getElementById('reminder-close-btn');
-        const messageBox = document.getElementById('message-box');
-
-        // Function to show a temporary message box
-        function showMessage(text, isError = false) {
-            messageBox.textContent = text;
-            messageBox.style.display = 'block';
-            messageBox.style.backgroundColor = isError ? 'red' : 'var(--blue-dark)';
-            setTimeout(() => {
-                messageBox.style.display = 'none';
-            }, 3000);
-        }
-
-        // --- Reminder Logic (uses localStorage) ---
-        
-        // This function will save reminders to localStorage.
-        // It's a simple way to persist data without a backend.
-        function saveReminders(reminders) {
-            localStorage.setItem('reminders', JSON.stringify(reminders));
-        }
-
-        // This function loads and displays reminders.
-        function loadAndDisplayReminders() {
-            const storedReminders = JSON.parse(localStorage.getItem('reminders')) || [];
-            const today = new Date().toISOString().slice(0, 10);
-            
-            // Filter for reminders that are due today or in the past
-            const dueReminders = storedReminders.filter(r => r.date <= today);
-            
-            if (dueReminders.length > 0) {
-                reminderList.innerHTML = ''; // Clear previous reminders
-                dueReminders.forEach(reminder => {
-                    const reminderItem = document.createElement('div');
-                    reminderItem.className = 'reminder-item';
-                    reminderItem.innerHTML = `
-                        <p class="reminder-category">${reminder.category}</p>
-                        <p class="reminder-date">Reminder due on: ${reminder.date}</p>
-                    `;
-                    reminderList.appendChild(reminderItem);
-                });
-                reminderWindow.classList.add('show');
-            } else {
-                reminderWindow.classList.remove('show');
-            }
-        }
-        
-        // Handle closing the reminder window
-        reminderCloseBtn.addEventListener('click', () => {
-            reminderWindow.classList.remove('show');
-        });
-        
-        // --- Main App Logic ---
-
-        // Asynchronous function to fetch and render categories
-        async function fetchAndRenderCategories() {
-            try {
-                loadingMessage.style.display = 'block';
-                const response = await fetch(apiUrl);
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                const data = await response.json();
-
-                // Combine and get unique categories
-                const allCategories = [
-                    ...data.fromColumnB,
-                    ...data.fromColumnG
-                ];
-                const uniqueCategories = [...new Set(allCategories)].sort();
-
-                loadingMessage.style.display = 'none';
-                renderCategories(uniqueCategories);
-
-            } catch (error) {
-                loadingMessage.textContent = 'Failed to load categories. Please try again later.';
-                showMessage('Error fetching data. Check your network.', true);
-                console.error('Error fetching categories:', error);
-            }
-        }
-
-        // Function to dynamically create HTML elements for each category
-        function renderCategories(categories) {
-            categoriesContainer.innerHTML = '';
-            categories.forEach(category => {
-                const item = document.createElement('div');
-                item.className = 'category-item';
-                item.dataset.category = category; // Store the category name for easy access
-
-                item.innerHTML = `
-                    <div class="category-name">${category}</div>
-                    <div class="fields-wrapper">
-                        <div class="input-group">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-edit"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
-                            <input type="text" id="remark-${category}" placeholder="Add remark..." class="remark-input">
-                        </div>
-                        <div class="input-group">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-calendar"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-                            <input type="date" id="date-${category}" class="date-input">
-                        </div>
-                    </div>
-                `;
-                categoriesContainer.appendChild(item);
-            });
-        }
-
-        // Event listener for the submit button
-        submitBtn.addEventListener('click', async () => {
-            const payload = [];
-            const newReminders = JSON.parse(localStorage.getItem('reminders')) || [];
-
-            document.querySelectorAll('.category-item').forEach(item => {
-                const category = item.dataset.category;
-                const remarkInput = item.querySelector('.remark-input');
-                const dateInput = item.querySelector('.date-input');
-
-                const remark = remarkInput.value.trim();
-                const reminderDate = dateInput.value;
-
-                // Only include categories with a remark or a reminder date
-                if (remark || reminderDate) {
-                    const data = {
-                        category: category,
-                        remark: remark,
-                        reminderDate: reminderDate,
-                        timestamp: new Date().toISOString()
-                    };
-                    payload.push(data);
-                }
-
-                // Add to reminders if a date is set and it's in the future
-                if (reminderDate && new Date(reminderDate) > new Date()) {
-                    // Check if a reminder for this category/date combo already exists
-                    const exists = newReminders.some(r => r.category === category && r.date === reminderDate);
-                    if (!exists) {
-                         newReminders.push({ category: category, date: reminderDate });
-                    }
-                }
-
-                // Clear inputs after data is collected for payload
-                remarkInput.value = '';
-                dateInput.value = '';
-            });
-
-            if (payload.length === 0) {
-                showMessage('Please add a remark or reminder date to at least one category.');
-                return;
-            }
-
-            try {
-                // Send the payload to the doPost function URL
-                const response = await fetch(postUrl, {
-                    method: 'POST',
-                    mode: 'no-cors', // Required for Google Apps Script without explicit CORS headers
-                    body: JSON.stringify(payload),
-                    headers: {
-                        'Content-Type': 'application/json'
-                    }
-                });
-
-                // The no-cors mode prevents us from checking response.ok
-                // so we'll just assume success and show a message
-                showMessage('Data submitted successfully! Your reminders have been saved.');
-                saveReminders(newReminders);
-                loadAndDisplayReminders();
-
-            } catch (error) {
-                showMessage('Failed to submit data. Please try again.', true);
-                console.error('Error submitting data:', error);
-            }
-        });
-
-        // --- Initial Call on Page Load ---
         document.addEventListener('DOMContentLoaded', () => {
+            const API_URL = 'https://script.google.com/macros/s/AKfycbwYeYhtJHjGOkQIXhJ4T3-t-pOup7c4-OC6-f_we8gf1lc8OBVONrikcasmqjts5aVU/exec';
+            const tableBody = document.getElementById('category-table-body');
+            const statusMessage = document.getElementById('status-message');
+            const remarkModal = document.getElementById('remark-modal');
+            const remarkInput = document.getElementById('remark-input');
+            const modalSubmitBtn = document.getElementById('modal-submit-btn');
+            const modalCancelBtn = document.getElementById('modal-cancel-btn');
+
+            let selectedCategory = null;
+
+            /**
+             * Updates the status message on the page.
+             * @param {string} message - The message to display.
+             * @param {string} type - 'success', 'error', or 'info'.
+             */
+            function updateStatus(message, type) {
+                statusMessage.textContent = message;
+                statusMessage.className = 'text-center text-sm font-medium transition-all duration-300 h-6';
+                if (type === 'success') {
+                    statusMessage.classList.add('text-green-500');
+                } else if (type === 'error') {
+                    statusMessage.classList.add('text-red-500');
+                } else {
+                    statusMessage.classList.add('text-gray-400');
+                }
+            }
+
+            /**
+             * Shows the remark modal.
+             */
+            function showModal() {
+                remarkModal.classList.remove('hidden');
+                setTimeout(() => {
+                    remarkModal.classList.add('opacity-100');
+                }, 10);
+            }
+
+            /**
+             * Hides the remark modal and resets input.
+             */
+            function hideModal() {
+                remarkModal.classList.remove('opacity-100');
+                setTimeout(() => {
+                    remarkModal.classList.add('hidden');
+                }, 300);
+                remarkInput.value = '';
+                selectedCategory = null;
+            }
+
+            /**
+             * Renders the categories in the table.
+             * @param {string[]} categories - The combined array of category names.
+             */
+            function renderCategories(categories) {
+                tableBody.innerHTML = ''; // Clear previous content
+                if (categories.length === 0) {
+                    tableBody.innerHTML = `<tr><td colspan="2" class="p-4 text-center text-sm text-gray-400">No categories found.</td></tr>`;
+                    return;
+                }
+                
+                categories.forEach(category => {
+                    const row = document.createElement('tr');
+                    row.className = 'hover:bg-zinc-700 transition-colors duration-200';
+                    row.innerHTML = `
+                        <td class="py-3 px-4 text-sm font-normal text-gray-300">${category}</td>
+                        <td class="py-3 px-4 text-right">
+                            <div class="inline-flex space-x-2">
+                                <!-- Approve Button (Tick) -->
+                                <button class="approve-btn p-2 rounded-full bg-green-600 hover:bg-green-700 transition-all duration-200" data-category="${category}" title="Approve">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-white" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                                    </svg>
+                                </button>
+                                <!-- Reject Button (Cross) -->
+                                <button class="reject-btn p-2 rounded-full bg-red-600 hover:bg-red-700 transition-all duration-200" data-category="${category}" title="Reject">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-white" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+                                    </svg>
+                                </button>
+                            </div>
+                        </td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+            }
+
+            /**
+             * Sends a POST request to the API with the given payload.
+             * @param {object} payload - The data to send.
+             */
+            async function postData(payload) {
+                try {
+                    updateStatus('Sending data...', 'info');
+                    // Note: Google Apps Script can often handle both GET and POST to the same URL.
+                    // Assuming this is the case, we'll post to the same URL.
+                    const response = await fetch(API_URL, {
+                        method: 'POST',
+                        mode: 'no-cors', // Use 'no-cors' mode to avoid CORS issues with simple POST
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(payload)
+                    });
+
+                    // Due to 'no-cors', we cannot check response.ok or read response body.
+                    // We'll optimistically assume success.
+                    updateStatus(`Success: Data sent for "${payload.category}"`, 'success');
+
+                } catch (error) {
+                    console.error('Error sending data:', error);
+                    updateStatus('Failed to send data. Check console for details.', 'error');
+                }
+            }
+
+            // Fetch categories on page load
+            async function fetchAndRenderCategories() {
+                try {
+                    updateStatus('Loading categories...', 'info');
+                    const response = await fetch(API_URL);
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    const data = await response.json();
+                    
+                    // Combine the two arrays into a single list
+                    const allCategories = [...data.fromColumnB, ...data.fromColumnG];
+                    renderCategories(allCategories);
+                    updateStatus(`Loaded ${allCategories.length} categories.`, 'success');
+                } catch (error) {
+                    console.error('Failed to fetch categories:', error);
+                    tableBody.innerHTML = `<tr><td colspan="2" class="p-4 text-center text-sm text-red-400">Error loading categories. Please try again later.</td></tr>`;
+                    updateStatus('Failed to fetch categories.', 'error');
+                }
+            }
+
+            // Event listeners for the table body (using event delegation for efficiency)
+            tableBody.addEventListener('click', (e) => {
+                const button = e.target.closest('button');
+                if (!button) return;
+
+                const category = button.dataset.category;
+                
+                if (button.classList.contains('approve-btn')) {
+                    // Handle right sign click
+                    postData({ category: category });
+                } else if (button.classList.contains('reject-btn')) {
+                    // Handle cross sign click
+                    selectedCategory = category;
+                    showModal();
+                }
+            });
+
+            // Event listeners for the modal buttons
+            modalSubmitBtn.addEventListener('click', () => {
+                const remark = remarkInput.value.trim();
+                if (selectedCategory && remark) {
+                    postData({ category: selectedCategory, remark: remark });
+                    hideModal();
+                } else {
+                    updateStatus('Remark cannot be empty.', 'error');
+                }
+            });
+
+            modalCancelBtn.addEventListener('click', hideModal);
+
+            // Fetch data initially
             fetchAndRenderCategories();
-            loadAndDisplayReminders(); // Check for reminders on page load
         });
     </script>
+
 </body>
 </html>

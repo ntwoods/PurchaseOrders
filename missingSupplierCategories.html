@@ -224,8 +224,8 @@
             </div>
           </div>
           <div class="mt-4 flex items-center gap-3 justify-between">
-            <button class="btn-3d-green" onclick="handleYes('${escapeHtml(category)}')">Yes, Order Created</button>
-            <button class="btn-3d-red" onclick="openPendingModal('${escapeHtml(category)}')">No, Order is Pending</button>
+            <button class="btn-3d-green" onclick="handleYes('${escapeHtml(category)}')">Yes</button>
+            <button class="btn-3d-red" onclick="openPendingModal('${escapeHtml(category)}')">No</button>
             <div class="badge">${statusMap[category] ? statusMap[category] : 'new'}</div>
           </div>
         `;

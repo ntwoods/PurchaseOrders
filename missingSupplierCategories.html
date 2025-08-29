@@ -281,9 +281,7 @@ Customize: change API_URL variable in <script> if needed.
         renderCards(searchEl.value);
         try{
           const payload = { category, status: 'created' };
-          const res = await fetch(API_URL, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload) });
-          if (!res.ok) throw new Error('POST failed');
-          // show success
+          const res = await fetch(API_URL, { method: 'POST', mode: 'no-cors', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload) });
           statusMap[category] = 'created';
           renderCards(searchEl.value);
         }catch(e){
@@ -326,8 +324,7 @@ Customize: change API_URL variable in <script> if needed.
         renderCards(searchEl.value);
         try{
           const payload = { category, status: 'pending', remark };
-          const res = await fetch(API_URL, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload) });
-          if (!res.ok) throw new Error('POST failed');
+          const res = await fetch(API_URL, { method: 'POST', mode: 'no-cors', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload) });
           statusMap[category] = 'pending';
           closeModal();
           renderCards(searchEl.value);

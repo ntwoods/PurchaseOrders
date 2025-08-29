@@ -1,252 +1,358 @@
-<!DOCTYPE html>
+<!-- OrderDashboard.html
+Single-file HTML/CSS/JS dashboard (drop into any static host or open locally).
+Features:
+- Fetches combined categories from provided API URL (deduped, preserves order)
+- Clean responsive grid using Tailwind Play CDN + minor custom styles for polished UI
+- Poppins font, Feather icons, and subtle animations
+- Two action buttons per category: "Yes, Order Created" (3D forest green) and "No, Order is Pending" (crimson red)
+- Clicking "Yes" sends POST { category, status: 'created' }
+- Clicking "No" opens a remark modal; 'Done' disabled until remark provided; POST { category, status: 'pending', remark }
+- Optimistic UI feedback and error handling
+
+Customize: change API_URL variable in <script> if needed.
+-->
+
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Category Manager</title>
-    <!-- Tailwind CSS CDN for styling -->
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Order Categories Dashboard</title>
+
+    <!-- Poppins font -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Tailwind Play CDN for quick Tailwind setup (good for prototypes) -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Use Inter font from Google Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        body {
-            font-family: 'Inter', sans-serif;
-            @apply bg-zinc-900 text-gray-100;
-        }
-        .scroll-container::-webkit-scrollbar {
-            width: 8px;
-        }
-        .scroll-container::-webkit-scrollbar-track {
-            background: #27272a; /* zinc-800 */
-        }
-        .scroll-container::-webkit-scrollbar-thumb {
-            background-color: #52525b; /* zinc-600 */
-            border-radius: 4px;
-        }
-        .scroll-container::-webkit-scrollbar-thumb:hover {
-            background-color: #71717a; /* zinc-500 */
-        }
-    </style>
-</head>
-<body class="flex items-center justify-center min-h-screen p-4">
-
-    <!-- Main Container -->
-    <div class="w-full max-w-2xl bg-zinc-800 rounded-2xl shadow-xl p-6 md:p-8 space-y-6 transform transition-all duration-300">
-        
-        <div class="flex flex-col items-center justify-center space-y-2">
-            <h1 class="text-3xl font-bold text-center text-green-400">Category Manager</h1>
-            <p class="text-center text-sm text-gray-400">Manage categories by approving or rejecting them.</p>
-        </div>
-
-        <!-- Status Message -->
-        <div id="status-message" class="text-center text-sm font-medium transition-all duration-300 h-6"></div>
-
-        <!-- Table Container -->
-        <div class="w-full h-80 overflow-y-auto scroll-container border border-zinc-700 rounded-xl">
-            <table class="min-w-full divide-y divide-zinc-700">
-                <thead class="sticky top-0 bg-zinc-700/80 backdrop-blur-sm z-10">
-                    <tr>
-                        <th scope="col" class="py-3.5 px-4 text-left text-sm font-semibold text-gray-100 rounded-tl-xl">Category Name</th>
-                        <th scope="col" class="py-3.5 px-4 text-right text-sm font-semibold text-gray-100 rounded-tr-xl">Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="category-table-body" class="divide-y divide-zinc-700">
-                    <!-- Categories will be injected here by JavaScript -->
-                    <tr>
-                        <td colspan="2" class="p-4 text-center text-sm text-gray-400">Loading categories...</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-    </div>
-
-    <!-- Modal for Remarks -->
-    <div id="remark-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 hidden transition-opacity duration-300 opacity-0">
-        <div class="bg-zinc-800 rounded-2xl p-6 w-96 max-w-[90%] shadow-2xl space-y-4">
-            <h2 class="text-xl font-bold text-gray-100">Provide a Remark</h2>
-            <p class="text-sm text-gray-400">Please explain why you are rejecting this category.</p>
-            <textarea id="remark-input" class="w-full p-3 bg-zinc-700 border border-zinc-600 rounded-lg text-sm text-gray-100 resize-none outline-none focus:ring-2 focus:ring-green-500" rows="4" placeholder="Enter your reason here..."></textarea>
-            <div class="flex justify-end gap-3">
-                <button id="modal-cancel-btn" class="px-4 py-2 text-sm font-medium rounded-lg text-gray-400 hover:text-gray-100 hover:bg-zinc-700 transition-colors duration-200">Cancel</button>
-                <button id="modal-submit-btn" class="px-5 py-2 text-sm font-medium rounded-lg text-white bg-red-600 hover:bg-red-700 transition-colors duration-200 shadow-md">Submit</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- JavaScript for fetching data and handling logic -->
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const API_URL = 'https://script.google.com/macros/s/AKfycbwYeYhtJHjGOkQIXhJ4T3-t-pOup7c4-OC6-f_we8gf1lc8OBVONrikcasmqjts5aVU/exec';
-            const tableBody = document.getElementById('category-table-body');
-            const statusMessage = document.getElementById('status-message');
-            const remarkModal = document.getElementById('remark-modal');
-            const remarkInput = document.getElementById('remark-input');
-            const modalSubmitBtn = document.getElementById('modal-submit-btn');
-            const modalCancelBtn = document.getElementById('modal-cancel-btn');
-
-            let selectedCategory = null;
-
-            /**
-             * Updates the status message on the page.
-             * @param {string} message - The message to display.
-             * @param {string} type - 'success', 'error', or 'info'.
-             */
-            function updateStatus(message, type) {
-                statusMessage.textContent = message;
-                statusMessage.className = 'text-center text-sm font-medium transition-all duration-300 h-6';
-                if (type === 'success') {
-                    statusMessage.classList.add('text-green-500');
-                } else if (type === 'error') {
-                    statusMessage.classList.add('text-red-500');
-                } else {
-                    statusMessage.classList.add('text-gray-400');
-                }
+      // Tailwind config: add Poppins
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: { poppins: ['Poppins', 'sans-serif'] },
+            colors: {
+              forest: {
+                600: '#166534',
+                700: '#14532d',
+                800: '#0f3b20'
+              },
+              crimson: {
+                500: '#dc2626',
+                600: '#b91c1c'
+              }
+            },
+            boxShadow: {
+              'neon': '0 6px 18px rgba(16,185,129,0.14), inset 0 -6px 20px rgba(0,0,0,0.06)'
             }
-
-            /**
-             * Shows the remark modal.
-             */
-            function showModal() {
-                remarkModal.classList.remove('hidden');
-                setTimeout(() => {
-                    remarkModal.classList.add('opacity-100');
-                }, 10);
-            }
-
-            /**
-             * Hides the remark modal and resets input.
-             */
-            function hideModal() {
-                remarkModal.classList.remove('opacity-100');
-                setTimeout(() => {
-                    remarkModal.classList.add('hidden');
-                }, 300);
-                remarkInput.value = '';
-                selectedCategory = null;
-            }
-
-            /**
-             * Renders the categories in the table.
-             * @param {string[]} categories - The combined array of category names.
-             */
-            function renderCategories(categories) {
-                tableBody.innerHTML = ''; // Clear previous content
-                if (categories.length === 0) {
-                    tableBody.innerHTML = `<tr><td colspan="2" class="p-4 text-center text-sm text-gray-400">No categories found.</td></tr>`;
-                    return;
-                }
-                
-                categories.forEach(category => {
-                    const row = document.createElement('tr');
-                    row.className = 'hover:bg-zinc-700 transition-colors duration-200';
-                    row.innerHTML = `
-                        <td class="py-3 px-4 text-sm font-normal text-gray-300">${category}</td>
-                        <td class="py-3 px-4 text-right">
-                            <div class="inline-flex space-x-2">
-                                <!-- Approve Button (Tick) -->
-                                <button class="approve-btn p-2 rounded-full bg-green-600 hover:bg-green-700 transition-all duration-200" data-category="${category}" title="Approve">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-white" viewBox="0 0 20 20" fill="currentColor">
-                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
-                                    </svg>
-                                </button>
-                                <!-- Reject Button (Cross) -->
-                                <button class="reject-btn p-2 rounded-full bg-red-600 hover:bg-red-700 transition-all duration-200" data-category="${category}" title="Reject">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-white" viewBox="0 0 20 20" fill="currentColor">
-                                        <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
-                                    </svg>
-                                </button>
-                            </div>
-                        </td>
-                    `;
-                    tableBody.appendChild(row);
-                });
-            }
-
-            /**
-             * Sends a POST request to the API with the given payload.
-             * @param {object} payload - The data to send.
-             */
-            async function postData(payload) {
-                try {
-                    updateStatus('Sending data...', 'info');
-                    // Note: Google Apps Script can often handle both GET and POST to the same URL.
-                    // Assuming this is the case, we'll post to the same URL.
-                    const response = await fetch(API_URL, {
-                        method: 'POST',
-                        mode: 'no-cors', // Use 'no-cors' mode to avoid CORS issues with simple POST
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify(payload)
-                    });
-
-                    // Due to 'no-cors', we cannot check response.ok or read response body.
-                    // We'll optimistically assume success.
-                    updateStatus(`Success: Data sent for "${payload.category}"`, 'success');
-
-                } catch (error) {
-                    console.error('Error sending data:', error);
-                    updateStatus('Failed to send data. Check console for details.', 'error');
-                }
-            }
-
-            // Fetch categories on page load
-            async function fetchAndRenderCategories() {
-                try {
-                    updateStatus('Loading categories...', 'info');
-                    const response = await fetch(API_URL);
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
-                    }
-                    const data = await response.json();
-                    
-                    // Combine the two arrays into a single list
-                    const allCategories = [...data.fromColumnB, ...data.fromColumnG];
-                    renderCategories(allCategories);
-                    updateStatus(`Loaded ${allCategories.length} categories.`, 'success');
-                } catch (error) {
-                    console.error('Failed to fetch categories:', error);
-                    tableBody.innerHTML = `<tr><td colspan="2" class="p-4 text-center text-sm text-red-400">Error loading categories. Please try again later.</td></tr>`;
-                    updateStatus('Failed to fetch categories.', 'error');
-                }
-            }
-
-            // Event listeners for the table body (using event delegation for efficiency)
-            tableBody.addEventListener('click', (e) => {
-                const button = e.target.closest('button');
-                if (!button) return;
-
-                const category = button.dataset.category;
-                
-                if (button.classList.contains('approve-btn')) {
-                    // Handle right sign click
-                    postData({ category: category });
-                } else if (button.classList.contains('reject-btn')) {
-                    // Handle cross sign click
-                    selectedCategory = category;
-                    showModal();
-                }
-            });
-
-            // Event listeners for the modal buttons
-            modalSubmitBtn.addEventListener('click', () => {
-                const remark = remarkInput.value.trim();
-                if (selectedCategory && remark) {
-                    postData({ category: selectedCategory, remark: remark });
-                    hideModal();
-                } else {
-                    updateStatus('Remark cannot be empty.', 'error');
-                }
-            });
-
-            modalCancelBtn.addEventListener('click', hideModal);
-
-            // Fetch data initially
-            fetchAndRenderCategories();
-        });
+          }
+        }
+      }
     </script>
 
-</body>
+    <!-- Feather icons (lightweight icon set) -->
+    <script src="https://unpkg.com/feather-icons"></script>
+
+    <!-- Simple CSS for the 3D button effect, minor extras -->
+    <style>
+      :root { --card-shadow: 0 10px 30px rgba(2,6,23,0.06); }
+      body { font-family: Poppins, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial; }
+
+      /* 3D green button */
+      .btn-3d-green {
+        background: linear-gradient(180deg, #16a34a 0%, #15803d 100%);
+        border-radius: 12px;
+        padding: .6rem 1rem;
+        color: white;
+        font-weight: 700;
+        box-shadow: 0 8px 0 rgba(3, 105, 64, 0.12), 0 18px 30px rgba(16,24,40,0.08);
+        transform: translateY(0);
+        transition: transform 120ms ease, box-shadow 120ms ease;
+      }
+      .btn-3d-green:active { transform: translateY(3px); box-shadow: 0 4px 0 rgba(3,105,64,0.08); }
+
+      /* 3D crimson */
+      .btn-3d-red {
+        background: linear-gradient(180deg, #ef4444 0%, #dc2626 100%);
+        border-radius: 12px;
+        padding: .6rem 1rem;
+        color: white;
+        font-weight: 700;
+        box-shadow: 0 8px 0 rgba(180, 20, 20, 0.12), 0 18px 30px rgba(16,24,40,0.08);
+        transform: translateY(0);
+        transition: transform 120ms ease, box-shadow 120ms ease;
+      }
+      .btn-3d-red:active { transform: translateY(3px); box-shadow: 0 4px 0 rgba(120, 18, 18, 0.08); }
+
+      .fade-in { animation: fadeIn .28s ease both; }
+      @keyframes fadeIn { from { opacity:0; transform: translateY(6px);} to { opacity:1; transform:none;} }
+
+      /* scrollable cards container subtle style */
+      .cards-scroll { scrollbar-width: thin; }
+      .cards-scroll::-webkit-scrollbar { height:8px; }
+      .cards-scroll::-webkit-scrollbar-thumb { background: rgba(15,23,42,0.12); border-radius: 6px; }
+
+      /* small badge */
+      .badge { font-size: 12px; background: rgba(15,23,42,0.06); padding: 4px 8px; border-radius: 999px; }
+    </style>
+  </head>
+  <body class="bg-gradient-to-b from-neutral-50 to-neutral-100 min-h-screen text-slate-900">
+
+    <div class="max-w-7xl mx-auto px-6 py-10">
+      <nav class="flex items-center justify-between mb-8">
+        <div class="flex items-center gap-4">
+          <div class="w-12 h-12 bg-forest-700 rounded-lg flex items-center justify-center shadow-neon text-white font-bold">NT</div>
+          <div>
+            <h1 class="text-2xl font-semibold">Categories Dashboard</h1>
+            <p class="text-sm text-slate-500">Review categories and mark order status quickly</p>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-3">
+          <button id="refreshBtn" class="px-4 py-2 rounded-lg border border-slate-200 hover:bg-slate-50 text-sm">Refresh</button>
+          <div class="text-sm text-slate-500">API: <span id="apiUrlShort" class="font-mono text-xs text-slate-600"></span></div>
+        </div>
+      </nav>
+
+      <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <aside class="p-4 rounded-xl bg-white shadow" style="min-height:220px;">
+          <h3 class="font-semibold mb-2">Summary</h3>
+          <div class="space-y-3">
+            <div class="flex items-center justify-between"><div class="text-sm text-slate-600">Total categories</div><div id="totalCount" class="font-semibold">—</div></div>
+            <div class="flex items-center justify-between"><div class="text-sm text-slate-600">Created</div><div id="createdCount" class="font-semibold">0</div></div>
+            <div class="flex items-center justify-between"><div class="text-sm text-slate-600">Pending</div><div id="pendingCount" class="font-semibold">0</div></div>
+            <div class="pt-2"><small class="text-xs text-slate-400">Click <strong>Yes, Order Created</strong> or <strong>No, Order is Pending</strong> for each item.</small></div>
+          </div>
+        </aside>
+
+        <div class="md:col-span-1 lg:col-span-2">
+          <div class="mb-4 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+              <input id="search" type="search" placeholder="Search categories..." class="px-4 py-2 rounded-lg border w-72" />
+              <div id="filterBadges" class="flex gap-2"></div>
+            </div>
+            <div class="text-sm text-slate-500">Status: <span id="statusSummary">Listening</span></div>
+          </div>
+
+          <div id="cards" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 cards-scroll max-h-[60vh] overflow-auto p-2">
+            <!-- Card templates injected here -->
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- Pending remark modal -->
+    <div id="modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40">
+      <div class="bg-white rounded-xl w-full max-w-lg p-6 shadow-lg">
+        <div class="flex items-start justify-between mb-4">
+          <div>
+            <h3 id="modalTitle" class="text-lg font-semibold">Add remark</h3>
+            <p id="modalSubtitle" class="text-sm text-slate-500">Provide a remark before marking order as pending</p>
+          </div>
+          <button id="modalClose" class="text-slate-400 hover:text-slate-600">✕</button>
+        </div>
+        <textarea id="remarkInput" rows="5" class="w-full border rounded-md p-3" placeholder="Type remark... (required)"></textarea>
+        <div class="mt-4 flex items-center justify-end gap-3">
+          <button id="modalCancel" class="px-4 py-2 rounded-lg border">Cancel</button>
+          <button id="modalDone" class="btn-3d-red" disabled>Done</button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // ------------------ Configuration ------------------
+      const API_URL = 'https://script.google.com/macros/s/AKfycbza9ne-1hmyL6nkwuo7USvOXZWAw9qgVWgz1AFtBZ4B_oSMUBwlsL8AEcqSBPDcjmmc/exec';
+      document.getElementById('apiUrlShort').textContent = API_URL.replace(/^(https?:\/\/)(www\.)?/, '').slice(0, 60);
+
+      // State
+      let categories = [];
+      const statusMap = {}; // category -> 'created' | 'pending' | 'error' | 'sending'
+
+      // Elements
+      const cardsEl = document.getElementById('cards');
+      const totalCountEl = document.getElementById('totalCount');
+      const createdCountEl = document.getElementById('createdCount');
+      const pendingCountEl = document.getElementById('pendingCount');
+      const statusSummaryEl = document.getElementById('statusSummary');
+      const searchEl = document.getElementById('search');
+
+      const modal = document.getElementById('modal');
+      const modalTitle = document.getElementById('modalTitle');
+      const modalSubtitle = document.getElementById('modalSubtitle');
+      const modalClose = document.getElementById('modalClose');
+      const modalCancel = document.getElementById('modalCancel');
+      const modalDone = document.getElementById('modalDone');
+      const remarkInput = document.getElementById('remarkInput');
+
+      let activePendingCategory = null;
+
+      // ------------------ Helpers ------------------
+      function combineAndDedupe(a = [], b = []){
+        const combined = [];
+        a.concat(b).forEach(item => {
+          if (!item) return;
+          const t = item.toString().trim();
+          if (t && !combined.includes(t)) combined.push(t);
+        });
+        return combined;
+      }
+
+      function renderSummary(){
+        totalCountEl.textContent = categories.length;
+        const created = Object.values(statusMap).filter(s=>s==='created').length;
+        const pending = Object.values(statusMap).filter(s=>s==='pending').length;
+        createdCountEl.textContent = created;
+        pendingCountEl.textContent = pending;
+        statusSummaryEl.textContent = `Created ${created} • Pending ${pending}`;
+      }
+
+      function createCard(category){
+        const container = document.createElement('div');
+        container.className = 'p-4 bg-white rounded-xl shadow hover:shadow-md transition fade-in';
+
+        const title = document.createElement('div');
+        title.className = 'flex items-start justify-between gap-3';
+        title.innerHTML = `<div class="flex items-start gap-3"><div class="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center text-slate-600 font-medium">${category.slice(0,2).toUpperCase()}</div><div><div class="font-semibold">${escapeHtml(category)}</div><div class="text-xs text-slate-400 mt-1">Category</div></div></div>`;
+
+        const actions = document.createElement('div');
+        actions.className = 'mt-4 flex items-center gap-3 justify-between';
+
+        const btnYes = document.createElement('button');
+        btnYes.className = 'btn-3d-green';
+        btnYes.innerHTML = 'Yes, Order Created';
+        btnYes.onclick = () => handleYes(category, btnYes);
+
+        const btnNo = document.createElement('button');
+        btnNo.className = 'btn-3d-red';
+        btnNo.innerHTML = 'No, Order is Pending';
+        btnNo.onclick = () => openPendingModal(category);
+
+        const right = document.createElement('div');
+        right.className = 'flex items-center gap-2';
+
+        const statusBadge = document.createElement('div');
+        statusBadge.className = 'badge';
+        statusBadge.textContent = statusMap[category] ? statusMap[category] : 'new';
+
+        right.appendChild(statusBadge);
+
+        actions.appendChild(btnYes);
+        actions.appendChild(btnNo);
+        actions.appendChild(right);
+
+        container.appendChild(title);
+        container.appendChild(actions);
+
+        return container;
+      }
+
+      function renderCards(filterText = ''){
+        cardsEl.innerHTML = '';
+        const filtered = categories.filter(c => c.toLowerCase().includes(filterText.toLowerCase()));
+        if (filtered.length === 0) {
+          cardsEl.innerHTML = '<div class="col-span-full p-6 text-center text-slate-500 bg-white rounded-xl shadow">No categories to show.</div>';
+          return;
+        }
+        filtered.forEach(cat => cardsEl.appendChild(createCard(cat)));
+        renderSummary();
+      }
+
+      // ------------------ Events / Actions ------------------
+      async function fetchCategories(){
+        setStatusText('Loading...');
+        try{
+          const res = await fetch(API_URL);
+          if (!res.ok) throw new Error('Network error');
+          const data = await res.json();
+          categories = combineAndDedupe(data.fromColumnB || [], data.fromColumnG || []);
+          renderCards(searchEl.value);
+          setStatusText('Loaded');
+        }catch(err){
+          console.error(err);
+          setStatusText('Failed to load');
+          cardsEl.innerHTML = `<div class="col-span-full p-6 text-center text-red-600 bg-white rounded-xl shadow">Failed to fetch categories — check console.</div>`;
+        }
+      }
+
+      function setStatusText(t){ statusSummaryEl.textContent = t; }
+
+      async function handleYes(category, btn){
+        // optimistic UI
+        statusMap[category] = 'sending';
+        renderCards(searchEl.value);
+        try{
+          const payload = { category, status: 'created' };
+          const res = await fetch(API_URL, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+          if (!res.ok) throw new Error('POST failed');
+          // show success
+          statusMap[category] = 'created';
+          renderCards(searchEl.value);
+        }catch(e){
+          console.error(e);
+          statusMap[category] = 'error';
+          alert('Failed to send. Check console for details.');
+          renderCards(searchEl.value);
+        }
+      }
+
+      function openPendingModal(category){
+        activePendingCategory = category;
+        modalTitle.textContent = `Pending remark — ${category}`;
+        remarkInput.value = '';
+        modalDone.setAttribute('disabled','');
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        remarkInput.focus();
+      }
+
+      function closeModal(){
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+        activePendingCategory = null;
+      }
+
+      remarkInput.addEventListener('input', ()=>{
+        const val = remarkInput.value.trim();
+        if (val.length > 0) modalDone.removeAttribute('disabled'); else modalDone.setAttribute('disabled','');
+      });
+
+      modalClose.addEventListener('click', closeModal);
+      modalCancel.addEventListener('click', closeModal);
+
+      modalDone.addEventListener('click', async ()=>{
+        const remark = remarkInput.value.trim();
+        if (!remark) return;
+        const category = activePendingCategory;
+        statusMap[category] = 'sending';
+        renderCards(searchEl.value);
+        try{
+          const payload = { category, status: 'pending', remark };
+          const res = await fetch(API_URL, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+          if (!res.ok) throw new Error('POST failed');
+          statusMap[category] = 'pending';
+          closeModal();
+          renderCards(searchEl.value);
+        }catch(e){
+          console.error(e);
+          statusMap[category] = 'error';
+          alert('Failed to send pending remark. Check console.');
+          renderCards(searchEl.value);
+        }
+      });
+
+      // search
+      searchEl.addEventListener('input', ()=> renderCards(searchEl.value));
+
+      document.getElementById('refreshBtn').addEventListener('click', fetchCategories);
+
+      // small HTML escape helper
+      function escapeHtml(str){ return String(str).replace(/[&<>\"']/g, (s)=> ({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',"'":"&#39;"})[s]); }
+
+      // initial load
+      fetchCategories();
+
+      // feather icons replace (if any inline) after DOM ready
+      document.addEventListener('DOMContentLoaded', ()=>{ try { feather.replace() } catch(e){} });
+
+    </script>
+  </body>
 </html>

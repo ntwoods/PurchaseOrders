@@ -93,6 +93,22 @@
         transition: transform 0.4s ease-out;
       }
       .popup.is-visible { transform: translateX(0); }
+      
+      /* New loader styles */
+      .loader {
+        border: 4px solid #f3f3f3;
+        border-top: 4px solid #14532d;
+        border-radius: 50%;
+        width: 24px;
+        height: 24px;
+        animation: spin 1s linear infinite;
+        margin-right: 8px;
+        display: none; /* Initially hidden */
+      }
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
     </style>
   </head>
   <body class="bg-gradient-to-b from-neutral-50 to-neutral-100 min-h-screen text-slate-900">
@@ -107,7 +123,10 @@
           </div>
         </div>
 
-        <button id="refreshBtn" class="px-4 py-2 rounded-lg border border-slate-200 hover:bg-slate-50 text-sm">Refresh</button>
+        <button id="refreshBtn" class="px-4 py-2 rounded-lg border border-slate-200 hover:bg-slate-50 text-sm flex items-center">
+            <span id="refreshLoader" class="loader"></span>
+            Refresh
+        </button>
       </nav>
 
       <section class="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -137,7 +156,10 @@
         <textarea id="remarkInput" rows="5" class="w-full border rounded-md p-3" placeholder="Type remark... (required)"></textarea>
         <div class="mt-4 flex items-center justify-end gap-3">
           <button id="modalCancel" class="px-4 py-2 rounded-lg border">Cancel</button>
-          <button id="modalDone" class="btn-3d-red" disabled>Done</button>
+          <button id="modalDone" class="btn-3d-red" disabled>
+            <span id="doneLoader" class="hidden">...</span>
+            <span id="doneText">Done</span>
+          </button>
         </div>
       </div>
     </div>
@@ -154,11 +176,23 @@
         </ul>
       <div id="noPendingMessage" class="text-xs text-slate-400 mt-2 hidden">No pending orders.</div>
     </div>
-
+    
+    <div id="newPendingCategories" class="fixed top-24 right-6 p-4 bg-white rounded-lg shadow-xl hidden">
+        <h4 class="text-sm font-semibold mb-2">New Pending Categories</h4>
+        <div id="pendingTableContainer" class="max-h-40 overflow-y-auto">
+            <table class="table-auto w-full text-xs text-left">
+                <tbody id="pendingTableBody">
+                </tbody>
+            </table>
+        </div>
+        <div id="noNewPendingMessage" class="text-xs text-slate-400 mt-2 text-center hidden">No new categories.</div>
+    </div>
+    
     <script>
       // ------------------ Configuration ------------------
       const API_URL = 'https://script.google.com/macros/s/AKfycbza9ne-1hmyL6nkwuo7USvOXZWAw9qgVWgz1AFtBZ4B_oSMUBwlsL8AEcqSBPDcjmmc/exec';
       const SPREADSHEET_URL = 'https://docs.google.com/spreadsheets/d/1MPBE5EED1iN8np3oVqcn3VSAYl7M-OUXaLj9_YJogh0/gviz/tq?tqx=out:json&sheet=MissedIMSReq';
+      const NEW_PENDING_API_URL = 'https://script.google.com/macros/s/AKfycbz1j7pFMggtq2yzjCI9izJ4Xf8itZWc6E0c3BEEkJYlNRX9JdjzhMwJ0dY8rr1kOrHN/exec';
 
       // State
       let categories = [];
@@ -179,11 +213,20 @@
       const modalCancel = document.getElementById('modalCancel');
       const modalDone = document.getElementById('modalDone');
       const remarkInput = document.getElementById('remarkInput');
-
+      const doneText = document.getElementById('doneText');
+      const doneLoader = document.getElementById('doneLoader');
+      
+      const refreshBtn = document.getElementById('refreshBtn');
+      const refreshLoader = document.getElementById('refreshLoader');
+      
       const pendingPopup = document.getElementById('pendingPopup');
       const pendingList = document.getElementById('pendingList');
       const dismissPopupBtn = document.getElementById('dismissPopup');
       const noPendingMessage = document.getElementById('noPendingMessage');
+      
+      const newPendingCategoriesEl = document.getElementById('newPendingCategories');
+      const pendingTableBodyEl = document.getElementById('pendingTableBody');
+      const noNewPendingMessageEl = document.getElementById('noNewPendingMessage');
 
       let activePendingCategory = null;
 
@@ -210,7 +253,30 @@
       }
 
       function setStatusText(t){ statusSummaryEl.textContent = t; }
+      
+      function showButtonProcessing(btn, textSpan, loaderSpan) {
+          btn.disabled = true;
+          textSpan.classList.add('hidden');
+          loaderSpan.classList.remove('hidden');
+      }
 
+      function hideButtonProcessing(btn, textSpan, loaderSpan) {
+          btn.disabled = false;
+          textSpan.classList.remove('hidden');
+          loaderSpan.classList.add('hidden');
+      }
+      
+      function showSuccessMessage(message) {
+          const successDiv = document.createElement('div');
+          successDiv.className = 'fixed top-24 right-6 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg fade-in';
+          successDiv.textContent = message;
+          document.body.appendChild(successDiv);
+          setTimeout(() => {
+              successDiv.classList.add('hidden');
+              setTimeout(() => successDiv.remove(), 500);
+          }, 3000);
+      }
+      
       // ------------------ UI Rendering ------------------
       function createCard(category){
         const container = document.createElement('div');
@@ -224,7 +290,7 @@
             </div>
           </div>
           <div class="mt-4 flex items-center gap-3 justify-between">
-            <button class="btn-3d-green" onclick="handleYes('${escapeHtml(category)}')">Yes</button>
+            <button class="btn-3d-green" onclick="handleYes('${escapeHtml(category)}', this)">Yes</button>
             <button class="btn-3d-red" onclick="openPendingModal('${escapeHtml(category)}')">No</button>
             <div class="badge">${statusMap[category] ? statusMap[category] : 'new'}</div>
           </div>
@@ -260,6 +326,23 @@
           pendingPopup.classList.remove('is-visible');
           setTimeout(() => pendingPopup.classList.add('hidden'), 400); // Wait for transition
         }
+      }
+      
+      function renderNewPendingTable(data) {
+          pendingTableBodyEl.innerHTML = '';
+          if (data && data.values && data.values.length > 0) {
+              data.values.forEach(category => {
+                  const row = document.createElement('tr');
+                  row.className = 'hover:bg-neutral-50';
+                  row.innerHTML = `<td class="p-2">${escapeHtml(category)}</td>`;
+                  pendingTableBodyEl.appendChild(row);
+              });
+              noNewPendingMessageEl.classList.add('hidden');
+              newPendingCategoriesEl.classList.remove('hidden');
+          } else {
+              noNewPendingMessageEl.classList.remove('hidden');
+              newPendingCategoriesEl.classList.add('hidden');
+          }
       }
 
       // ------------------ Data Fetching (direct from Sheets) ------------------
@@ -300,9 +383,22 @@
           return { pending: [], createdToday: new Set() };
         }
       }
+      
+      async function fetchNewPendingCategories() {
+          try {
+              const res = await fetch(NEW_PENDING_API_URL);
+              if (!res.ok) throw new Error('Failed to fetch new pending categories');
+              const data = await res.json();
+              renderNewPendingTable(data);
+          } catch (err) {
+              console.error('Failed to fetch new pending categories', err);
+              renderNewPendingTable(null);
+          }
+      }
 
       // ------------------ Main fetch that populates dashboard categories ------------------
       async function fetchMainCategories(){
+        refreshLoader.style.display = 'block';
         setStatusText('Loading...');
         try{
           const apiRes = await fetch(API_URL);
@@ -317,10 +413,12 @@
 
           renderCards(searchEl.value);
           setStatusText('Loaded');
+          refreshLoader.style.display = 'none';
         }catch(err){
           console.error(err);
           setStatusText('Failed to load');
           cardsEl.innerHTML = `<div class="col-span-full p-6 text-center text-red-600 bg-white rounded-xl shadow">Failed to fetch categories — check console.</div>`;
+          refreshLoader.style.display = 'none';
         }
       }
 
@@ -347,23 +445,24 @@
       }
 
       // ------------------ Events / Actions ------------------
-      async function handleYes(category){
+      async function handleYes(category, button){
+        showButtonProcessing(button, button.querySelector('span'), button.querySelector('span')); // This is not ideal, need to refactor HTML for proper span
         statusMap[category] = 'sending';
-        renderCards(searchEl.value);
         try{
           const payload = { category, status: 'created', remark: '' };
           await fetch(API_URL, { method: 'POST', mode: 'no-cors', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload) });
           statusMap[category] = 'created';
-          await fetchMainCategories();
-          checkAndShowPopup();
+          showSuccessMessage('Category marked as created successfully!');
+          window.location.reload();
         }catch(e){
           console.error(e);
           statusMap[category] = 'error';
           alert('Failed to send. Check console for details.');
+          hideButtonProcessing(button, button.querySelector('span'), button.querySelector('span'));
           renderCards(searchEl.value);
         }
       }
-
+      
       function openPendingModal(category){
         activePendingCategory = category;
         modalTitle.textContent = `Pending remark — ${category}`;
@@ -396,30 +495,34 @@
       modalDone.addEventListener('click', async ()=>{
         const remark = remarkInput.value.trim();
         if (!remark) return;
+        
+        showButtonProcessing(modalDone, doneText, doneLoader);
+        
         const category = activePendingCategory;
         statusMap[category] = 'sending';
-        renderCards(searchEl.value);
         try{
           const payload = { category, status: 'pending', remark };
           await fetch(API_URL, { method: 'POST', mode: 'no-cors', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload) });
           statusMap[category] = 'pending';
           closeModal();
-          await fetchMainCategories();
-          checkAndShowPopup();
+          showSuccessMessage('Category marked as pending successfully!');
+          window.location.reload();
         }catch(e){
           console.error(e);
           statusMap[category] = 'error';
           alert('Failed to send pending remark. Check console.');
+          hideButtonProcessing(modalDone, doneText, doneLoader);
           renderCards(searchEl.value);
         }
       });
 
       searchEl.addEventListener('input', ()=> renderCards(searchEl.value));
-      document.getElementById('refreshBtn').addEventListener('click', fetchMainCategories);
+      refreshBtn.addEventListener('click', fetchMainCategories);
 
       // Initial load & periodic updates
       (async function init(){
         await fetchMainCategories();
+        await fetchNewPendingCategories();
         // run immediately then every 20 seconds to show popup with pending categories
         await checkAndShowPopup();
         popupIntervalId = setInterval(checkAndShowPopup, 20000);

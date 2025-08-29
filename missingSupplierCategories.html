@@ -157,16 +157,18 @@
     </div>
 
     <script>
-      // ------------------ Configuration ------------------
+// ------------------ Configuration ------------------
+      // URL of your Google Apps Script 'doGet' function
       const API_URL = 'https://script.google.com/macros/s/AKfycbza9ne-1hmyL6nkwuo7USvOXZWAw9qgVWgz1AFtBZ4B_oSMUBwlsL8AEcqSBPDcjmmc/exec';
-      // Direct Sheets fetch (gviz JSON) - no Apps Script API required for reads
+      // URL for direct Sheets fetch (gviz JSON) for the pending popup
       const SPREADSHEET_URL = 'https://docs.google.com/spreadsheets/d/1MPBE5EED1iN8np3oVqcn3VSAYl7M-OUXaLj9_YJogh0/gviz/tq?tqx=out:json&sheet=MissedIMSReq';
 
       // State
       let categories = [];
-      const statusMap = {}; // category -> 'created' | 'pending' | 'error' | 'sending'
+      const statusMap = {};
       const createdCategoriesToday = new Set();
       let pendingCategoriesToday = [];
+      let dismissTimestamp = 0; // Tracks when the user last dismissed the popup
 
       // Elements
       const cardsEl = document.getElementById('cards');
@@ -301,19 +303,20 @@
         }
       }
 
-      // ------------------ Main fetch that populates dashboard categories (uses direct sheet fetch) ------------------
+      // ------------------ Main fetch that populates dashboard categories ------------------
       async function fetchMainCategories(){
         setStatusText('Loading...');
         try{
-          const { pending, createdToday } = await fetchSheetPendingCategories();
-
-          // keep createdCategoriesToday in sync
-          createdCategoriesToday.clear();
-          createdToday.forEach(c => createdCategoriesToday.add(c));
-
-          // categories for the dashboard = pending categories today (except those already created today)
-          categories = pending.filter(cat => !createdCategoriesToday.has(cat));
-
+          const apiRes = await fetch(API_URL);
+          if (!apiRes.ok) throw new Error('Network error from Apps Script API');
+          const apiData = await apiRes.json();
+          const fetchedCategories = combineAndDedupe(apiData.fromColumnB || [], apiData.fromColumnG || []);
+          
+          const { createdToday } = await fetchSheetPendingCategories();
+          
+          // Filter out categories that are already marked 'created' today
+          categories = fetchedCategories.filter(cat => !createdToday.has(cat));
+          
           renderCards(searchEl.value);
           setStatusText('Loaded');
         }catch(err){
@@ -325,7 +328,7 @@
 
       // ------------------ Popup / interval logic ------------------
       let popupIntervalId = null;
-      let suppressUntil = 0; // timestamp to suppress auto-popup after dismiss
+      let suppressUntil = 0; // timestamp to suppress auto-popup after user dismisses
 
       async function checkAndShowPopup(){
         try{
@@ -333,18 +336,10 @@
           pendingCategoriesToday = pending || [];
           renderPendingPopup();
 
-          // if there are pending items and not suppressed, show popup animation
           if (pendingCategoriesToday.length > 0 && Date.now() > suppressUntil) {
             pendingPopup.classList.remove('hidden');
-            // small delay to allow element to become visible before adding class
             setTimeout(() => pendingPopup.classList.add('is-visible'), 60);
-            // auto-hide after 7 seconds so it reappears on next interval
-            setTimeout(()=>{
-              pendingPopup.classList.remove('is-visible');
-              setTimeout(()=> pendingPopup.classList.add('hidden'), 400);
-            }, 7000);
           } else {
-            // hide
             pendingPopup.classList.remove('is-visible');
             setTimeout(()=> pendingPopup.classList.add('hidden'), 400);
           }
@@ -362,7 +357,6 @@
           const payload = { category, status: 'created', remark: '' };
           await fetch(API_URL, { method: 'POST', mode: 'no-cors', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload) });
           statusMap[category] = 'created';
-          // refresh local view
           await fetchMainCategories();
         }catch(e){
           console.error(e);
@@ -396,10 +390,9 @@
       modalClose.addEventListener('click', closeModal);
       modalCancel.addEventListener('click', closeModal);
       dismissPopupBtn.addEventListener('click', () => {
-        // temporarily suppress automatic popups for 10 seconds after user dismisses
-        suppressUntil = Date.now() + 10000;
+        suppressUntil = Date.now() + 20000;
         pendingPopup.classList.remove('is-visible');
-        setTimeout(() => pendingPopup.classList.add('hidden'), 400); // Wait for transition
+        setTimeout(() => pendingPopup.classList.add('hidden'), 400);
       });
 
       modalDone.addEventListener('click', async ()=>{
@@ -413,7 +406,7 @@
           await fetch(API_URL, { method: 'POST', mode: 'no-cors', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload) });
           statusMap[category] = 'pending';
           closeModal();
-          await fetchMainCategories(); // refresh dashboard
+          await fetchMainCategories();
         }catch(e){
           console.error(e);
           statusMap[category] = 'error';
@@ -422,19 +415,16 @@
         }
       });
 
-      // search
       searchEl.addEventListener('input', ()=> renderCards(searchEl.value));
       document.getElementById('refreshBtn').addEventListener('click', fetchMainCategories);
 
       // Initial load & periodic updates
       (async function init(){
         await fetchMainCategories();
-        // run immediately then every 10 seconds to show popup with pending categories
         await checkAndShowPopup();
-        popupIntervalId = setInterval(checkAndShowPopup, 10000);
+        popupIntervalId = setInterval(checkAndShowPopup, 20000);
       })();
 
-      // feather icons replace (if any inline) after DOM ready
       document.addEventListener('DOMContentLoaded', ()=>{ try { feather.replace() } catch(e){} });
     </script>
   </body>

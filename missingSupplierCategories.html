@@ -90,27 +90,13 @@
         box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
         z-index: 1000;
         transform: translateX(120%);
-        transition: transform 0.4s ease-out, opacity 0.3s ease;
-        opacity: 0;
+        transition: transform 0.4s ease-out;
       }
-      .popup.is-visible { transform: translateX(0); opacity: 1; }
+      .popup.is-visible { transform: translateX(0); }
     </style>
   </head>
-  <body class="bg-gradient-to-b from-neutral-50 to-neutral-100 min-h-screen text-slate-900">   
-  <!-- Pending categories pop-up -->
-<div id="pendingPopup" class="popup hidden p-5 flex-col">
-  <div class="flex items-center justify-between mb-3">
-    <h4 class="text-lg font-semibold text-sky-500 flex items-center gap-2">
-      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-alert-circle"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12" y2="16"></line></svg>
-      Pending Orders
-    </h4>
-    <button id="dismissPopup" class="text-sm text-slate-500 hover:text-slate-700">Dismiss</button>
-  </div>
-  <ul id="pendingList" class="text-sm text-slate-700 space-y-2">
-    <!-- List items injected here -->
-  </ul>
-  <div id="noPendingMessage" class="text-xs text-slate-400 mt-2 hidden">No new pending orders.</div>
-</div>
+  <body class="bg-gradient-to-b from-neutral-50 to-neutral-100 min-h-screen text-slate-900">
+
     <div class="max-w-7xl mx-auto px-6 py-10">
       <nav class="flex items-center justify-between mb-8">
         <div class="flex items-center gap-4">
@@ -166,14 +152,12 @@
       </div>
       <ul id="pendingList" class="text-sm text-slate-700 space-y-2">
         </ul>
-      <div id="noPendingMessage" class="text-xs text-slate-400 mt-2 hidden">No new pending orders.</div>
+      <div id="noPendingMessage" class="text-xs text-slate-400 mt-2 hidden">No pending orders.</div>
     </div>
 
     <script>
-// ------------------ Configuration ------------------
-      // URL of your Google Apps Script 'doGet' function
+      // ------------------ Configuration ------------------
       const API_URL = 'https://script.google.com/macros/s/AKfycbza9ne-1hmyL6nkwuo7USvOXZWAw9qgVWgz1AFtBZ4B_oSMUBwlsL8AEcqSBPDcjmmc/exec';
-      // URL for direct Sheets fetch (gviz JSON) for the pending popup
       const SPREADSHEET_URL = 'https://docs.google.com/spreadsheets/d/1MPBE5EED1iN8np3oVqcn3VSAYl7M-OUXaLj9_YJogh0/gviz/tq?tqx=out:json&sheet=MissedIMSReq';
 
       // State
@@ -181,7 +165,7 @@
       const statusMap = {};
       const createdCategoriesToday = new Set();
       let pendingCategoriesToday = [];
-      let dismissTimestamp = 0; // Tracks when the user last dismissed the popup
+      let suppressUntil = 0;
 
       // Elements
       const cardsEl = document.getElementById('cards');
@@ -218,7 +202,7 @@
       function isToday(timestamp) {
         if (!timestamp) return false;
         const date = new Date(timestamp);
-        if (isNaN(date)) return false;
+        if (isNaN(date.getTime())) return false; // Check for invalid date
         const today = new Date();
         return date.getFullYear() === today.getFullYear() &&
                date.getMonth() === today.getMonth() &&
@@ -240,8 +224,8 @@
             </div>
           </div>
           <div class="mt-4 flex items-center gap-3 justify-between">
-            <button class="btn-3d-green" onclick="handleYes('${escapeHtml(category)}', this)">Yes</button>
-            <button class="btn-3d-red" onclick="openPendingModal('${escapeHtml(category)}')">No</button>
+            <button class="btn-3d-green" onclick="handleYes('${escapeHtml(category)}')">Yes, Order Created</button>
+            <button class="btn-3d-red" onclick="openPendingModal('${escapeHtml(category)}')">No, Order is Pending</button>
             <div class="badge">${statusMap[category] ? statusMap[category] : 'new'}</div>
           </div>
         `;
@@ -270,10 +254,11 @@
           });
           noPendingMessage.classList.add('hidden');
           pendingPopup.classList.remove('hidden');
+          setTimeout(() => pendingPopup.classList.add('is-visible'), 50);
         } else {
           noPendingMessage.classList.remove('hidden');
-          pendingPopup.classList.add('hidden');
           pendingPopup.classList.remove('is-visible');
+          setTimeout(() => pendingPopup.classList.add('hidden'), 400); // Wait for transition
         }
       }
 
@@ -283,7 +268,6 @@
           const res = await fetch(SPREADSHEET_URL);
           if (!res.ok) throw new Error('Sheet fetch failed');
           const text = await res.text();
-          // JSON is wrapped in a function call; extract the JSON object
           const jsonText = text.substring(text.indexOf('{'), text.lastIndexOf('}') + 1);
           const data = JSON.parse(jsonText);
           const rows = data.table && data.table.rows ? data.table.rows : [];
@@ -294,17 +278,18 @@
           rows.forEach(row => {
             const cells = row.c || [];
             // cells[0] -> timestamp, cells[1] -> category, cells[2] -> status
-            const rawTs = (cells[0] && (cells[0].f || cells[0].v)) ? (cells[0].f || cells[0].v) : null;
-            const category = (cells[1] && (cells[1].v || cells[1].f)) ? (cells[1].v || cells[1].f) : null;
-            const status = (cells[2] && (cells[2].v || cells[2].f)) ? String(cells[2].v || cells[2].f).trim().toLowerCase() : null;
+            const rawTs = (cells[0] && cells[0].f) ? cells[0].f : null;
+            const category = (cells[1] && cells[1].v) ? String(cells[1].v).trim() : null;
+            const status = (cells[2] && cells[2].v) ? String(cells[2].v).trim().toLowerCase() : null;
 
-            if (!rawTs || !category) return;
+            if (!category || !status) return;
+
             const tsDate = new Date(rawTs);
-            if (isNaN(tsDate)) return;
+            if (isNaN(tsDate.getTime())) return;
 
             if (isToday(tsDate)){
-              if (status === 'created') createdToday.add(String(category).trim());
-              if (status === 'pending') pending.push(String(category).trim());
+              if (status === 'created') createdToday.add(category);
+              if (status === 'pending') pending.push(category);
             }
           });
 
@@ -324,12 +309,12 @@
           if (!apiRes.ok) throw new Error('Network error from Apps Script API');
           const apiData = await apiRes.json();
           const fetchedCategories = combineAndDedupe(apiData.fromColumnB || [], apiData.fromColumnG || []);
-          
+
           const { createdToday } = await fetchSheetPendingCategories();
-          
+
           // Filter out categories that are already marked 'created' today
           categories = fetchedCategories.filter(cat => !createdToday.has(cat));
-          
+
           renderCards(searchEl.value);
           setStatusText('Loaded');
         }catch(err){
@@ -371,6 +356,7 @@
           await fetch(API_URL, { method: 'POST', mode: 'no-cors', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload) });
           statusMap[category] = 'created';
           await fetchMainCategories();
+          checkAndShowPopup();
         }catch(e){
           console.error(e);
           statusMap[category] = 'error';
@@ -420,6 +406,7 @@
           statusMap[category] = 'pending';
           closeModal();
           await fetchMainCategories();
+          checkAndShowPopup();
         }catch(e){
           console.error(e);
           statusMap[category] = 'error';
@@ -434,88 +421,12 @@
       // Initial load & periodic updates
       (async function init(){
         await fetchMainCategories();
+        // run immediately then every 20 seconds to show popup with pending categories
         await checkAndShowPopup();
         popupIntervalId = setInterval(checkAndShowPopup, 20000);
       })();
 
       document.addEventListener('DOMContentLoaded', ()=>{ try { feather.replace() } catch(e){} });
     </script>
-<script>
-  // Add these constants and state variables to the top of your existing script tag
-  const SPREADSHEET_URL = 'https://docs.google.com/spreadsheets/d/1MPBE5EED1iN8np3oVqcn3VSAYl7M-OUXaLj9_YJogh0/gviz/tq?tqx=out:json&sheet=MissedIMSReq';
-  const pendingPopup = document.getElementById('pendingPopup');
-  const pendingList = document.getElementById('pendingList');
-  const dismissPopupBtn = document.getElementById('dismissPopup');
-  const noPendingMessage = document.getElementById('noPendingMessage');
-  let pendingCategoriesToday = [];
-
-  // Add these functions inside your script tag
-  function renderPendingPopup() {
-    pendingList.innerHTML = '';
-    if (pendingCategoriesToday && pendingCategoriesToday.length > 0) {
-      const deduped = Array.from(new Set(pendingCategoriesToday.map(c => String(c).trim()).filter(Boolean)));
-      deduped.forEach(cat => {
-        const li = document.createElement('li');
-        li.className = 'p-2 bg-neutral-100 rounded-md flex items-center gap-2';
-        li.innerHTML = `<span class="w-2 h-2 bg-sky-500 rounded-full"></span>${escapeHtml(cat)}`;
-        pendingList.appendChild(li);
-      });
-      noPendingMessage.classList.add('hidden');
-      pendingPopup.classList.remove('hidden');
-      setTimeout(() => pendingPopup.classList.add('is-visible'), 50);
-    } else {
-      noPendingMessage.classList.remove('hidden');
-      pendingPopup.classList.remove('is-visible');
-      setTimeout(() => pendingPopup.classList.add('hidden'), 400); // Wait for transition
-    }
-  }
-
-  async function fetchUpdatedSheetData() {
-    try {
-      const res = await fetch(SPREADSHEET_URL);
-      const text = await res.text();
-      const jsonText = text.substring(text.indexOf('{'), text.lastIndexOf('}') + 1);
-      const data = JSON.parse(jsonText);
-      const rows = data.table.rows;
-
-      const pending = [];
-      if (rows && rows.length > 0) {
-        rows.forEach(row => {
-          const cells = row.c;
-          if (cells && cells[0] && cells[0].f && cells[1] && cells[2]) {
-            const timestamp = new Date(cells[0].f);
-            const category = cells[1].v;
-            const status = cells[2].v;
-
-            if (
-              timestamp instanceof Date &&
-              timestamp.getFullYear() === new Date().getFullYear() &&
-              timestamp.getMonth() === new Date().getMonth() &&
-              timestamp.getDate() === new Date().getDate() &&
-              status === "pending"
-            ) {
-              pending.push(category);
-            }
-          }
-        });
-      }
-      pendingCategoriesToday = pending;
-      renderPendingPopup();
-
-    } catch(err) {
-      console.error('Failed to fetch from Google Sheet', err);
-    }
-  }
-
-  // Add this event listener
-  dismissPopupBtn.addEventListener('click', () => {
-    pendingPopup.classList.remove('is-visible');
-    setTimeout(() => pendingPopup.classList.add('hidden'), 400); // Wait for transition
-  });
-
-  // Call the function on page load and on an interval
-  fetchUpdatedSheetData();
-  setInterval(fetchUpdatedSheetData, 20000); // Update every 20 seconds
-</script>    
   </body>
 </html>

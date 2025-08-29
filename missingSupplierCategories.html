@@ -78,6 +78,21 @@
 
       /* small badge */
       .badge { font-size: 12px; background: rgba(15,23,42,0.06); padding: 4px 8px; border-radius: 999px; }
+
+      /* Pop-up container */
+      .popup {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        max-width: 350px;
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        z-index: 1000;
+        transform: translateX(120%);
+        transition: transform 0.4s ease-out;
+      }
+      .popup.is-visible { transform: translateX(0); }
     </style>
   </head>
   <body class="bg-gradient-to-b from-neutral-50 to-neutral-100 min-h-screen text-slate-900">
@@ -127,13 +142,13 @@
       </div>
     </div>
 
-
-  
+    <div id="pendingPopup" class="popup hidden p-5 flex-col">
       <div class="flex items-center justify-between mb-3">
         <h4 class="text-lg font-semibold text-sky-500 flex items-center gap-2">
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-alert-circle"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12" y2="16"></line></svg>
           Pending Orders
         </h4>
+        <button id="dismissPopup" class="text-sm text-slate-500 hover:text-slate-700">Dismiss</button>
       </div>
       <ul id="pendingList" class="text-sm text-slate-700 space-y-2">
         </ul>
@@ -165,7 +180,9 @@
       const modalDone = document.getElementById('modalDone');
       const remarkInput = document.getElementById('remarkInput');
 
+      const pendingPopup = document.getElementById('pendingPopup');
       const pendingList = document.getElementById('pendingList');
+      const dismissPopupBtn = document.getElementById('dismissPopup');
       const noPendingMessage = document.getElementById('noPendingMessage');
 
       let activePendingCategory = null;
@@ -225,6 +242,25 @@
         filtered.forEach(cat => cardsEl.appendChild(createCard(cat)));
       }
 
+      function renderPendingPopup(){
+        pendingList.innerHTML = '';
+        if(pendingCategoriesToday && pendingCategoriesToday.length > 0) {
+          const deduped = Array.from(new Set(pendingCategoriesToday.map(c => String(c).trim()).filter(Boolean)));
+          deduped.forEach(cat => {
+            const li = document.createElement('li');
+            li.className = 'p-2 bg-neutral-100 rounded-md flex items-center gap-2';
+            li.innerHTML = `<span class="w-2 h-2 bg-sky-500 rounded-full"></span>${escapeHtml(cat)}`;
+            pendingList.appendChild(li);
+          });
+          noPendingMessage.classList.add('hidden');
+          pendingPopup.classList.remove('hidden');
+          setTimeout(() => pendingPopup.classList.add('is-visible'), 50);
+        } else {
+          noPendingMessage.classList.remove('hidden');
+          pendingPopup.classList.remove('is-visible');
+          setTimeout(() => pendingPopup.classList.add('hidden'), 400); // Wait for transition
+        }
+      }
 
       // ------------------ Data Fetching (direct from Sheets) ------------------
       async function fetchSheetPendingCategories(){
@@ -253,13 +289,15 @@
 
             if (isToday(tsDate)){
               if (status === 'created') createdToday.add(category);
+              if (status === 'pending') pending.push(category);
             }
           });
-          return { createdToday };
+
+          return { pending: Array.from(new Set(pending)), createdToday };
 
         } catch (err) {
           console.error('Failed to fetch sheet', err);
-          return { createdToday: new Set() };
+          return { pending: [], createdToday: new Set() };
         }
       }
 
@@ -286,6 +324,28 @@
         }
       }
 
+      // ------------------ Popup / interval logic ------------------
+      let popupIntervalId = null;
+
+      async function checkAndShowPopup(){
+        try{
+          const { pending } = await fetchSheetPendingCategories();
+          pendingCategoriesToday = pending || [];
+          renderPendingPopup();
+
+          if (pendingCategoriesToday.length > 0 && Date.now() > suppressUntil) {
+            pendingPopup.classList.remove('hidden');
+            setTimeout(() => pendingPopup.classList.add('is-visible'), 60);
+          } else {
+            pendingPopup.classList.remove('is-visible');
+            setTimeout(()=> pendingPopup.classList.add('hidden'), 400);
+          }
+
+        }catch(err){
+          console.error('Popup check failed', err);
+        }
+      }
+
       // ------------------ Events / Actions ------------------
       async function handleYes(category){
         statusMap[category] = 'sending';
@@ -295,6 +355,7 @@
           await fetch(API_URL, { method: 'POST', mode: 'no-cors', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload) });
           statusMap[category] = 'created';
           await fetchMainCategories();
+          checkAndShowPopup();
         }catch(e){
           console.error(e);
           statusMap[category] = 'error';
@@ -324,6 +385,14 @@
         if (val.length > 0) modalDone.removeAttribute('disabled'); else modalDone.setAttribute('disabled','');
       });
 
+      modalClose.addEventListener('click', closeModal);
+      modalCancel.addEventListener('click', closeModal);
+      dismissPopupBtn.addEventListener('click', () => {
+        // Set a timestamp to prevent the popup from immediately re-showing
+        suppressUntil = Date.now() + 20000;
+        pendingPopup.classList.remove('is-visible');
+        setTimeout(() => pendingPopup.classList.add('hidden'), 400); // Wait for transition
+      });
       modalDone.addEventListener('click', async ()=>{
         const remark = remarkInput.value.trim();
         if (!remark) return;
@@ -336,6 +405,7 @@
           statusMap[category] = 'pending';
           closeModal();
           await fetchMainCategories();
+          checkAndShowPopup();
         }catch(e){
           console.error(e);
           statusMap[category] = 'error';
@@ -346,6 +416,15 @@
 
       searchEl.addEventListener('input', ()=> renderCards(searchEl.value));
       document.getElementById('refreshBtn').addEventListener('click', fetchMainCategories);
+
+      // Initial load & periodic updates
+      (async function init(){
+        await fetchMainCategories();
+        // run immediately then every 20 seconds to show popup with pending categories
+        await checkAndShowPopup();
+        popupIntervalId = setInterval(checkAndShowPopup, 20000);
+      })();
+
       document.addEventListener('DOMContentLoaded', ()=>{ try { feather.replace() } catch(e){} });
     </script>
   </body>

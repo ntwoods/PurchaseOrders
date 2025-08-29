@@ -326,7 +326,6 @@
 
       // ------------------ Popup / interval logic ------------------
       let popupIntervalId = null;
-      let suppressUntil = 0; // timestamp to suppress auto-popup after user dismisses
 
       async function checkAndShowPopup(){
         try{
@@ -389,11 +388,11 @@
       modalClose.addEventListener('click', closeModal);
       modalCancel.addEventListener('click', closeModal);
       dismissPopupBtn.addEventListener('click', () => {
+        // Set a timestamp to prevent the popup from immediately re-showing
         suppressUntil = Date.now() + 20000;
         pendingPopup.classList.remove('is-visible');
-        setTimeout(() => pendingPopup.classList.add('hidden'), 400);
+        setTimeout(() => pendingPopup.classList.add('hidden'), 400); // Wait for transition
       });
-
       modalDone.addEventListener('click', async ()=>{
         const remark = remarkInput.value.trim();
         if (!remark) return;

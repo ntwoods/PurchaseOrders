@@ -221,8 +221,8 @@
             </div>
           </div>
           <div class="mt-4 flex items-center gap-3 justify-between">
-            <button class="btn-3d-green" onclick="handleYes('${escapeHtml(category)}', this)">Yes</button>
-            <button class="btn-3d-red" onclick="openPendingModal('${escapeHtml(category)}')">No</button>
+            <button class="btn-3d-green" onclick="handleYes('${escapeHtml(category)}', this)">Yes, Order Created</button>
+            <button class="btn-3d-red" onclick="openPendingModal('${escapeHtml(category)}')">No, Order is Pending</button>
             <div class="badge">${statusMap[category] ? statusMap[category] : 'new'}</div>
           </div>
         `;
@@ -394,7 +394,7 @@
       // Initial load & periodic updates
       fetchMainCategories();
       fetchUpdatedSheetData();
-      setInterval(fetchUpdatedSheetData, 10000); // Update pending pop-up every 10 seconds
+      setInterval(fetchUpdatedSheetData, 20000); // Update pending pop-up every 20 seconds
 
       // feather icons replace (if any inline) after DOM ready
       document.addEventListener('DOMContentLoaded', ()=>{ try { feather.replace() } catch(e){} });

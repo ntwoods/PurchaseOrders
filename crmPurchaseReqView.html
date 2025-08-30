@@ -180,7 +180,7 @@
             flex-shrink: 0; /* Ensures button doesn't shrink */
         }
 
-        .action-button:hover {
+        .action-button:hover:not(:disabled) {
             background: linear-gradient(135deg, #1565c0 0%, var(--color-primary) 100%);
             transform: translateY(-1px);
         }
@@ -201,8 +201,29 @@
             flex-shrink: 0;
         }
 
-        .cancel-button:hover {
+        .cancel-button:hover:not(:disabled) {
             background: #c62828; /* Darker red on hover */
+            transform: translateY(-1px);
+        }
+
+        /* New Received Button Style */
+        .received-button {
+            width: 100%;
+            background: #4caf50; /* Green color for received */
+            color: var(--color-white);
+            border: none;
+            padding: 0.6rem 1.25rem;
+            border-radius: var(--border-radius-small);
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin-top: 0.5rem; /* Space between action buttons */
+            flex-shrink: 0;
+        }
+
+        .received-button:hover:not(:disabled) {
+            background: #388e3c; /* Darker green on hover */
             transform: translateY(-1px);
         }
 
@@ -226,6 +247,12 @@
         .view-file-button:hover {
             background: #399ae1; /* Darker shade on hover */
             transform: translateY(-1px);
+        }
+        
+        /* Disabled state for all buttons */
+        .action-button:disabled, .cancel-button:disabled, .received-button:disabled {
+             opacity: 0.6;
+             cursor: not-allowed;
         }
 
         /* Modal Styles */
@@ -740,151 +767,159 @@
         }
 
         // Create request card
-// Create request card
-function createRequestCard(request) {
-    const card = document.createElement('div');
-    card.className = 'request-card';
-    
-    // Highlight card if there's a responseRemark (already marked)
-    if (request.responseRemark && request.responseRemark.trim() !== '') {
-        card.classList.add('highlighted');
-    }
-
-    // Add overdue-card-highlight immediately if poReceived and deadline passed
-    let poReceivedTimestamp = null;
-    if (request.poReceived) {
-        const parsedDate = parseIsoDateTime(request.poReceived); 
-        if (parsedDate && !isNaN(parsedDate.getTime())) {
-            poReceivedTimestamp = parsedDate.getTime();
-            const deadline = poReceivedTimestamp + (24 * 60 * 60 * 1000); // 24 hours in milliseconds
-            if (new Date().getTime() > deadline) {
-                card.classList.add('overdue-card-highlight');
-            }
-        }
-    }
-
-    let crmValue = request.crm || 'N/A';
-    if (crmValue !== 'N/A' && (crmValue.startsWith('http://') || crmValue.startsWith('https://'))) {
-        crmValue = `<a href="${crmValue}" target="_blank" style="color: var(--color-primary); text-decoration: none;">View CRM</a>`;
-    }
-
-    let productHtml = '';
-    if (request.product && (request.product.startsWith('http://') || request.product.startsWith('https://'))) {
-        productHtml = `
-            <div class="field-group">
-                <span class="field-label">File:</span>
-                <a href="${request.product}" target="_blank" class="view-file-button">View File</a>
-            </div>
-        `;
-    } else {
-        productHtml = `
-            <div class="field-group">
-                <span class="field-label">Product:</span>
-                <div class="field-value">${request.product || 'N/A'}</div>
-            </div>
-        `;
-    }
-
-    let poReceivedDisplay = 'N/A';
-    let deadlineHtml = ''; // Initialize deadline HTML as empty
-
-    if (request.poReceived) {
-        const parsedDate = parseIsoDateTime(request.poReceived); 
-        if (parsedDate && !isNaN(parsedDate.getTime())) {
-            poReceivedTimestamp = parsedDate.getTime();
-            // Display in Indian Standard Time (IST)
-            poReceivedDisplay = parsedDate.toLocaleString('en-IN', { 
-                timeZone: 'Asia/Kolkata',
-                year: 'numeric',
-                month: '2-digit',
-                day: '2-digit',
-                hour: '2-digit',
-                minute: '2-digit',
-                second: '2-digit',
-                hour12: true // For AM/PM
-            });
-            // CORRECTED: Use request.id for the countdown element's ID
-            deadlineHtml = `
-                <div class="field-group">
-                    <span class="field-label">Deadline:</span>
-                    <div class="field-value" id="countdown-${request.id}"></div> 
-                </div>
-            `;
-        } else {
-            console.warn('Could not parse poReceived:', request.poReceived, 'Falling back to N/A.');
-        }
-    }
-
-    // Watermark HTML, conditionally added based on crmStatus
-    const watermarkHtml = request.crmStatus === 'Cancel' ? '<div class="watermark">Cancelled</div>' : '';
-
-    // Determine button text based on whether a response remark exists
-    const buttonText = (request.responseRemark && request.responseRemark.trim() !== '') ? 'Modify Response' : 'Mark Response';
-
-
-    card.innerHTML = `
-        ${watermarkHtml} <div class="card-content">
-            <div class="field-group">
-                <span class="field-label">Dealer Name:</span>
-                <div class="field-value">${request.dealer || 'N/A'}</div>
-            </div>
-
-            ${productHtml}
-
-            <div class="field-group">
-                <span class="field-label">Req Dt.:</span>
-                <div class="field-value">
-                  ${request.timeStamp ? new Date(request.timeStamp).toLocaleDateString('en-GB') : 'N/A'}
-                </div>
-            </div>
+        function createRequestCard(request) {
+            const card = document.createElement('div');
+            card.className = 'request-card';
             
-            <div class="field-group">
-                <span class="field-label">Priority:</span>
-                <div class="field-value">${request.priority || 'N/A'}</div>
-            </div>
+            // Highlight card if there's a responseRemark (already marked)
+            if (request.responseRemark && request.responseRemark.trim() !== '') {
+                card.classList.add('highlighted');
+            }
 
-            <div class="field-group">
-                <span class="field-label">Remark:</span>
-                <div class="field-value">${request.remark || 'N/A'}</div>
-            </div>
+            // Add overdue-card-highlight immediately if poReceived and deadline passed
+            let poReceivedTimestamp = null;
+            if (request.poReceived) {
+                const parsedDate = parseIsoDateTime(request.poReceived); 
+                if (parsedDate && !isNaN(parsedDate.getTime())) {
+                    poReceivedTimestamp = parsedDate.getTime();
+                    const deadline = poReceivedTimestamp + (24 * 60 * 60 * 1000); // 24 hours in milliseconds
+                    if (new Date().getTime() > deadline) {
+                        card.classList.add('overdue-card-highlight');
+                    }
+                }
+            }
 
-            ${request.poDetail ? `
-            <div class="field-group">
-                <span class="field-label">PO:</span>
-                <div class="field-value">${request.poDetail}</div>
-            </div>
-            ` : ''}
+            let crmValue = request.crm || 'N/A';
+            if (crmValue !== 'N/A' && (crmValue.startsWith('http://') || crmValue.startsWith('https://'))) {
+                crmValue = `<a href="${crmValue}" target="_blank" style="color: var(--color-primary); text-decoration: none;">View CRM</a>`;
+            }
 
-            <div class="field-group">
-                <span class="field-label">CRM:</span>
-                <div class="field-value">${crmValue}</div>
-            </div>
-            ${poReceivedTimestamp ? `
-                <div class="field-group">
-                    <span class="field-label">PO Received:</span>
-                    <div class="field-value">${poReceivedDisplay}</div>
+            let productHtml = '';
+            if (request.product && (request.product.startsWith('http://') || request.product.startsWith('https://'))) {
+                productHtml = `
+                    <div class="field-group">
+                        <span class="field-label">File:</span>
+                        <a href="${request.product}" target="_blank" class="view-file-button">View File</a>
+                    </div>
+                `;
+            } else {
+                productHtml = `
+                    <div class="field-group">
+                        <span class="field-label">Product:</span>
+                        <div class="field-value">${request.product || 'N/A'}</div>
+                    </div>
+                `;
+            }
+
+            let poReceivedDisplay = 'N/A';
+            let deadlineHtml = ''; // Initialize deadline HTML as empty
+
+            if (request.poReceived) {
+                const parsedDate = parseIsoDateTime(request.poReceived); 
+                if (parsedDate && !isNaN(parsedDate.getTime())) {
+                    poReceivedTimestamp = parsedDate.getTime();
+                    // Display in Indian Standard Time (IST)
+                    poReceivedDisplay = parsedDate.toLocaleString('en-IN', { 
+                        timeZone: 'Asia/Kolkata',
+                        year: 'numeric',
+                        month: '2-digit',
+                        day: '2-digit',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        second: '2-digit',
+                        hour12: true // For AM/PM
+                    });
+                    // CORRECTED: Use request.id for the countdown element's ID
+                    deadlineHtml = `
+                        <div class="field-group">
+                            <span class="field-label">Deadline:</span>
+                            <div class="field-value" id="countdown-${request.id}"></div> 
+                        </div>
+                    `;
+                } else {
+                    console.warn('Could not parse poReceived:', request.poReceived, 'Falling back to N/A.');
+                }
+            }
+
+            // Watermark HTML, conditionally added based on crmStatus
+            const watermarkHtml = request.crmStatus === 'Cancel' ? '<div class="watermark">Cancelled</div>' : '';
+
+            // Determine button text based on whether a response remark exists
+            const buttonText = (request.responseRemark && request.responseRemark.trim() !== '') ? 'Modify Response' : 'Mark Response';
+            
+            // NEW: Conditionally create the "Received" button
+            let receivedButtonHtml = '';
+            if (request.poReceived && request.poReceived.trim() !== '') {
+                receivedButtonHtml = `
+                    <button class="received-button" onclick="markAsReceived('${request.id}')">
+                        Received
+                    </button>
+                `;
+            }
+
+            card.innerHTML = `
+                ${watermarkHtml} <div class="card-content">
+                    <div class="field-group">
+                        <span class="field-label">Dealer Name:</span>
+                        <div class="field-value">${request.dealer || 'N/A'}</div>
+                    </div>
+
+                    ${productHtml}
+
+                    <div class="field-group">
+                        <span class="field-label">Req Dt.:</span>
+                        <div class="field-value">
+                          ${request.timeStamp ? new Date(request.timeStamp).toLocaleDateString('en-GB') : 'N/A'}
+                        </div>
+                    </div>
+                    
+                    <div class="field-group">
+                        <span class="field-label">Priority:</span>
+                        <div class="field-value">${request.priority || 'N/A'}</div>
+                    </div>
+
+                    <div class="field-group">
+                        <span class="field-label">Remark:</span>
+                        <div class="field-value">${request.remark || 'N/A'}</div>
+                    </div>
+
+                    ${request.poDetail ? `
+                    <div class="field-group">
+                        <span class="field-label">PO:</span>
+                        <div class="field-value">${request.poDetail}</div>
+                    </div>
+                    ` : ''}
+
+                    <div class="field-group">
+                        <span class="field-label">CRM:</span>
+                        <div class="field-value">${crmValue}</div>
+                    </div>
+                    ${poReceivedTimestamp ? `
+                        <div class="field-group">
+                            <span class="field-label">PO Received:</span>
+                            <div class="field-value">${poReceivedDisplay}</div>
+                        </div>
+                        ${deadlineHtml}
+                    ` : ''}
                 </div>
-                ${deadlineHtml}
-            ` : ''}
-        </div>
-        <div class="editable">
-            <button class="action-button" onclick="openModal('${request.id}')">
-                ${buttonText}
-            </button>
-            <button class="cancel-button" onclick="cancelRequest('${request.id}')">
-                Cancel Request
-            </button>
-        </div>
-    `;
+                <div class="editable">
+                    <button class="action-button" onclick="openModal('${request.id}')">
+                        ${buttonText}
+                    </button>
+                    <button class="cancel-button" onclick="cancelRequest('${request.id}')">
+                        Cancel Request
+                    </button>
+                    ${receivedButtonHtml} </div>
+            `;
 
-    // Start countdown only if poReceivedTimestamp is valid
-    if (poReceivedTimestamp) {
-        // Pass request.id for unique element ID for countdown
-        startCountdown(poReceivedTimestamp, `countdown-${request.id}`, card);
-    }
+            // Start countdown only if poReceivedTimestamp is valid
+            if (poReceivedTimestamp) {
+                // Pass request.id for unique element ID for countdown
+                startCountdown(poReceivedTimestamp, `countdown-${request.id}`, card);
+            }
 
-    return card;
-}
+            return card;
+        }
         // Function to start the countdown timer
         function startCountdown(poReceivedTimestamp, elementId, cardElement) {
             const deadline = poReceivedTimestamp + (24 * 60 * 60 * 1000); // 24 hours in milliseconds
@@ -1124,10 +1159,6 @@ function createRequestCard(request) {
                     },
                     body: JSON.stringify(submissionData)
                 });
-                // For 'no-cors' mode, response.ok will always be false and status 0.
-                // You'll need to rely on the Apps Script's success/failure from its side.
-                // If your Apps Script is configured to respond with specific JSON and CORS is handled,
-                // you can change mode to 'cors' and check response.ok.
                 
                 showToast('Response submitted successfully!', 'success');
                 closeModal();
@@ -1150,7 +1181,7 @@ function createRequestCard(request) {
                 return;
             }
 
-            if (!confirm(`Are you sure you want to cancel the request for "${requestToCancel.product}"?`)) {
+            if (!confirm(`Are you sure you want to cancel the request for "${requestToCancel.dealer}"?`)) {
                 return; // User cancelled the confirmation
             }
 
@@ -1160,19 +1191,16 @@ function createRequestCard(request) {
             };
 
             // Disable the specific buttons on the card during submission
-            const cardElement = document.querySelector(`.request-card .action-button[onclick*="${requestId}"]`).closest('.request-card');
-            const actionButton = cardElement.querySelector('.action-button');
+            const cardElement = document.querySelector(`.cancel-button[onclick*="${requestId}"]`).closest('.request-card');
+            const allButtons = cardElement.querySelectorAll('.editable button');
+            allButtons.forEach(btn => btn.disabled = true);
+            
             const cancelButton = cardElement.querySelector('.cancel-button');
-            const originalActionButtonText = actionButton.textContent;
-            const originalCancelButtonText = cancelButton.textContent;
-
-            actionButton.disabled = true;
-            cancelButton.disabled = true;
             cancelButton.textContent = 'Cancelling...';
 
             try {
                 console.log('Cancelling request:', submissionData);
-                const response = await fetch(GAS_WEB_APP_URL, {
+                await fetch(GAS_WEB_APP_URL, {
                     method: 'POST',
                     mode: 'no-cors', 
                     headers: {
@@ -1186,11 +1214,57 @@ function createRequestCard(request) {
             } catch (error) {
                 console.error('Error cancelling request:', error);
                 showToast('Error cancelling request. Please try again.', 'error');
-            } finally {
-                actionButton.disabled = false;
-                cancelButton.disabled = false;
-                actionButton.textContent = originalActionButtonText;
-                cancelButton.textContent = originalCancelButtonText;
+                 // Re-enable buttons on failure
+                allButtons.forEach(btn => btn.disabled = false);
+                cancelButton.textContent = 'Cancel Request';
+            }
+        }
+        
+        // NEW: Function to handle marking a request as PO Received
+        async function markAsReceived(requestId) {
+            const requestToMark = requests.find(req => req.id === requestId);
+            if (!requestToMark) {
+                console.error("Could not find request with ID for marking as received:", requestId);
+                showToast("Error processing request. Request not found.", "error");
+                return;
+            }
+
+            if (!confirm(`Are you sure you want to mark the request for "${requestToMark.dealer}" as received?`)) {
+                return; // User cancelled the confirmation
+            }
+
+            const submissionData = {
+                action: 'poReceived', // New action for backend
+                id: requestId
+            };
+
+            // Disable all buttons on the specific card during submission
+            const cardElement = document.querySelector(`.received-button[onclick*="${requestId}"]`).closest('.request-card');
+            const allButtons = cardElement.querySelectorAll('.editable button');
+            allButtons.forEach(btn => btn.disabled = true);
+            
+            const receivedButton = cardElement.querySelector('.received-button');
+            receivedButton.textContent = 'Processing...';
+
+            try {
+                console.log('Marking as received:', submissionData);
+                await fetch(GAS_WEB_APP_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(submissionData)
+                });
+                
+                showToast('Request marked as received!', 'success');
+                fetchRequests(); // Re-fetch to update the dashboard
+            } catch (error) {
+                console.error('Error marking as received:', error);
+                showToast('Error marking request as received. Please try again.', 'error');
+                // Re-enable buttons on failure
+                allButtons.forEach(btn => btn.disabled = false);
+                receivedButton.textContent = 'Received';
             }
         }
 

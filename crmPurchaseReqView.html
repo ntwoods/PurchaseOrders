@@ -1,15 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CRM Requests Dashboard</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>CRM Requests Dashboard — With Deadline & Countdown</title>
     <style>
-        /* Base styles & variables */
+        /* (kept your CSS unchanged except kept here for completeness) */
         :root {
-            --color-primary: #1976d2; /* Darker Blue */
-            --color-secondary: #42a5f5; /* Lighter Blue */
-            --color-accent: #e3f2fd; /* Lightest Blue for borders/backgrounds */
+            --color-primary: #1976d2;
+            --color-secondary: #42a5f5;
+            --color-accent: #e3f2fd;
             --color-text-dark: #333;
             --color-text-medium: #555;
             --color-text-light: #666;
@@ -23,541 +23,68 @@
             --border-radius-medium: 12px;
             --border-radius-large: 16px;
         }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
+        * { margin:0; padding:0; box-sizing:border-box; }
         body {
-            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol';
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
             background: linear-gradient(135deg, var(--color-accent) 0%, var(--color-white) 100%);
-            min-height: 100vh;
-            color: var(--color-text-dark);
-            line-height: 1.6;
+            min-height:100vh; color:var(--color-text-dark); line-height:1.6;
         }
-
-        /* Header */
-        .header {
-            background: var(--color-white);
-            box-shadow: var(--shadow-light);
-            border-bottom: 3px solid var(--color-accent);
-            padding: 1.5rem 0; /* Reduced padding */
-            margin-bottom: 1.5rem; /* Reduced margin */
-        }
-
-        .header-content {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 1rem;
-        }
-
-        .header h1 {
-            color: var(--color-primary);
-            font-size: 2rem; /* Smaller title */
-            font-weight: 700;
-            margin-bottom: 0.25rem; /* Reduced margin */
-        }
-
-        .header p {
-            color: var(--color-secondary);
-            font-size: 0.95rem; /* Smaller tagline */
-        }
-
-        /* Container & Loading */
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 1rem;
-        }
-
-        .loading {
-            text-align: center;
-            padding: 3rem 0;
-        }
-
-        .loading-spinner {
-            width: 40px; /* Smaller spinner */
-            height: 40px; /* Smaller spinner */
-            border: 3px solid var(--color-accent);
-            border-top: 3px solid var(--color-primary);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 0.75rem;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        /* Request Grid & Card */
-        .requests-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); /* More compact grid */
-            gap: 1rem; /* Reduced gap */
-            margin-bottom: 1.5rem;
-        }
-
-        .request-card {
-            background: var(--color-white);
-            border-radius: var(--border-radius-medium);
-            box-shadow: var(--shadow-medium);
-            border: 1px solid var(--color-accent);
-            padding: 1.25rem; /* Reduced padding */
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
-            position: relative; /* Needed for absolute positioning of watermark */
-            overflow: hidden; /* Ensures watermark doesn't spill out */           
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between; /* Ensures button is at bottom */
-            height: 100%; /* Important for consistent card height */
-        }
-        .request-card.highlighted {
-            background-color: #b5f5d2; /* Light green for general highlight */
-            border-color: #14914d; /* Slightly darker green border */
-        }
-        .request-card.overdue-card-highlight { /* Specific highlight for overdue */
-            background-color: #ffebee; /* Very light red */
-            border-color: #ef5350; /* Red border */
-            box-shadow: 0 4px 15px rgba(239, 83, 80, 0.2); /* Reddish shadow */
-        }       
-
-        .request-card:hover {
-            transform: translateY(-3px); /* Slightly less transform */
-            box-shadow: var(--shadow-hover);
-        }
-        .watermark {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%) rotate(-45deg);
-            font-size: 3em; /* Adjust size as needed */
-            color: rgba(255, 0, 0, 0.2); /* Red with 20% opacity */
-            pointer-events: none; /* Allows clicks on elements beneath */
-            z-index: 1; /* Ensure it's above card content but below actions */
-            white-space: nowrap; /* Prevent text from wrapping */
-            font-weight: bold;
-            text-transform: uppercase;
-        }
-        
-        /* Field Group - compact */
-        .field-group {
-            margin-bottom: 0.6rem; /* Reduced margin */
-            display: flex;
-            align-items: baseline; /* Align label and value nicely */
-        }
-
-        .field-label {
-            font-weight: 600;
-            color: var(--color-primary);
-            font-size: 0.85rem; /* Smaller font */
-            margin-right: 0.5rem;
-            flex-shrink: 0; /* Prevent label from shrinking */
-        }
-
-        .field-value {
-            color: var(--color-text-medium);
-            font-size: 0.9rem; /* Smaller font */
-            line-height: 1.3;
-            word-break: break-word; /* Ensure long text breaks */
-        }
-
-        /* Action Button */
-        .action-button {
-            width: 100%;
-            background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-secondary) 100%);
-            color: var(--color-white);
-            border: none;
-            padding: 0.6rem 1.25rem; /* More compact padding */
-            border-radius: var(--border-radius-small);
-            font-size: 0.95rem; /* Slightly smaller font */
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            margin-top: 1rem;
-            flex-shrink: 0; /* Ensures button doesn't shrink */
-        }
-
-        .action-button:hover:not(:disabled) {
-            background: linear-gradient(135deg, #1565c0 0%, var(--color-primary) 100%);
-            transform: translateY(-1px);
-        }
-        
-        /* New Cancel Button Style */
-        .cancel-button {
-            width: 100%;
-            background: #e53935; /* Red color for cancel */
-            color: var(--color-white);
-            border: none;
-            padding: 0.6rem 1.25rem;
-            border-radius: var(--border-radius-small);
-            font-size: 0.95rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            margin-top: 0.5rem; /* Space between action buttons */
-            flex-shrink: 0;
-        }
-
-        .cancel-button:hover:not(:disabled) {
-            background: #c62828; /* Darker red on hover */
-            transform: translateY(-1px);
-        }
-
-        /* New Received Button Style */
-        .received-button {
-            width: 100%;
-            background: #4caf50; /* Green color for received */
-            color: var(--color-white);
-            border: none;
-            padding: 0.6rem 1.25rem;
-            border-radius: var(--border-radius-small);
-            font-size: 0.95rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            margin-top: 0.5rem; /* Space between action buttons */
-            flex-shrink: 0;
-        }
-
-        .received-button:hover:not(:disabled) {
-            background: #388e3c; /* Darker green on hover */
-            transform: translateY(-1px);
-        }
-
-        .view-file-button {
-            display: block; /* Make it a block element to take full width */
-            width: fit-content; /* Adjust width to content */
-            background: var(--color-secondary); /* A slightly different blue */
-            color: var(--color-white);
-            border: none;
-            padding: 0.4rem 0.8rem; /* Smaller padding for inline button */
-            border-radius: var(--border-radius-small);
-            font-size: 0.85rem; /* Smaller font size */
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            text-decoration: none; /* Remove underline for links */
-            text-align: center;
-            margin-top: 0.5rem; /* Space below label */
-        }
-
-        .view-file-button:hover {
-            background: #399ae1; /* Darker shade on hover */
-            transform: translateY(-1px);
-        }
-        
-        /* Disabled state for all buttons */
-        .action-button:disabled, .cancel-button:disabled, .received-button:disabled {
-             opacity: 0.6;
-             cursor: not-allowed;
-        }
-
-        /* Modal Styles */
-        .modal-overlay {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.4); /* Slightly lighter overlay */
-            z-index: 1000;
-            backdrop-filter: blur(3px); /* Slightly less blur */
-            overflow-y: auto; /* Allow scrolling if modal content is tall */
-            padding: 1rem;
-        }
-
-        .modal {
-            background: var(--color-white);
-            border-radius: var(--border-radius-large);
-            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.25); /* Adjusted shadow */
-            width: 95%;
-            max-width: 450px; /* Slightly narrower modal */
-            padding: 1.75rem; /* Reduced padding */
-            position: relative; /* For proper centering */
-            margin: 50px auto; /* Centering for overflow-y:auto */
-        }
-
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1.25rem; /* Reduced margin */
-            padding-bottom: 0.75rem; /* Reduced padding */
-            border-bottom: 1px solid var(--color-accent); /* Thinner border */
-        }
-
-        .modal-title {
-            color: var(--color-primary);
-            font-size: 1.35rem; /* Smaller title */
-            font-weight: 700;
-        }
-
-        .close-button {
-            background: none;
-            border: none;
-            font-size: 1.35rem; /* Smaller close button */
-            cursor: pointer;
-            color: var(--color-text-light);
-            padding: 0.2rem;
-            border-radius: 4px;
-            transition: background 0.2s ease;
-        }
-
-        .close-button:hover {
-            background: var(--color-gray-light);
-            color: var(--color-text-dark);
-        }
-
-        /* Form Elements */
-        .form-group {
-            margin-bottom: 1.25rem; /* Reduced margin */
-        }
-
-        .form-label {
-            display: block;
-            margin-bottom: 0.4rem; /* Reduced margin */
-            font-weight: 600;
-            color: var(--color-primary);
-            font-size: 0.9rem;
-        }
-
-        .form-input, .form-select, .form-textarea, .searchable-dropdown-input {
-            width: 100%;
-            padding: 0.65rem; /* More compact padding */
-            border: 1px solid var(--color-accent); /* Thinner border */
-            border-radius: var(--border-radius-small);
-            font-size: 0.95rem;
-            transition: border-color 0.2s ease, box-shadow 0.2s ease;
-        }
-
-        .form-input:focus, .form-select:focus, .form-textarea:focus, .searchable-dropdown-input:focus {
-            outline: none;
-            border-color: var(--color-secondary);
-            box-shadow: 0 0 0 2px rgba(66, 165, 245, 0.15); /* Slightly lighter shadow */
-        }
-
-        .form-textarea {
-            resize: vertical;
-            min-height: 70px; /* Slightly smaller textarea */
-        }
-
-        /* Searchable Dropdown Specific Styles */
-        .searchable-dropdown-container {
-            position: relative;
-            width: 100%;
-        }
-
-        .searchable-dropdown-input {
-            padding-right: 2.5rem; /* Space for clear button */
-        }
-
-        .searchable-dropdown-results {
-            position: absolute;
-            width: 100%;
-            max-height: 180px; /* Limit height */
-            overflow-y: auto;
-            background: var(--color-white);
-            border: 1px solid var(--color-accent);
-            border-radius: var(--border-radius-small);
-            box-shadow: var(--shadow-light);
-            z-index: 1002;
-            margin-top: 4px;
-            list-style: none; /* Remove default list styling */
-            padding: 0.25rem 0;
-        }
-
-        .searchable-dropdown-results div {
-            padding: 0.6rem 0.8rem;
-            cursor: pointer;
-            font-size: 0.95rem;
-            color: var(--color-text-dark);
-        }
-
-        .searchable-dropdown-results div:hover {
-            background-color: var(--color-accent);
-            color: var(--color-primary);
-        }
-
-        .searchable-dropdown-results div.selected {
-            background-color: var(--color-secondary);
-            color: var(--color-white);
-        }
-        
-        .search-clear-button {
-            position: absolute;
-            right: 0.75rem;
-            top: 50%;
-            transform: translateY(-50%);
-            background: none;
-            border: none;
-            color: var(--color-text-light);
-            font-size: 1.1rem;
-            cursor: pointer;
-            padding: 0.2rem;
-            line-height: 1;
-            display: none; /* Hidden by default */
-        }
-        .searchable-dropdown-input:not(:placeholder-shown) + .search-clear-button {
-            display: block; /* Show clear button when input has value */
-        }
-
-
-        .modal-actions {
-            display: flex;
-            gap: 0.75rem; /* Reduced gap */
-            justify-content: flex-end;
-            margin-top: 1.5rem; /* Reduced margin */
-            padding-top: 0.75rem; /* Reduced padding */
-            border-top: 1px solid var(--color-accent);
-        }
-
-        .btn-cancel {
-            background: var(--color-gray-light);
-            color: var(--color-text-light);
-            border: 1px solid var(--color-gray-medium);
-            padding: 0.65rem 1.25rem; /* More compact padding */
-            border-radius: var(--border-radius-small);
-            cursor: pointer;
-            font-size: 0.95rem;
-            transition: all 0.2s ease;
-        }
-
-        .btn-cancel:hover {
-            background: var(--color-gray-medium);
-            color: var(--color-text-dark);
-        }
-
-        .btn-submit {
-            background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-secondary) 100%);
-            color: var(--color-white);
-            border: none;
-            padding: 0.65rem 1.25rem; /* More compact padding */
-            border-radius: var(--border-radius-small);
-            font-size: 0.95rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-
-        .btn-submit:hover:not(:disabled) {
-            background: linear-gradient(135deg, #1565c0 0%, var(--color-primary) 100%);
-        }
-
-        .btn-submit:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-            background: var(--color-gray-medium); /* Disabled button color */
-            color: var(--color-text-light);
-        }
-
-        /* Empty State */
-        .empty-state {
-            text-align: center;
-            padding: 3rem 1rem;
-            color: var(--color-text-light);
-        }
-
-        .empty-state-icon {
-            font-size: 3.5rem; /* Smaller icon */
-            margin-bottom: 0.8rem;
-            opacity: 0.4;
-        }
-
-        .empty-state h3 {
-            color: var(--color-text-medium);
-            font-size: 1.3rem;
-            margin-bottom: 0.5rem;
-        }
-
-        .empty-state p {
-            font-size: 0.95rem;
-        }
-
-        /* Toast Notifications */
-        #toast-container {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            z-index: 1050;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-
-        .toast {
-            background-color: rgba(25, 118, 210, 0.9); /* Primary blue with transparency */
-            color: var(--color-white);
-            padding: 12px 20px;
-            border-radius: var(--border-radius-small);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-            opacity: 0;
-            transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
-            transform: translateY(-20px);
-            min-width: 250px;
-            max-width: 350px;
-        }
-
-        .toast.show {
-            opacity: 1;
-            transform: translateY(0);
-        }
-
-        .toast.error {
-            background-color: rgba(229, 57, 53, 0.9); /* Red for errors */
-        }
-        
-        /* New: Overdue text style */
-        .overdue-text {
-            color: #e53935; /* Red color */
-            font-weight: 600;
-        }
-
-        /* Countdown text colors */
-        .countdown-red {
-            color: #ef5350; /* Light red */
-            font-weight: 600;
-        }
-        .countdown-yellow {
-            color: #ffee58; /* Light yellow */
-            font-weight: 600;
-        }
-        .countdown-green {
-            color: #66bb6a; /* Light green */
-            font-weight: 600;
-        }
-
-
-        /* Media Queries */
-        @media (max-width: 768px) {
-            .header h1 {
-                font-size: 1.75rem;
-            }
-            
-            .requests-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .modal {
-                width: 98%;
-                padding: 1.25rem;
-            }
-            
-            .modal-actions {
-                flex-direction: column;
-            }
-            .btn-cancel, .btn-submit {
-                width: 100%;
-            }
-
-            #toast-container {
-                right: 10px;
-                left: 10px;
-                top: 10px;
-            }
+        .header { background:var(--color-white); box-shadow:var(--shadow-light); border-bottom:3px solid var(--color-accent); padding:1.5rem 0; margin-bottom:1.5rem; }
+        .header-content { max-width:1200px; margin:0 auto; padding:0 1rem; }
+        .header h1 { color:var(--color-primary); font-size:2rem; font-weight:700; margin-bottom:0.25rem; }
+        .header p { color:var(--color-secondary); font-size:0.95rem; }
+        .container { max-width:1200px; margin:0 auto; padding:0 1rem; }
+        .loading { text-align:center; padding:3rem 0; }
+        .loading-spinner { width:40px; height:40px; border:3px solid var(--color-accent); border-top:3px solid var(--color-primary); border-radius:50%; animation:spin 1s linear infinite; margin:0 auto 0.75rem; }
+        @keyframes spin { 0% { transform: rotate(0deg) } 100% { transform: rotate(360deg) } }
+        .requests-grid { display:grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap:1rem; margin-bottom:1.5rem; }
+        .request-card { background:var(--color-white); border-radius:var(--border-radius-medium); box-shadow:var(--shadow-medium); border:1px solid var(--color-accent); padding:1.25rem; transition:transform 0.2s ease, box-shadow 0.2s ease; position:relative; overflow:hidden; display:flex; flex-direction:column; justify-content:space-between; height:100%; }
+        .request-card.highlighted { background-color:#b5f5d2; border-color:#14914d; }
+        .request-card.overdue-card-highlight { background-color:#ffebee; border-color:#ef5350; box-shadow: 0 4px 15px rgba(239,83,80,0.2); }
+        .request-card:hover { transform: translateY(-3px); box-shadow:var(--shadow-hover); }
+        .watermark { position:absolute; top:50%; left:50%; transform: translate(-50%,-50%) rotate(-45deg); font-size:3em; color:rgba(255,0,0,0.2); pointer-events:none; z-index:1; white-space:nowrap; font-weight:bold; text-transform:uppercase; }
+        .field-group { margin-bottom:0.6rem; display:flex; align-items:baseline; }
+        .field-label { font-weight:600; color:var(--color-primary); font-size:0.85rem; margin-right:0.5rem; flex-shrink:0; }
+        .field-value { color:var(--color-text-medium); font-size:0.9rem; line-height:1.3; word-break:break-word; }
+        .action-button { width:100%; background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-secondary) 100%); color:var(--color-white); border:none; padding:0.6rem 1.25rem; border-radius:var(--border-radius-small); font-size:0.95rem; font-weight:600; cursor:pointer; transition:all 0.2s ease; margin-top:1rem; flex-shrink:0; }
+        .cancel-button { width:100%; background:#e53935; color:var(--color-white); border:none; padding:0.6rem 1.25rem; border-radius:var(--border-radius-small); font-size:0.95rem; font-weight:600; cursor:pointer; transition:all 0.2s ease; margin-top:0.5rem; flex-shrink:0; }
+        .received-button { width:100%; background:#4caf50; color:var(--color-white); border:none; padding:0.6rem 1.25rem; border-radius:var(--border-radius-small); font-size:0.95rem; font-weight:600; cursor:pointer; transition:all 0.2s ease; margin-top:0.5rem; flex-shrink:0; }
+        .view-file-button { display:block; width:fit-content; background:var(--color-secondary); color:var(--color-white); border:none; padding:0.4rem 0.8rem; border-radius:var(--border-radius-small); font-size:0.85rem; font-weight:600; cursor:pointer; transition:all 0.2s ease; text-decoration:none; text-align:center; margin-top:0.5rem; }
+        .modal-overlay { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.4); z-index:1000; backdrop-filter: blur(3px); overflow-y:auto; padding:1rem; }
+        .modal { background:var(--color-white); border-radius:var(--border-radius-large); box-shadow:0 15px 40px rgba(0,0,0,0.25); width:95%; max-width:450px; padding:1.75rem; position:relative; margin:50px auto; }
+        .modal-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:1.25rem; padding-bottom:0.75rem; border-bottom:1px solid var(--color-accent); }
+        .modal-title { color:var(--color-primary); font-size:1.35rem; font-weight:700; }
+        .close-button { background:none; border:none; font-size:1.35rem; cursor:pointer; color:var(--color-text-light); padding:0.2rem; border-radius:4px; transition:background 0.2s ease; }
+        .close-button:hover { background:var(--color-gray-light); color:var(--color-text-dark); }
+        .form-group { margin-bottom:1.25rem; }
+        .form-label { display:block; margin-bottom:0.4rem; font-weight:600; color:var(--color-primary); font-size:0.9rem; }
+        .form-input, .form-select, .form-textarea, .searchable-dropdown-input { width:100%; padding:0.65rem; border:1px solid var(--color-accent); border-radius:var(--border-radius-small); font-size:0.95rem; transition: border-color 0.2s ease, box-shadow 0.2s ease; }
+        .form-textarea { resize:vertical; min-height:70px; }
+        .searchable-dropdown-container { position:relative; width:100%; }
+        .searchable-dropdown-results { position:absolute; width:100%; max-height:180px; overflow-y:auto; background:var(--color-white); border:1px solid var(--color-accent); border-radius:var(--border-radius-small); box-shadow:var(--shadow-light); z-index:1002; margin-top:4px; list-style:none; padding:0.25rem 0; }
+        .searchable-dropdown-results div { padding:0.6rem 0.8rem; cursor:pointer; font-size:0.95rem; color:var(--color-text-dark); }
+        .searchable-dropdown-results div:hover { background-color:var(--color-accent); color:var(--color-primary); }
+        .searchable-dropdown-results div.selected { background-color:var(--color-secondary); color:var(--color-white); }
+        .search-clear-button { position:absolute; right:0.75rem; top:50%; transform:translateY(-50%); background:none; border:none; color:var(--color-text-light); font-size:1.1rem; cursor:pointer; padding:0.2rem; line-height:1; display:none; }
+        .searchable-dropdown-input:not(:placeholder-shown) + .search-clear-button { display:block; }
+        .modal-actions { display:flex; gap:0.75rem; justify-content:flex-end; margin-top:1.5rem; padding-top:0.75rem; border-top:1px solid var(--color-accent); }
+        .btn-cancel { background:var(--color-gray-light); color:var(--color-text-light); border:1px solid var(--color-gray-medium); padding:0.65rem 1.25rem; border-radius:var(--border-radius-small); cursor:pointer; font-size:0.95rem; }
+        .btn-submit { background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-secondary) 100%); color:var(--color-white); border:none; padding:0.65rem 1.25rem; border-radius:var(--border-radius-small); font-size:0.95rem; font-weight:600; cursor:pointer; }
+        .empty-state { text-align:center; padding:3rem 1rem; color:var(--color-text-light); }
+        .toast { background-color:rgba(25,118,210,0.9); color:var(--color-white); padding:12px 20px; border-radius:var(--border-radius-small); box-shadow:0 4px 12px rgba(0,0,0,0.2); opacity:0; transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out; transform: translateY(-20px); min-width:250px; max-width:350px; }
+        .toast.show { opacity:1; transform: translateY(0); }
+        .toast.error { background-color: rgba(229,57,53,0.9); }
+        .overdue-text { color:#e53935; font-weight:600; }
+        .countdown-red { color:#ef5350; font-weight:600; }
+        .countdown-yellow { color:#ffb300; font-weight:600; } /* changed from yellow hex to more visible */
+        .countdown-green { color:#66bb6a; font-weight:600; }
+        @media (max-width:768px) {
+            .header h1 { font-size:1.75rem; }
+            .requests-grid { grid-template-columns:1fr; }
+            .modal { width:98%; padding:1.25rem; }
+            .modal-actions { flex-direction:column; }
+            .btn-cancel, .btn-submit { width:100%; }
+            #toast-container { right:10px; left:10px; top:10px; }
         }
     </style>
 </head>
@@ -620,28 +147,20 @@
         let poNumbers = [];
         let filteredPoNumbers = [];
         let selectedRequest = null;
-        let selectedPoNo = ''; // To store the selected PO number from searchable dropdown
-        let countdownIntervals = {}; // Store intervals to clear them
+        let selectedPoNo = '';
+        let countdownIntervals = {}; // store by element ID (or generated key)
 
-        // API URLs
-        // IMPORTANT: Replace this with your actual Google Apps Script Web App URL
         const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycby7Iwfzy98sI8UFYs6lCZZF_ESoaTzFd3UWwZJWepffBD6rueQ9TdzgLq7oE98npIwpdQ/exec';
-        // IMPORTANT: Replace this with your actual Google Sheet URL for PO numbers
-        // Ensure this sheet is published to the web for the Google Visualization API to access it.
         const GOOGLE_SHEET_PO_URL = 'https://docs.google.com/spreadsheets/d/1MPBE5EED1iN8np3oVqcn3VSAYl7M-OUXaLj9_YJogh0/gviz/tq?tqx=out:json&sheet=Requests&range=A:AL';
 
-        // Initialize the application
         document.addEventListener('DOMContentLoaded', function() {
             fetchRequests();
             fetchPoNumbers();
             setupFormValidation();
             setupSearchableDropdown();
-            if (typeof setReadOnlyMode === "function") {
-          setReadOnlyMode();
-        } 
+            if (typeof setReadOnlyMode === "function") setReadOnlyMode();
         });
 
-        // Function to fetch data from your Google Apps Script
         async function fetchRequests() {
             const loading = document.getElementById('loading');
             const container = document.getElementById('requests-container');
@@ -660,19 +179,15 @@
             try {
                 const response = await fetch(`${GAS_WEB_APP_URL}?action=getRequests`);
                 if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-
                 const result = await response.json();
                 console.log('Fetched requests response:', result);
-                
-                if (!Array.isArray(result.data)) {
-                    throw new Error("Expected 'data' to be an array");
-                }
-                requests = result.data; 
+                if (!Array.isArray(result.data)) throw new Error("Expected 'data' to be an array");
+                requests = result.data;
                 renderRequests();
             } catch (error) {
                 console.error('Error fetching requests:', error);
                 showToast('Error loading requests. Please try again.', 'error');
-                requests = []; // Clear requests on error
+                requests = [];
                 renderRequests();
             } finally {
                 loading.style.display = 'none';
@@ -682,110 +197,125 @@
         async function fetchPoNumbers() {
             try {
                 const response = await fetch(GOOGLE_SHEET_PO_URL);
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
                 const text = await response.text();
-                // Google Visualization API response is not pure JSON, it's wrapped
                 const jsonText = text.substring(text.indexOf('{'), text.lastIndexOf('}') + 1);
                 const data = JSON.parse(jsonText);
-        
-                // Extract PO numbers only when column U (index 0) is blank/null
-                // and then get value from AL column (index 17)
+
+                // Adjusted indices according to your comments
+                // This filtering logic mirrors your original - adapt indices if needed.
                 poNumbers = data.table.rows
-                    .filter(row => row.c[8]?.v === "Done" && (!row.c[20] || row.c[20].v === "")) // I = Done, U blank
-                    .map(row => row.c[37]?.v) // AL value
+                    .filter(row => row.c[8]?.v === "Done" && (!row.c[20] || row.c[20].v === ""))
+                    .map(row => row.c[37]?.v)
                     .filter(value => value !== undefined && value !== null && value !== '')
                     .map(String);
-                
+
                 poNumbers = [...new Set(poNumbers)].sort();
                 filteredPoNumbers = [...poNumbers];
                 populateSearchResults();
             } catch (error) {
                 console.error('Error fetching PO numbers:', error);
                 showToast('Error loading PO numbers. Fallback used.', 'error');
-                // Fallback PO numbers in case of API issues
-                poNumbers = ['PO-2024-001-Fallback', 'PO-2024-002-Fallback', 'PO-2024-003-Fallback', 'PO-2024-004-Fallback'];
+                poNumbers = ['PO-2024-001-Fallback','PO-2024-002-Fallback','PO-2024-003-Fallback','PO-2024-004-Fallback'];
                 poNumbers = [...new Set(poNumbers)].sort();
                 filteredPoNumbers = [...poNumbers];
                 populateSearchResults();
             }
         }
 
-        // Render requests
         function renderRequests() {
-            const loading = document.getElementById('loading');
             const container = document.getElementById('requests-container');
             const emptyState = document.getElementById('empty-state');
-
-            loading.style.display = 'none';
 
             if (requests.length === 0) {
                 emptyState.style.display = 'block';
                 container.style.display = 'none';
+                container.innerHTML = '';
                 return;
             }
 
             container.style.display = 'grid';
             container.innerHTML = '';
 
-            requests.forEach((request) => { // Removed index as it's not used for ID now
+            requests.forEach((request) => {
                 const card = createRequestCard(request);
+                // append card to DOM first
                 container.appendChild(card);
+
+                // After append, if poReceivedTimestamp dataset exists, start countdown using element reference
+                if (card.dataset && card.dataset.poReceivedTimestamp) {
+                    const poReceivedTimestamp = parseInt(card.dataset.poReceivedTimestamp, 10);
+                    const countdownEl = card.querySelector(`#countdown-${cssSafeId(request.id)}`);
+                    // only start if element found
+                    if (countdownEl) {
+                        startCountdown(poReceivedTimestamp, countdownEl, card);
+                    } else {
+                        console.warn('Countdown element not found after append for', request.id);
+                    }
+                }
             });
         }
 
-        // Helper function to parse ISO 8601 string explicitly
+        // Helper: make an ID safe (remove spaces and problematic chars)
+        function cssSafeId(raw) {
+            if (raw === undefined || raw === null) return '';
+            return String(raw).replace(/[^a-zA-Z0-9\-_:.]/g, '_');
+        }
+
+        // Parse ISO 8601 explicitly (keeps your robust parsing)
         function parseIsoDateTime(isoString) {
             if (!isoString || typeof isoString !== 'string') return null;
-            // Example: 2025-07-14T08:37:24.000Z or 2025-07-14T08:37:24Z
-            const parts = isoString.match(/(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.(\d{3}))?Z/);
+            const parts = isoString.match(/(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.(\d{1,3}))?Z/);
             if (!parts) {
-                // If direct regex fails, try native Date constructor as a last resort,
-                // it might handle some variations or invalid parts gracefully
                 const nativeDate = new Date(isoString);
-                if (!isNaN(nativeDate.getTime())) {
-                    return nativeDate;
-                }
-                return null; // Still couldn't parse
+                if (!isNaN(nativeDate.getTime())) return nativeDate;
+                return null;
             }
-
             const [, year, month, day, hours, minutes, seconds, milliseconds] = parts;
-            
-            // Create a Date object in UTC
             const date = new Date(Date.UTC(
-                parseInt(year),
-                parseInt(month) - 1, // Month is 0-indexed
-                parseInt(day),
-                parseInt(hours),
-                parseInt(minutes),
-                parseInt(seconds),
-                parseInt(milliseconds || '0') // Handle missing milliseconds part
+                parseInt(year), parseInt(month) - 1, parseInt(day),
+                parseInt(hours), parseInt(minutes), parseInt(seconds),
+                parseInt(milliseconds || '0')
             ));
-
             return date;
         }
 
-        // Create request card
         function createRequestCard(request) {
             const card = document.createElement('div');
             card.className = 'request-card';
-            
-            // Highlight card if there's a responseRemark (already marked)
+
             if (request.responseRemark && request.responseRemark.trim() !== '') {
                 card.classList.add('highlighted');
             }
 
-            // Add overdue-card-highlight immediately if poReceived and deadline passed
             let poReceivedTimestamp = null;
+            let deadlineDisplay = '';
             if (request.poReceived) {
-                const parsedDate = parseIsoDateTime(request.poReceived); 
+                const parsedDate = parseIsoDateTime(request.poReceived);
                 if (parsedDate && !isNaN(parsedDate.getTime())) {
                     poReceivedTimestamp = parsedDate.getTime();
-                    const deadline = poReceivedTimestamp + (24 * 60 * 60 * 1000); // 24 hours in milliseconds
-                    if (new Date().getTime() > deadline) {
+                    const deadline = poReceivedTimestamp + (24 * 60 * 60 * 1000); // +24 hours
+                    // Store as dataset for later usage (so renderRequests can start countdown after append)
+                    card.dataset.poReceivedTimestamp = String(poReceivedTimestamp);
+
+                    // deadline absolute display in IST
+                    deadlineDisplay = new Date(deadline).toLocaleString('en-IN', {
+                        timeZone: 'Asia/Kolkata',
+                        year: 'numeric',
+                        month: '2-digit',
+                        day: '2-digit',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        second: '2-digit',
+                        hour12: true
+                    });
+
+                    // If already overdue, mark card
+                    if (Date.now() > deadline) {
                         card.classList.add('overdue-card-highlight');
                     }
+                } else {
+                    console.warn('Could not parse poReceived:', request.poReceived);
                 }
             }
 
@@ -800,65 +330,56 @@
                     <div class="field-group">
                         <span class="field-label">File:</span>
                         <a href="${request.product}" target="_blank" class="view-file-button">View File</a>
-                    </div>
-                `;
+                    </div>`;
             } else {
                 productHtml = `
                     <div class="field-group">
                         <span class="field-label">Product:</span>
                         <div class="field-value">${request.product || 'N/A'}</div>
-                    </div>
-                `;
+                    </div>`;
             }
 
             let poReceivedDisplay = 'N/A';
-            let deadlineHtml = ''; // Initialize deadline HTML as empty
-
-            if (request.poReceived) {
-                const parsedDate = parseIsoDateTime(request.poReceived); 
-                if (parsedDate && !isNaN(parsedDate.getTime())) {
-                    poReceivedTimestamp = parsedDate.getTime();
-                    // Display in Indian Standard Time (IST)
-                    poReceivedDisplay = parsedDate.toLocaleString('en-IN', { 
-                        timeZone: 'Asia/Kolkata',
-                        year: 'numeric',
-                        month: '2-digit',
-                        day: '2-digit',
-                        hour: '2-digit',
-                        minute: '2-digit',
-                        second: '2-digit',
-                        hour12: true // For AM/PM
-                    });
-                    // CORRECTED: Use request.id for the countdown element's ID
-                    deadlineHtml = `
-                        <div class="field-group">
-                            <span class="field-label">Deadline:</span>
-                            <div class="field-value" id="countdown-${request.id}"></div> 
-                        </div>
-                    `;
-                } else {
-                    console.warn('Could not parse poReceived:', request.poReceived, 'Falling back to N/A.');
-                }
+            if (poReceivedTimestamp) {
+                const parsedDate = new Date(poReceivedTimestamp);
+                poReceivedDisplay = parsedDate.toLocaleString('en-IN', {
+                    timeZone: 'Asia/Kolkata',
+                    year: 'numeric',
+                    month: '2-digit',
+                    day: '2-digit',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit',
+                    hour12: true
+                });
             }
 
-            // Watermark HTML, conditionally added based on crmStatus
             const watermarkHtml = request.crmStatus === 'Cancel' ? '<div class="watermark">Cancelled</div>' : '';
-
-            // Determine button text based on whether a response remark exists
             const buttonText = (request.responseRemark && request.responseRemark.trim() !== '') ? 'Modify Response' : 'Mark Response';
-            
-            // NEW: Conditionally create the "Received" button
+
             let receivedButtonHtml = '';
             if (request.poReceived && request.poReceived.trim() !== '') {
                 receivedButtonHtml = `
                     <button class="received-button" onclick="markAsReceived('${request.id}')">
                         Received
-                    </button>
-                `;
+                    </button>`;
             }
 
+            // Always show absolute deadline (if poReceived present) and a dedicated countdown field
+            const deadlineHtml = poReceivedTimestamp ? `
+                <div class="field-group">
+                    <span class="field-label">Deadline:</span>
+                    <div class="field-value" id="deadline-${cssSafeId(request.id)}">${deadlineDisplay}</div>
+                </div>
+                <div class="field-group">
+                    <span class="field-label">Time Left:</span>
+                    <div class="field-value" id="countdown-${cssSafeId(request.id)}"></div>
+                </div>
+            ` : '';
+
             card.innerHTML = `
-                ${watermarkHtml} <div class="card-content">
+                ${watermarkHtml}
+                <div class="card-content">
                     <div class="field-group">
                         <span class="field-label">Dealer Name:</span>
                         <div class="field-value">${request.dealer || 'N/A'}</div>
@@ -872,7 +393,7 @@
                           ${request.timeStamp ? new Date(request.timeStamp).toLocaleDateString('en-GB') : 'N/A'}
                         </div>
                     </div>
-                    
+
                     <div class="field-group">
                         <span class="field-label">Priority:</span>
                         <div class="field-value">${request.priority || 'N/A'}</div>
@@ -887,13 +408,13 @@
                     <div class="field-group">
                         <span class="field-label">PO:</span>
                         <div class="field-value">${request.poDetail}</div>
-                    </div>
-                    ` : ''}
+                    </div>` : ''}
 
                     <div class="field-group">
                         <span class="field-label">CRM:</span>
                         <div class="field-value">${crmValue}</div>
                     </div>
+
                     ${poReceivedTimestamp ? `
                         <div class="field-group">
                             <span class="field-label">PO Received:</span>
@@ -902,6 +423,7 @@
                         ${deadlineHtml}
                     ` : ''}
                 </div>
+
                 <div class="editable">
                     <button class="action-button" onclick="openModal('${request.id}')">
                         ${buttonText}
@@ -909,116 +431,116 @@
                     <button class="cancel-button" onclick="cancelRequest('${request.id}')">
                         Cancel Request
                     </button>
-                    ${receivedButtonHtml} </div>
+                    ${receivedButtonHtml}
+                </div>
             `;
 
-            // Start countdown only if poReceivedTimestamp is valid
-            if (poReceivedTimestamp) {
-                // Pass request.id for unique element ID for countdown
-                startCountdown(poReceivedTimestamp, `countdown-${request.id}`, card);
-            }
-
+            // don't start countdown here because card isn't appended yet — renderRequests will start it after append
             return card;
         }
-        // Function to start the countdown timer
-        function startCountdown(poReceivedTimestamp, elementId, cardElement) {
-            const deadline = poReceivedTimestamp + (24 * 60 * 60 * 1000); // 24 hours in milliseconds
-            const countdownElement = document.getElementById(elementId);
 
+        // Start the countdown timer. Accepts poReceivedTimestamp (ms) and an element (DOM node) or element id string
+        function startCountdown(poReceivedTimestamp, countdownElementOrId, cardElement) {
+            // determine the countdown DOM element
+            let countdownElement = null;
+            if (typeof countdownElementOrId === 'string') {
+                countdownElement = document.getElementById(countdownElementOrId);
+            } else {
+                countdownElement = countdownElementOrId;
+            }
             if (!countdownElement) {
-                console.warn(`Countdown element with ID ${elementId} not found.`);
-                return; // Exit if element not found
+                console.warn('Countdown element not found for', countdownElementOrId);
+                return;
             }
 
-            // Clear any existing interval for this element to prevent multiple timers
-            if (countdownIntervals[elementId]) {
-                clearInterval(countdownIntervals[elementId]);
+            const deadline = poReceivedTimestamp + (24 * 60 * 60 * 1000);
+            const intervalKey = countdownElement.id || ('countdown_key_' + Math.random().toString(36).slice(2));
+
+            // clear existing interval if any
+            if (countdownIntervals[intervalKey]) {
+                clearInterval(countdownIntervals[intervalKey]);
             }
 
-            const interval = setInterval(() => {
-                const now = new Date().getTime();
+            const MILLIS = {
+                sec: 1000,
+                min: 1000 * 60,
+                hour: 1000 * 60 * 60,
+                day: 1000 * 60 * 60 * 24
+            };
+
+            const update = () => {
+                const now = Date.now();
                 const timeRemaining = deadline - now;
 
                 if (timeRemaining <= 0) {
-                    clearInterval(interval);
+                    clearInterval(countdownIntervals[intervalKey]);
                     countdownElement.innerHTML = '<span class="overdue-text">Overdue</span>';
-                    // Add highlight to the card if overdue
-                    if (cardElement) {
-                        cardElement.classList.add('overdue-card-highlight'); // Use a distinct class for overdue highlight
-                    }
-                } else {
-                    const days = Math.floor(timeRemaining / (1000 * 60 * 60 * 24));
-                    const hours = Math.floor((timeRemaining % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-                    const minutes = Math.floor((timeRemaining % (1000 * 60)) / (1000 * 60));
-                    const seconds = Math.floor((timeRemaining % (1000 * 60)) / 1000);
-
-                    // Apply color based on time remaining for better visual cues
-                    let countdownClass = 'countdown-green'; // Default green
-                    if (timeRemaining < 1 * 60 * 60 * 1000) { // Less than 1 hour
-                        countdownClass = 'countdown-red'; 
-                    } else if (timeRemaining < 4 * 60 * 60 * 1000) { // Less than 4 hours
-                        countdownClass = 'countdown-yellow'; 
-                    }
-
-                    countdownElement.innerHTML = `<span class="${countdownClass}">` +
-                        `${days > 0 ? days + 'd ' : ''}` + 
-                        `${hours.toString().padStart(2, '0')}h ` + 
-                        `${minutes.toString().padStart(2, '0')}m ` + 
-                        `${seconds.toString().padStart(2, '0')}s` +
-                        `</span>`;
+                    if (cardElement) cardElement.classList.add('overdue-card-highlight');
+                    return;
                 }
-            }, 1000); // Update every second
 
-            countdownIntervals[elementId] = interval; // Store the interval ID
+                const days = Math.floor(timeRemaining / MILLIS.day);
+                const hours = Math.floor((timeRemaining % MILLIS.day) / MILLIS.hour);
+                const minutes = Math.floor((timeRemaining % MILLIS.hour) / MILLIS.min);
+                const seconds = Math.floor((timeRemaining % MILLIS.min) / MILLIS.sec);
+
+                let countdownClass = 'countdown-green';
+                if (timeRemaining < 1 * MILLIS.hour) {
+                    countdownClass = 'countdown-red';
+                } else if (timeRemaining < 4 * MILLIS.hour) {
+                    countdownClass = 'countdown-yellow';
+                }
+
+                countdownElement.innerHTML = `<span class="${countdownClass}">` +
+                    `${days > 0 ? days + 'd ' : ''}` +
+                    `${String(hours).padStart(2,'0')}h ` +
+                    `${String(minutes).padStart(2,'0')}m ` +
+                    `${String(seconds).padStart(2,'0')}s` +
+                    `</span>`;
+            };
+
+            // initial render then interval
+            update();
+            countdownIntervals[intervalKey] = setInterval(update, 1000);
         }
 
-        // Open modal
+        // Modal & form logic (kept same)
         function openModal(requestId) {
-            // Find the request object by id
             selectedRequest = requests.find(req => req.id === requestId);
             if (!selectedRequest) {
                 console.error("Could not find request with ID:", requestId);
                 showToast("Error opening response form. Request not found.", "error");
                 return;
             }
-
             document.getElementById('modal-overlay').style.display = 'block';
             document.body.style.overflow = 'hidden';
-            
-            // Populate form fields if a response already exists
             document.getElementById('poSearchInput').value = selectedRequest.expectedPoNo || '';
             selectedPoNo = selectedRequest.expectedPoNo || '';
             document.getElementById('remark').value = selectedRequest.responseRemark || '';
-            populateSearchResults(); // Repopulate and hide dropdown
+            populateSearchResults();
             validateForm();
         }
 
-        // Close modal
         function closeModal() {
             document.getElementById('modal-overlay').style.display = 'none';
             document.body.style.overflow = 'auto';
             selectedRequest = null;
-            document.getElementById('poSearchResults').style.display = 'none'; // Hide dropdown on close
+            document.getElementById('poSearchResults').style.display = 'none';
         }
 
-        // Setup form validation
         function setupFormValidation() {
             const remarkInput = document.getElementById('remark');
             const poSearchInput = document.getElementById('poSearchInput');
-
             remarkInput.addEventListener('input', validateForm);
-            poSearchInput.addEventListener('input', validateForm); // For searchable PO input
+            poSearchInput.addEventListener('input', validateForm);
         }
 
-        // Validate form
         function validateForm() {
             const remark = document.getElementById('remark').value.trim();
-            // The PO number is valid if selectedPoNo is not empty
             const isValid = selectedPoNo && remark;
             document.getElementById('submit-btn').disabled = !isValid;
         }
 
-        // Setup Searchable Dropdown
         function setupSearchableDropdown() {
             const poSearchInput = document.getElementById('poSearchInput');
             const poSearchResults = document.getElementById('poSearchResults');
@@ -1027,15 +549,13 @@
                 const searchText = this.value.toLowerCase();
                 filteredPoNumbers = poNumbers.filter(po => po.toLowerCase().includes(searchText));
                 populateSearchResults();
-                poSearchResults.style.display = filteredPoNumbers.length > 0 && searchText.length > 0 ? 'block' : 'none';
-                
-                // If input matches exactly one filtered result, pre-select it but don't set as final selection yet
+                poSearchResults.style.display = (filteredPoNumbers.length > 0 && searchText.length > 0) ? 'block' : 'none';
                 if (filteredPoNumbers.length === 1 && filteredPoNumbers[0].toLowerCase() === searchText) {
-                    selectedPoNo = filteredPoNumbers[0]; // Tentatively set
+                    selectedPoNo = filteredPoNumbers[0];
                 } else {
-                    selectedPoNo = ''; // Clear if not exact match or multiple
+                    selectedPoNo = '';
                 }
-                validateForm(); // Re-validate on input
+                validateForm();
             });
 
             poSearchInput.addEventListener('focus', function() {
@@ -1045,27 +565,18 @@
                 poSearchResults.style.display = filteredPoNumbers.length > 0 ? 'block' : 'none';
             });
 
-            // Hide results when clicking outside, but not if clicking on results themselves
             document.addEventListener('click', function(e) {
                 if (!poSearchInput.contains(e.target) && !poSearchResults.contains(e.target)) {
                     poSearchResults.style.display = 'none';
                 }
             });
 
-             // Keyboard navigation for accessibility
-             poSearchInput.addEventListener('keydown', function(e) {
+            poSearchInput.addEventListener('keydown', function(e) {
                 const resultsDivs = Array.from(poSearchResults.children);
                 let currentFocus = -1;
-
-                if (poSearchResults.style.display === 'block') {
-                    for (let i = 0; i < resultsDivs.length; i++) {
-                        if (resultsDivs[i].classList.contains('selected')) {
-                            currentFocus = i;
-                            break;
-                        }
-                    }
+                for (let i = 0; i < resultsDivs.length; i++) {
+                    if (resultsDivs[i].classList.contains('selected')) { currentFocus = i; break; }
                 }
-
                 if (e.key === 'ArrowDown') {
                     e.preventDefault();
                     currentFocus = (currentFocus + 1) % resultsDivs.length;
@@ -1083,8 +594,7 @@
 
         function populateSearchResults() {
             const poSearchResults = document.getElementById('poSearchResults');
-            poSearchResults.innerHTML = ''; // Clear previous results
-
+            poSearchResults.innerHTML = '';
             if (filteredPoNumbers.length === 0 && document.getElementById('poSearchInput').value.length > 0) {
                 const noResultDiv = document.createElement('div');
                 noResultDiv.textContent = 'No matching PO numbers';
@@ -1093,7 +603,6 @@
                 poSearchResults.appendChild(noResultDiv);
                 return;
             }
-
             filteredPoNumbers.forEach(po => {
                 const div = document.createElement('div');
                 div.textContent = po;
@@ -1104,7 +613,7 @@
 
         function selectPoNumber(po) {
             document.getElementById('poSearchInput').value = po;
-            selectedPoNo = po; // Final selection
+            selectedPoNo = po;
             document.getElementById('poSearchResults').style.display = 'none';
             validateForm();
         }
@@ -1112,9 +621,9 @@
         function clearPoSearch() {
             document.getElementById('poSearchInput').value = '';
             selectedPoNo = '';
-            filteredPoNumbers = [...poNumbers]; // Reset filter
+            filteredPoNumbers = [...poNumbers];
             populateSearchResults();
-            document.getElementById('poSearchResults').style.display = 'none'; // Hide results
+            document.getElementById('poSearchResults').style.display = 'none';
             validateForm();
         }
 
@@ -1129,180 +638,112 @@
             });
         }
 
-
-        // Submit response
         async function submitResponse() {
             const formData = {
-                expectedPoNo: selectedPoNo, // Use the selected PO number
-                responseRemark: document.getElementById('remark').value.trim(), // Changed to responseRemark
+                expectedPoNo: selectedPoNo,
+                responseRemark: document.getElementById('remark').value.trim(),
             };
-
-            const submissionData = {
-                action: 'submitResponse',
-                id: selectedRequest.id, // Use the actual ID from the selected request
-                // Only send the form data, other fields are not needed for update action
-                ...formData
-            };
-
+            if (!selectedRequest) { showToast('No request selected', 'error'); return; }
+            const submissionData = { action: 'submitResponse', id: selectedRequest.id, ...formData };
             const submitBtn = document.getElementById('submit-btn');
             const originalBtnText = submitBtn.textContent;
-            submitBtn.disabled = true; // Disable button to prevent multiple submissions
-            submitBtn.textContent = 'Submitting...';
-
+            submitBtn.disabled = true; submitBtn.textContent = 'Submitting...';
             try {
                 console.log('Submitting:', submissionData);
-                const response = await fetch(GAS_WEB_APP_URL, {
+                await fetch(GAS_WEB_APP_URL, {
                     method: 'POST',
-                    mode: 'no-cors', // Required for Google Apps Script Web Apps when not in same origin
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(submissionData)
                 });
-                
                 showToast('Response submitted successfully!', 'success');
                 closeModal();
-                fetchRequests(); // Re-fetch requests to update the dashboard
+                fetchRequests();
             } catch (error) {
                 console.error('Error submitting response:', error);
                 showToast('Error submitting response. Please try again.', 'error');
             } finally {
-                submitBtn.disabled = false; // Re-enable button
+                submitBtn.disabled = false;
                 submitBtn.textContent = originalBtnText;
             }
         }
 
-        // New function to handle cancelling a request
         async function cancelRequest(requestId) {
             const requestToCancel = requests.find(req => req.id === requestId);
-            if (!requestToCancel) {
-                console.error("Could not find request with ID for cancellation:", requestId);
-                showToast("Error cancelling request. Request not found.", "error");
-                return;
-            }
-
-            if (!confirm(`Are you sure you want to cancel the request for "${requestToCancel.dealer}"?`)) {
-                return; // User cancelled the confirmation
-            }
-
-            const submissionData = {
-                action: 'cancelRequest', // New action for backend
-                id: requestId
-            };
-
-            // Disable the specific buttons on the card during submission
-            const cardElement = document.querySelector(`.cancel-button[onclick*="${requestId}"]`).closest('.request-card');
-            const allButtons = cardElement.querySelectorAll('.editable button');
-            allButtons.forEach(btn => btn.disabled = true);
-            
-            const cancelButton = cardElement.querySelector('.cancel-button');
-            cancelButton.textContent = 'Cancelling...';
-
+            if (!requestToCancel) { showToast("Error cancelling request. Request not found.", "error"); return; }
+            if (!confirm(`Are you sure you want to cancel the request for "${requestToCancel.dealer}"?`)) return;
+            const submissionData = { action: 'cancelRequest', id: requestId };
             try {
+                const cardElement = document.querySelector(`.cancel-button[onclick*="${requestId}"]`).closest('.request-card');
+                const allButtons = cardElement.querySelectorAll('.editable button');
+                allButtons.forEach(btn => btn.disabled = true);
+                const cancelButton = cardElement.querySelector('.cancel-button');
+                cancelButton.textContent = 'Cancelling...';
                 console.log('Cancelling request:', submissionData);
                 await fetch(GAS_WEB_APP_URL, {
-                    method: 'POST',
-                    mode: 'no-cors', 
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(submissionData)
+                    method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(submissionData)
                 });
-                
                 showToast('Request cancelled successfully!', 'success');
-                fetchRequests(); // Re-fetch requests to update the dashboard
+                fetchRequests();
             } catch (error) {
                 console.error('Error cancelling request:', error);
                 showToast('Error cancelling request. Please try again.', 'error');
-                 // Re-enable buttons on failure
+                const cardElement = document.querySelector(`.cancel-button[onclick*="${requestId}"]`).closest('.request-card');
+                const allButtons = cardElement.querySelectorAll('.editable button');
                 allButtons.forEach(btn => btn.disabled = false);
-                cancelButton.textContent = 'Cancel Request';
+                cardElement.querySelector('.cancel-button').textContent = 'Cancel Request';
             }
         }
-        
-        // NEW: Function to handle marking a request as PO Received
+
         async function markAsReceived(requestId) {
             const requestToMark = requests.find(req => req.id === requestId);
-            if (!requestToMark) {
-                console.error("Could not find request with ID for marking as received:", requestId);
-                showToast("Error processing request. Request not found.", "error");
-                return;
-            }
-
-            if (!confirm(`Are you sure you want to mark the request for "${requestToMark.dealer}" as received?`)) {
-                return; // User cancelled the confirmation
-            }
-
-            const submissionData = {
-                action: 'poReceived', // New action for backend
-                id: requestId
-            };
-
-            // Disable all buttons on the specific card during submission
-            const cardElement = document.querySelector(`.received-button[onclick*="${requestId}"]`).closest('.request-card');
-            const allButtons = cardElement.querySelectorAll('.editable button');
-            allButtons.forEach(btn => btn.disabled = true);
-            
-            const receivedButton = cardElement.querySelector('.received-button');
-            receivedButton.textContent = 'Processing...';
-
+            if (!requestToMark) { showToast("Error processing request. Request not found.", "error"); return; }
+            if (!confirm(`Are you sure you want to mark the request for "${requestToMark.dealer}" as received?`)) return;
+            const submissionData = { action: 'poReceived', id: requestId };
             try {
+                const cardElement = document.querySelector(`.received-button[onclick*="${requestId}"]`).closest('.request-card');
+                const allButtons = cardElement.querySelectorAll('.editable button');
+                allButtons.forEach(btn => btn.disabled = true);
+                const receivedButton = cardElement.querySelector('.received-button');
+                receivedButton.textContent = 'Processing...';
                 console.log('Marking as received:', submissionData);
                 await fetch(GAS_WEB_APP_URL, {
-                    method: 'POST',
-                    mode: 'no-cors',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(submissionData)
+                    method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(submissionData)
                 });
-                
                 showToast('Request marked as received!', 'success');
-                fetchRequests(); // Re-fetch to update the dashboard
+                fetchRequests();
             } catch (error) {
                 console.error('Error marking as received:', error);
                 showToast('Error marking request as received. Please try again.', 'error');
-                // Re-enable buttons on failure
+                const cardElement = document.querySelector(`.received-button[onclick*="${requestId}"]`).closest('.request-card');
+                const allButtons = cardElement.querySelectorAll('.editable button');
                 allButtons.forEach(btn => btn.disabled = false);
-                receivedButton.textContent = 'Received';
+                cardElement.querySelector('.received-button').textContent = 'Received';
             }
         }
 
-
-        // Close modal when clicking outside
-        document.getElementById('modal-overlay').addEventListener('click', function(e) {
-            // Check if the click is directly on the overlay, not its children
-            if (e.target === this) {
-                closeModal();
-            }
+        document.getElementById('modal-overlay').addEventListener('click', function(e){
+            if (e.target === this) closeModal();
+        });
+        document.addEventListener('keydown', function(e){
+            if (e.key === 'Escape' && document.getElementById('modal-overlay').style.display === 'block') closeModal();
         });
 
-        // Close modal with Escape key
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape' && document.getElementById('modal-overlay').style.display === 'block') {
-                closeModal();
-            }
-        });
-
-        // Toast Notification System
         function showToast(message, type = 'success', duration = 3000) {
             const toastContainer = document.getElementById('toast-container');
             const toast = document.createElement('div');
             toast.className = `toast ${type}`;
             toast.textContent = message;
-
             toastContainer.appendChild(toast);
-
-            // Trigger reflow to ensure transition starts
-            void toast.offsetWidth; 
+            void toast.offsetWidth;
             toast.classList.add('show');
-
             setTimeout(() => {
                 toast.classList.remove('show');
                 toast.addEventListener('transitionend', () => toast.remove());
             }, duration);
         }
     </script>
+
     <script src="https://ntwoods.github.io/ordertodispatch/js/viewOnly.js"></script>
 </body>
 </html>

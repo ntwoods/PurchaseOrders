@@ -740,6 +740,7 @@
         }
 
         // Create request card
+// Create request card
 function createRequestCard(request) {
     const card = document.createElement('div');
     card.className = 'request-card';
@@ -846,6 +847,13 @@ function createRequestCard(request) {
                 <span class="field-label">Remark:</span>
                 <div class="field-value">${request.remark || 'N/A'}</div>
             </div>
+
+            ${request.poDetail ? `
+            <div class="field-group">
+                <span class="field-label">PO:</span>
+                <div class="field-value">${request.poDetail}</div>
+            </div>
+            ` : ''}
 
             <div class="field-group">
                 <span class="field-label">CRM:</span>

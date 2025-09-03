@@ -167,14 +167,15 @@
                     <th onclick="sortTable(0)">PO Number <span class="sort-arrow"></span></th>
                     <th onclick="sortTable(1)">Supplier Name <span class="sort-arrow"></span></th>
                     <th onclick="sortTable(2)">Status <span class="sort-arrow"></span></th>
-                    <th onclick="sortTable(3)">Expected Dispatch <span class="sort-arrow"></span></th>
-                    <th onclick="sortTable(4)">Expected Delivery <span class="sort-arrow"></span></th>
-                    <th onclick="sortTable(5)">Received On <span class="sort-arrow"></span></th>
-                    <th onclick="sortTable(6)">PO URL <span class="sort-arrow"></span></th>
-                    <th onclick="sortTable(7)">Dispatch Detail <span class="sort-arrow"></span></th>
-                    <th onclick="sortTable(8)">Invoice <span class="sort-arrow"></span></th>
-                    <th onclick="sortTable(9)">CRM <span class="sort-arrow"></span></th>
-                    <th onclick="sortTable(10)">CRM Requests <span class="sort-arrow"></span></th>
+                    <th onclick="sortTable(3)">Order Date <span class="sort-arrow"></span></th>                    
+                    <th onclick="sortTable(4)">Expected Dispatch <span class="sort-arrow"></span></th>
+                    <th onclick="sortTable(5)">Expected Delivery <span class="sort-arrow"></span></th>
+                    <th onclick="sortTable(6)">Received On <span class="sort-arrow"></span></th>
+                    <th onclick="sortTable(7)">PO URL <span class="sort-arrow"></span></th>
+                    <th onclick="sortTable(8)">Dispatch Detail <span class="sort-arrow"></span></th>
+                    <th onclick="sortTable(9)">Invoice <span class="sort-arrow"></span></th>
+                    <th onclick="sortTable(10)">CRM <span class="sort-arrow"></span></th>
+                    <th onclick="sortTable(11)">CRM Requests <span class="sort-arrow"></span></th>
                 </tr>
             </thead>
             <tbody id="orderTableBody"></tbody>
@@ -219,7 +220,7 @@
             const tbody = document.getElementById('orderTableBody');
             tbody.innerHTML = '';
             
-            const columns = ['poNumber', 'supplierName', 'orderType', 'expectedDispatchDate', 'expectedDeliveryDate', 'acknowledgedTimestamp', 'poURL', 'dispatchDetailURL', 'invoiceUrl', 'crmName', 'crmRequestURL'];
+            const columns = ['poNumber', 'supplierName', 'orderType', 'orderDate', 'expectedDispatchDate', 'expectedDeliveryDate', 'acknowledgedTimestamp', 'poURL', 'dispatchDetailURL', 'invoiceUrl', 'crmName', 'crmRequestURL'];
             
             filteredOrders.forEach(order => {
                 const row = document.createElement('tr');
@@ -227,6 +228,7 @@
                     <td>${order.poNumber || ''}</td>
                     <td>${order.supplierName || ''}</td>
                     <td>${order.orderType || ''}</td>
+                    <td>${formatDate(order.orderDate)}</td>
                     <td>${formatDate(order.expectedDispatchDate)}</td>
                     <td>${formatDate(order.expectedDeliveryDate)}</td>
                     <td>${formatDate(order.acknowledgedTimestamp)}</td>
@@ -283,7 +285,7 @@
         }
         
         function sortTable(columnIndex) {
-            const columns = ['poNumber', 'supplierName', 'orderType', 'expectedDispatchDate', 'expectedDeliveryDate', 'acknowledgedTimestamp', 'poURL', 'dispatchDetailURL', 'invoiceUrl', 'crmName', 'crmRequestURL'];
+            const columns = ['poNumber', 'supplierName', 'orderType', 'orderDate', 'expectedDispatchDate', 'expectedDeliveryDate', 'acknowledgedTimestamp', 'poURL', 'dispatchDetailURL', 'invoiceUrl', 'crmName', 'crmRequestURL'];
             const columnKey = columns[columnIndex];
             const isDateColumn = ['expectedDispatchDate', 'expectedDeliveryDate', 'acknowledgedTimestamp'].includes(columnKey);
 

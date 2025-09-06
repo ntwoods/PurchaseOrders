@@ -669,6 +669,15 @@
                             <span class="detail-value">${formatDateTimeForDisplay(order.deadline)}</span>
                         </div>
                         ` : ''}
+
+                            ${typeof order.delayCount !== 'undefined' ? `
+                               <div class="detail-row">
+                             <span class="detail-icon">⏳</span>
+                          <span class="detail-label">Delay Count:</span>
+                         <span class="detail-value">${order.delayCount}</span>
+                          </div>
+                         ` : ''}
+
                         ${order.category ? `
                         <div class="detail-row">
                             <span class="detail-label">Category:</span>
@@ -982,7 +991,14 @@
                         nextDispatchDate: nextDispatchDate // Send as YYYY-MM-DD
                     })
                 });
-                            
+                    // ✅ Local delay count update
+                   const order = orders.find(o => o.id === orderId);
+                    if (order) {
+                    order.delayCount = (order.delayCount || 0) + 1;
+                    const delayCountEl = document.getElementById(`delay-count-${order.id}`);
+                  if (delayCountEl) delayCountEl.textContent = order.delayCount;
+                 }  
+
                 // Immediately show success message (since no-cors gives no feedback)
                 showFeedback(orderId, 'Delayed action submitted successfully (check sheet for update)!', 'success');
             

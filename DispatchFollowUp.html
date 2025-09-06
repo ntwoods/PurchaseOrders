@@ -666,6 +666,12 @@
                                 <span class="detail-value">${formatDateForDisplay(parseDate(order.dispatchDate))}</span>
                             </div>
                             <div class="detail-row">
+                                <span class="detail-icon">Ⓜ️</span>
+                                <span class="detail-label">Sent To Supplier:</span>
+                                <span class="detail-value">${formatDateForDisplay(parseDate(order.timestamp))}</span>
+                            </div>
+                            
+                            <div class="detail-row">
                                 <span class="detail-icon">⏰</span>
                                 <span class="detail-label">Confirmed On:</span>
                                 <span class="detail-value">${formatDateTimeForDisplay(parseDate(order.dispatchDateTimeStamp))}</span>

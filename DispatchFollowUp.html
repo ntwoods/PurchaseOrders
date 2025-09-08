@@ -572,8 +572,12 @@
             const deadline = new Date(dispatchTimestamp);
             deadline.setDate(deadline.getDate() + reminderDays);
             deadline.setHours(20, 0, 0, 0);
+            if (deadline.getDay() === 0) {
+                deadline.setDate(deadline.getDate() -1);
+            }
             return deadline;
-        }
+            }
+
 
         // Format time left for countdown timer
         function formatCountdown(timeLeft) {

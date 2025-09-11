@@ -476,6 +476,9 @@
         if (result.success && result.data.length > 0) {
           result.data.forEach(order => {
             renderOrderCard(order);
+			if (typeof setReadOnlyMode === "function") {
+			  setReadOnlyMode();
+			}			  
           });
         } else if (result.success && result.data.length === 0) {
           noOrdersMessage.style.display = 'block';
@@ -590,12 +593,14 @@ function formatDate(dateStr) {
           <a href="${order.orderDataSheet}" target="_blank" class="btn-custom btn-view" style="background: orange; color: black;">
 	  <i class="fas fa-file-order"></i> Order File
 	  </a>
-          <button class="btn-custom btn-received received-btn" class="button-grid" 
+		<div class="editable">
+		  <button class="btn-custom btn-received received-btn" class="button-grid" 
                   data-original-timestamp="${order.timestamp}" 
                   data-normalized-timestamp="${normalizedTimestamp}" 
                   data-display-timestamp="${displayTimestamp}">
             <i class="fas fa-check-circle"></i> Received
           </button>
+		</div>
 	</div>
  	<div class="remark-container">
 	    <div class="remark-label">Remark:</div>
@@ -709,5 +714,6 @@ function formatDate(dateStr) {
     `;
     document.head.appendChild(style);
   </script>
+	<script src="https://ntwoods.github.io/ordertodispatch/js/viewOnly.js"></script>
 </body>
 </html>

@@ -464,7 +464,7 @@
 		    const timeLeft = deadline.getTime() - now.getTime();
 	
 		    if (timeLeft <= 0) {
-			countdownElement.textContent = 'Deadline Passed!';
+			countdownElement.textContent = 'Overdue!';
 			countdownElement.style.color = '#dc3545'; // Red color for passed deadline
 		    } else {
 			const days = Math.floor(timeLeft / (1000 * 60 * 60 * 24));

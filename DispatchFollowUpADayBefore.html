@@ -490,6 +490,7 @@
     <script>
         // REPLACE THIS WITH YOUR DEPLOYED GOOGLE APPS SCRIPT WEB APP URL
         const API_URL = 'https://script.google.com/macros/s/AKfycbynKuCKar5-CgsMfOBwCZm0swnfqxsWvKylbrj8QwLDoHlTNMSoCf1YowAVPAm1EHrOWQ/exec';
+        const DEADLINE_LOG_URL = 'https://script.google.com/macros/s/AKfycbz55kgQ4Xn3Pxp8PCtIaH_d9cvFIPJfAhLh0h4brlT4fZNukDGo3hMYyhTvtI0OyYOyMw/exec';         
         let orders = [];
         let countdownIntervals = [];
 
@@ -882,6 +883,16 @@
                 buttonElement.textContent = '... see less';
             }
         }
+        
+    function sendDeadlineLog(poNumber, deadline, action){
+        if(!DEADLINE_LOG_URL) return;
+        fetch(DEADLINE_LOG_URL,{
+            method:'POST',mode:'no-cors',
+            headers:{'Content-Type':'application/json'},
+            body:JSON.stringify({poNumber:poNumber,deadline:formatDateTimeForDisplay(deadline),action:action})
+        }).catch(err=>console.error('Error sending deadline log:',err));
+    }
+
         
         // Handle On Time action
         async function handleOnTime(timestamp, orderId) {

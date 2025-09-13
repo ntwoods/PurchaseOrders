@@ -710,11 +710,79 @@
         el.classList.toggle('show');
     }
 
+        // Toggle visibility of the hold input section
+        function toggleHoldInput(orderId, forceHide = false) {
+            const holdInputSection = document.getElementById(`hold-input-${orderId}`);
+            const holdUntilInput = document.getElementById(`hold-until-${orderId}`);
+            const holdRemarkInput = document.getElementById(`hold-remark-${orderId}`);
+
+            if (forceHide) {
+                holdInputSection.classList.remove('show');
+                holdUntilInput.value = ''; // Clear fields
+                holdRemarkInput.value = '';
+            } else {
+                holdInputSection.classList.toggle('show');
+                // Hide delayed section if it's open
+                document.getElementById(`delayed-input-${orderId}`).classList.remove('show');
+            }
+        }
+
+        // Handle "Hold" action submission
+        async function handleHold(timestamp, orderId) {
+            const holdUntilInput = document.getElementById(`hold-until-${orderId}`);
+            const holdRemarkInput = document.getElementById(`hold-remark-${orderId}`);
+            const holdUntilDate = holdUntilInput.value; // YYYY-MM-DD format
+            const holdRemark = holdRemarkInput.value;
+            const markHoldButton = event.target;
+
+            if (!holdUntilDate && !holdRemark) {
+                showFeedback(orderId, 'Please enter either a "Hold Until" date or a "Hold Remark".', 'error');
+                return;
+            }
+
+            markHoldButton.disabled = true;
+            markHoldButton.textContent = '⏳ Processing...';
+
+            try {
+                // Send POST request
+                fetch(API_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        action: 'hold',
+                        timestamp: formatTimestampForSheet(timestamp),
+                        holdUntilDate: holdUntilDate,
+                        holdRemark: holdRemark
+                    })
+                });
+
+                showFeedback(orderId, 'Hold action submitted successfully (check sheet for update)!', 'success');
+                
+                // Hide input section and clear values after submission
+                toggleHoldInput(orderId, true); // Force hide and clear fields
+
+                setTimeout(loadOrders, 2000); // Refresh orders
+            } catch (error) {
+                console.error('Error submitting Hold action:', error);
+                showFeedback(orderId, `Client-side error: ${error.message}`, 'error');
+            } finally {
+                setTimeout(() => {
+                    markHoldButton.disabled = false;
+                    markHoldButton.textContent = 'Mark Hold';
+                }, 2000);
+            }
+        }
+    
     function showFeedback(orderId,msg,type){
         const fb=document.getElementById(`feedback-${orderId}`);
         fb.textContent=msg; fb.className=`action-feedback ${type}`; fb.style.display='block';
         setTimeout(()=>fb.style.display='none',5000);
     }
+
+    
 </script>
     <script src="https://ntwoods.github.io/ordertodispatch/js/viewOnly.js"></script>
     <script>

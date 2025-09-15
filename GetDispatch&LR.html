@@ -652,6 +652,71 @@
             height: 12px;
         }
 
+/* --- Compact metadata badges & countdown --- */
+.meta-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 4px 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(147,197,253,.35);
+  background: linear-gradient(145deg,#eef6ff 0%,#e6f1ff 100%);
+  color: #1e3a8a;
+}
+
+.badge .dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background:#3b82f6;
+}
+
+.badge.secondary {
+  background: linear-gradient(145deg,#f7fee7 0%,#ecfccb 100%);
+  border-color: #d9f99d;
+  color:#365314;
+}
+
+.badge.countdown {
+  background: linear-gradient(145deg,#eff6ff 0%,#dbeafe 100%);
+  border-color:#bfdbfe;
+  color:#1e3a8a;
+  letter-spacing: .02em;
+}
+
+.overdue-tag {
+  background: linear-gradient(145deg,#fee2e2 0%,#fecaca 100%);
+  border: 1px solid #fca5a5;
+  color:#991b1b;
+}
+
+.order-card.overdue {
+  background: linear-gradient(145deg,#fff1f2 0%,#ffe4e6 100%);
+  border-color: rgba(239,68,68,.25);
+  box-shadow:
+    0 3px 5px -1px rgba(239,68,68,.08),
+    0 1px 3px -1px rgba(239,68,68,.06);
+}
+
+/* Tighten header spacing slightly for readability */
+.order-header { gap: 6px; }
+.order-info h3 { max-width: 70%; }
+.po-number { white-space: nowrap; }
+
+/* Make file labels & inputs sit a bit tighter on small cards */
+.file-label { min-height: 34px; font-size: 0.72rem; }
+
+/* Optional: when only one card exists, avoid stretching too tall */
+.orders-container.single-item .order-card { max-width: 720px; margin:auto; }
+		
+
     </style>
 <body>
     <div class="container">
@@ -791,7 +856,20 @@
                             <h3>${order.supplierName || 'Unknown Supplier'}</h3>
                             <div class="po-number">${(order.purchaseOrderNumber)}</div>
                         </div>
-                        <div class="order-timestamp">${formatTimestamp(order.timestamp)}</div>
+						<div class="order-timestamp">${formatTimestamp(order.timestamp)}</div>
+						
+						<!-- NEW: Meta row with Dispatch Date + Countdown -->
+						<div class="meta-row">
+						  <span class="badge" title="Dispatch Date">
+						    <span class="dot"></span>
+						    Dispatch: <strong id="dispatchLabel${index}"></strong>
+						  </span>
+						  <span class="badge countdown" id="countdown${index}" title="Time remaining to dispatch">
+						    ⏳ --:--:--
+						  </span>
+						  <span class="badge overdue-tag" id="overdue${index}" style="display:none;">Overdue</span>
+						</div>
+
                         <div class="button-group">
                             <a href="${order.googleSheetURL}" target="_blank" class="action-button">
                                 View PO

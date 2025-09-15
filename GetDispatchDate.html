@@ -122,6 +122,17 @@
       color:#1565c0; font-weight:500;
     }
     .notification-prompt:hover { background:#bbdefb; }
+
+    .order-card.overdue {
+      border: 2px solid #ef5350;
+      background: #ffebee; /* light red highlight */
+    }
+    .countdown-timer {
+      font-size: .95rem;
+      font-weight: 600;
+      color: #d32f2f; /* red text */
+    }
+    
   </style>
 </head>
 <body>
@@ -180,17 +191,28 @@
     }
   }
 
-  function renderOrders(){
-    const c=document.getElementById('orders-container');
-    if(!orders.length){ c.innerHTML="<p style='grid-column:1/-1;text-align:center;'>📭 No pending orders</p>"; return;}
-    c.innerHTML=orders.map((o,i)=>`
-      <div class="order-card">
-        <div class="requester-name">👤 ${o.supplierName}</div>
-        <div class="timestamp">${o.purchaseOrderNumber}</div>
-        <div class="timestamp">
-          🕒 Sent: ${new Date(o.timestamp).toLocaleString()}
-        </div>
-        <div class="countdown-timer" id="countdown-${i}"></div>
+function calculateDeadline(sentTs){
+  const d = new Date(sentTs);
+  d.setHours(20,0,0,0); // 8:00 PM same day
+  return d;
+}
+
+function formatDateTime(d){
+  return d.toLocaleString("en-GB",{day:"2-digit",month:"2-digit",year:"numeric",hour:"2-digit",minute:"2-digit",second:"2-digit"});
+}
+
+        
+      function renderOrders(){
+        const c=document.getElementById('orders-container');
+        if(!orders.length){ c.innerHTML="<p style='grid-column:1/-1;text-align:center;'>📭 No pending orders</p>"; return;}
+        c.innerHTML=orders.map((o,i)=>{
+          const deadline = calculateDeadline(o.timestamp);
+          return `
+            <div class="order-card" id="order-${i}">
+              <div class="requester-name">👤 ${o.supplierName}</div>
+              <div class="timestamp">🕒 Sent: ${new Date(o.timestamp).toLocaleString()}</div>
+              <div class="timestamp">📌 Deadline: ${formatDateTime(deadline)}</div>
+              <div class="countdown-timer" id="countdown-${i}"></div>
         <div class="order-actions">
           ${o.googleSheetURL?`<button class="view-po-btn" onclick="window.open('${o.googleSheetURL}')"><span class="material-icons">description</span> View PO</button>`:""}
         </div>
@@ -207,9 +229,34 @@
             <button class="mark-hold-btn" onclick="markHold(${i})">✅ Mark Hold</button>
           </div>
         </div>
-      </div>`).join('');
+        </div>`;
+    }).join('');
+    startCountdowns();
   }
 
+function startCountdowns(){
+  setInterval(()=>{
+    orders.forEach((o,i)=>{
+      const deadline=calculateDeadline(o.timestamp);
+      const now=new Date();
+      const el=document.getElementById(`countdown-${i}`);
+      const card=document.getElementById(`order-${i}`);
+      if(!el||!card) return;
+      const diff=deadline-now;
+      if(diff<=0){
+        el.textContent="Overdue!";
+        card.classList.add("overdue");
+      }else{
+        const h=Math.floor(diff/(1000*60*60));
+        const m=Math.floor((diff%(1000*60*60))/(1000*60));
+        const s=Math.floor((diff%(1000*60))/1000);
+        el.textContent=`⏳ ${h}h ${m}m ${s}s left`;
+      }
+    });
+  },1000);
+}
+
+  
   async function submitDispatch(i){
     const o=orders[i]; const d=document.getElementById(`dispatch-${i}`).value;
     if(!d){showMessage("Select a dispatch date","error");return;}

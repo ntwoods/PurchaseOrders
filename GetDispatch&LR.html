@@ -1311,10 +1311,6 @@ function calculateDeadline(dispatchDate){
             });
 
             delayForm.addEventListener('submit', async function(e) {
-			// --- NEW: Log deadline with action follow4 ---
-			const action = "follow4";
-			const deadline = calculateDeadline(order.dispatchDate);
-			sendDeadlineLog(order.purchaseOrderNumber, deadline, action);			
 				e.preventDefault();
                 
                 const markDelayBtn = delayForm.querySelector('.mark-delay-btn');
@@ -1327,6 +1323,10 @@ function calculateDeadline(dispatchDate){
                     const timestamp = document.getElementById('delayTimestampInput').value;
                     const delayedReason = document.getElementById('delayedReason').value;
                     const nextDispatchDate = document.getElementById('nextDispatchDate').value;
+					// --- NEW: Log deadline with action follow4 ---
+					const action = "follow4";
+					const deadline = calculateDeadline(order.dispatchDate);
+					sendDeadlineLog(order.purchaseOrderNumber, deadline, action);								
                     
                     const payload = {
                         action: 'delay',

@@ -773,6 +773,92 @@
         const API_URL = 'https://script.google.com/macros/s/AKfycbwKB6wQPmrOXmMQ8bM43AMyWgtDobQJ96dPJXntgZpmyJRYogSz9qQHEqIn-OwBY67Qkw/exec';
         
         let orders = [];
+		// Countdown holders so we can clear on re-render
+		let _countdownIntervals = [];
+		
+		function clearCountdowns() {
+		  _countdownIntervals.forEach(id => clearInterval(id));
+		  _countdownIntervals = [];
+		}
+		
+		// Accepts "DD-MM-YYYY", "YYYY-MM-DD", or ISO; returns Date at 23:59:59 local
+		function parseDispatchDate(raw) {
+		  if (!raw) return null;
+		  if (typeof raw === 'number') return new Date(raw); // timestamp
+		  let s = String(raw).trim();
+		
+		  // Try DD-MM-YYYY
+		  const ddm = /^(\d{1,2})[-\/](\d{1,2})[-\/](\d{4})$/;
+		  const ymd = /^(\d{4})[-\/](\d{1,2})[-\/](\d{1,2})$/;
+		
+		  let d;
+		  if (ddm.test(s)) {
+		    const [, dd, mm, yyyy] = s.match(ddm);
+		    d = new Date(Number(yyyy), Number(mm)-1, Number(dd), 23, 59, 59);
+		  } else if (ymd.test(s)) {
+		    const [, yyyy, mm, dd] = s.match(ymd);
+		    d = new Date(Number(yyyy), Number(mm)-1, Number(dd), 23, 59, 59);
+		  } else {
+		    // Fallback to Date parser (handles ISO like 2025-09-20T00:00:00Z)
+		    const tryDate = new Date(s);
+		    if (!isNaN(tryDate)) {
+		      d = tryDate;
+		      // If no time, pin to end of local day
+		      if (s.length <= 10) d.setHours(23,59,59,0);
+		    }
+		  }
+		  return (d && !isNaN(d)) ? d : null;
+		}
+		
+		function formatDateDMY(d) {
+		  if (!d || isNaN(d)) return '—';
+		  const dd = String(d.getDate()).padStart(2,'0');
+		  const mm = String(d.getMonth()+1).padStart(2,'0');
+		  const yyyy = d.getFullYear();
+		  return `${dd}-${mm}-${yyyy}`;
+		}
+		
+		function formatDuration(ms) {
+		  const total = Math.max(0, Math.floor(ms/1000));
+		  const d = Math.floor(total/86400);
+		  const h = Math.floor((total%86400)/3600);
+		  const m = Math.floor((total%3600)/60);
+		  const s = total%60;
+		  // Show days if any, else hh:mm:ss
+		  return d>0 ? `${d}d ${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`
+		             : `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+		}
+		
+		function attachCountdown(index, targetDate) {
+		  const countdownEl = document.getElementById(`countdown${index}`);
+		  const overdueEl   = document.getElementById(`overdue${index}`);
+		  const cardEl      = document.querySelectorAll('.order-card')[index];
+		
+		  function tick() {
+		    const diff = targetDate - new Date();
+		    if (diff <= 0) {
+		      countdownEl.textContent = '00:00:00';
+		      overdueEl.style.display = 'inline-flex';
+		      cardEl.classList.add('overdue');
+		      return; // let interval clear below
+		    }
+		    countdownEl.textContent = formatDuration(diff);
+		  }
+		
+		  tick();
+		  const id = setInterval(() => {
+		    const diff = targetDate - new Date();
+		    if (diff <= 0) {
+		      tick();
+		      clearInterval(id);
+		      return;
+		    }
+		    tick();
+		  }, 1000);
+		
+		  _countdownIntervals.push(id);
+		}
+		
 
         // Load orders on page load
         document.addEventListener('DOMContentLoaded', function() {
@@ -828,6 +914,7 @@
 
         function renderOrders() {
             const container = document.getElementById('ordersContainer');
+			clearCountdowns();
             
             console.log('Orders to render:', orders); // Debug log
             
@@ -981,14 +1068,38 @@
             `).join('');
 
             // Add event listeners for file inputs and forms
-            orders.forEach((order, index) => {
-                // Add a small delay to ensure DOM elements are fully rendered
-                setTimeout(() => {
-                    setupFileInput(`dispatchDetails${index}`);
-                    setupFileInput(`invoice${index}`); 
-                    setupFormSubmission(`orderForm${index}`, index);
-                }, 100);
-            });
+			orders.forEach((order, index) => {
+				// Add a small delay to ensure DOM elements are fully rendered
+				setTimeout(() => {
+					setupFileInput(`dispatchDetails${index}`);
+					setupFileInput(`invoice${index}`); 
+					setupFormSubmission(`orderForm${index}`, index);
+				}, 100);
+			
+				// --- NEW: Setup dispatch label + countdown per card ---
+				const rawDispatch =
+				  order.dispatchDate ||
+				  order.dispatch_date ||
+				  order.dispatchdate ||
+				  order.DispatchDate ||
+				  order['Dispatch Date'] ||
+				  null;
+			
+				const labelEl = document.getElementById(`dispatchLabel${index}`);
+				const target  = parseDispatchDate(rawDispatch);
+			
+				if (labelEl) {
+				  if (target) {
+					labelEl.textContent = formatDateDMY(target);
+					attachCountdown(index, target);
+				  } else {
+					labelEl.textContent = rawDispatch ? String(rawDispatch) : '—';
+					const cd = document.getElementById(`countdown${index}`);
+					if (cd) cd.style.display = 'none';
+				  }
+				}
+			});
+
             
             // Setup delay modal listeners
             setupDelayModal();

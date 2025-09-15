@@ -1225,12 +1225,7 @@
 			// --- NEW: Log deadline with action follow4 ---
 			// --- NEW: Log deadline with action follow4 ---
 			const action = "follow4";
-			if (order && order.purchaseOrderNumber && order.deadline) {
-			    sendDeadlineLog(order.purchaseOrderNumber, order.deadline, action);
-			}
-
-			
-
+			sendDeadlineLog(order.purchaseOrderNumber, order.deadline, action);			
             const dispatchFileArray = [];
             const invoiceFileArray = [];
 

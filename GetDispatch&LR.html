@@ -804,7 +804,7 @@
 		    if (!isNaN(tryDate)) {
 		      d = tryDate;
 		      // If no time, pin to end of local day
-		      if (s.length <= 10) d.setHours(23,59,59,0);
+		      if (s.length <= 10) d.setHours(20,0,0,0);
 		    }
 		  }
 		  return (d && !isNaN(d)) ? d : null;

@@ -213,6 +213,7 @@ function formatDateTime(d){
               <div class="timestamp">🕒 Sent: ${new Date(o.timestamp).toLocaleString()}</div>
               <div class="timestamp">📌 Deadline: ${formatDateTime(deadline)}</div>
               <div class="countdown-timer" id="countdown-${i}"></div>
+        <div class="editable">
         <div class="order-actions">
           ${o.googleSheetURL?`<button class="view-po-btn" onclick="window.open('${o.googleSheetURL}')"><span class="material-icons">description</span> View PO</button>`:""}
         </div>
@@ -227,6 +228,7 @@ function formatDateTime(d){
             <label>⏰ Hold Until *</label><input type="date" id="hold-until-${i}">
             <label>📝 Remark *</label><input type="text" id="hold-remark-${i}">
             <button class="mark-hold-btn" onclick="markHold(${i})">✅ Mark Hold</button>
+          </div>
           </div>
         </div>
         </div>`;
@@ -297,5 +299,6 @@ function startCountdowns(){
     loadOrders(); refreshInterval=setInterval(loadOrders,120000);
   });
 </script>
+<script src="https://ntwoods.github.io/ordertodispatch/js/viewOnly.js></script>
 </body>
 </html>

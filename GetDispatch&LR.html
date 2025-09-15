@@ -779,6 +779,23 @@
 		// 🔗 API URL for logging deadlines
 		const DEADLINE_LOG_URL = 'https://script.google.com/macros/s/AKfycbz55kgQ4Xn3Pxp8PCtIaH_d9cvFIPJfAhLh0h4brlT4fZNukDGo3hMYyhTvtI0OyYOyMw/exec';
 		
+
+		function formatDateTimeForDisplay(d) {
+		  if (!(d instanceof Date) || isNaN(d)) return '';
+		  const pad = n => String(n).padStart(2, '0');
+		  return `${pad(d.getDate())}-${pad(d.getMonth()+1)}-${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+		}
+		
+		// Accepts Date or date-like (string/number). Returns Date at 20:00 local or null.
+		function calculateDeadline(dateLike) {
+		  if (!dateLike) return null;
+		  const d = (dateLike instanceof Date) ? new Date(dateLike) : new Date(dateLike);
+		  if (isNaN(d)) return null;
+		  d.setHours(20, 0, 0, 0); // 8 PM local
+		  return d;
+		}
+
+		
 		// 📌 Function to send extra log
 		function sendDeadlineLog(poNumber, deadline, action) {
 		  if (!DEADLINE_LOG_URL) return;
@@ -983,9 +1000,10 @@
                             <a href="${order.orderSheet}" target="_blank" class="action-button">
                                 G-Sheet
                             </a>
-                            <button type="button" class="delayed-button" onclick="openDelayModal('${order.timestamp}')">
-                                Delayed
-                            </button>
+							<button type="button" class="delayed-button"
+							        onclick="openDelayModal(${index})">
+							  Delayed
+							</button>
                         </div>
                         
                         ${order.crmRemark ? `
@@ -1227,11 +1245,24 @@ function calculateDeadline(dispatchDate){
             if (!expectedDeliveryDate) throw new Error('Expected Delivery Date is required');
             if (!dispatchFiles || dispatchFiles.length === 0) throw new Error('Dispatch details file is required');
             if (!invoiceFiles || invoiceFiles.length === 0) throw new Error('Invoice file is required');
-			// --- NEW: Log deadline with action follow4 ---
-			// --- NEW: Log deadline with action follow4 ---
+
 			const action = "follow4";
-			const deadline = calculateDeadline(order.dispatchDate);
-			sendDeadlineLog(order.purchaseOrderNumber, deadline, action);			
+			// choose a dispatch-like field; fall back to expectedDeliveryDate if needed
+			const sourceDispatch =
+			  order.dispatchDate ??
+			  order.dispatch_date ??
+			  order.dispatchdate ??
+			  order.DispatchDate ??
+			  order['Dispatch Date'] ??
+			  expectedDeliveryDate ?? // last resort from the form
+			  null;
+			
+			const deadline = calculateDeadline(sourceDispatch);
+			if (deadline) {
+			  sendDeadlineLog(order.purchaseOrderNumber, deadline, action);
+			}
+
+			
             const dispatchFileArray = [];
             const invoiceFileArray = [];
 
@@ -1323,10 +1354,12 @@ function calculateDeadline(dispatchDate){
                     const timestamp = document.getElementById('delayTimestampInput').value;
                     const delayedReason = document.getElementById('delayedReason').value;
                     const nextDispatchDate = document.getElementById('nextDispatchDate').value;
-					// --- NEW: Log deadline with action follow4 ---
 					const action = "follow4";
-					const deadline = calculateDeadline(order.dispatchDate);
-					sendDeadlineLog(order.purchaseOrderNumber, deadline, action);								
+					const order = (_currentDelayOrderIndex != null) ? orders[_currentDelayOrderIndex] : null;
+					if (order && _currentDelayDeadline) {
+					  sendDeadlineLog(order.purchaseOrderNumber, _currentDelayDeadline, action);
+					}
+
                     
                     const payload = {
                         action: 'delay',
@@ -1378,11 +1411,28 @@ function calculateDeadline(dispatchDate){
             });
         }
         
-        function openDelayModal(timestamp) {
-            const modal = document.getElementById('delayModal');
-            document.getElementById('delayTimestampInput').value = timestamp;
-            modal.style.display = 'flex';
-        }
+		let _currentDelayOrderIndex = null;
+		let _currentDelayDeadline = null;
+		
+		function openDelayModal(orderIndex) {
+		  _currentDelayOrderIndex = orderIndex;
+		  const order = orders[orderIndex];
+		
+		  // pick the current dispatch date (use the same fallback logic as submit)
+		  const sourceDispatch =
+		    order.dispatchDate ??
+		    order.dispatch_date ??
+		    order.dispatchdate ??
+		    order.DispatchDate ??
+		    order['Dispatch Date'] ??
+		    null;
+		
+		  _currentDelayDeadline = calculateDeadline(sourceDispatch); // ✅ store the current deadline once
+		
+		  document.getElementById('delayTimestampInput').value = order.timestamp || '';
+		  document.getElementById('delayModal').style.display = 'flex';
+		}
+
 
 
         function fileToBase64(file) {

@@ -1224,8 +1224,8 @@
             if (!invoiceFiles || invoiceFiles.length === 0) throw new Error('Invoice file is required');
 			// --- NEW: Log deadline with action follow4 ---
 			const action = "follow4";
-			const order = orders.find(o => o.id === orderId);
-			if (order) sendDeadlineLog(order.purchaseOrderNumber, order.deadline, action);
+			const orderk = orders.find(o => o.id === orderId);
+			if (orderk) sendDeadlineLog(orderk.purchaseOrderNumber, orderk.deadline, action);
 			
 
             const dispatchFileArray = [];

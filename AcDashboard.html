@@ -488,6 +488,9 @@
             order.supplierName.toLowerCase().includes(searchText)
         );
         renderOrders(filteredData);
+                if (typeof setReadOnlyMode === "function") {
+                  setReadOnlyMode();
+                }                   
     }
 
     async function markDone(buttonElement, poNumber) {
@@ -583,7 +586,11 @@
 
     setInterval(fetchOrders, 30000);
     fetchOrders();
+                    if (typeof setReadOnlyMode === "function") {
+                  setReadOnlyMode();
+                }           
 </script>
 <script src="https://ntwoods.github.io/ordertodispatch/js/viewOnly.js"></script>
 </body>
 </html>
+

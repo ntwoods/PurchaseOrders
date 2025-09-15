@@ -265,8 +265,9 @@ function startCountdowns(){
   async function submitDispatch(i){
     const o=orders[i]; const d=document.getElementById(`dispatch-${i}`).value;
     if(!d){showMessage("Select a dispatch date","error");return;}
+    const deadline=calculateDeadline(o.timestamp);    
     await fetch(postUrl,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify({type:'dispatch',timestamp:o.timestamp,dispatchDate:d})});
-    sendDeadlineLog(o.purchaseOrderNumber,d,"follow3");
+    sendDeadlineLog(o.purchaseOrderNumber,deadline,"follow3");
     showMessage("Dispatch submitted successfully!","success");
     orders.splice(i,1); renderOrders(); updateStatus();
   }

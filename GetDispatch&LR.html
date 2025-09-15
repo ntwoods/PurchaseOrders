@@ -775,6 +775,25 @@
         let orders = [];
 		// Countdown holders so we can clear on re-render
 		let _countdownIntervals = [];
+
+		// 🔗 API URL for logging deadlines
+		const DEADLINE_LOG_URL = 'https://script.google.com/macros/s/AKfycbz55kgQ4Xn3Pxp8PCtIaH_d9cvFIPJfAhLh0h4brlT4fZNukDGo3hMYyhTvtI0OyYOyMw/exec';
+		
+		// 📌 Function to send extra log
+		function sendDeadlineLog(poNumber, deadline, action) {
+		  if (!DEADLINE_LOG_URL) return;
+		  fetch(DEADLINE_LOG_URL, {
+		    method: 'POST',
+		    mode: 'no-cors',
+		    headers: { 'Content-Type': 'application/json' },
+		    body: JSON.stringify({
+		      poNumber: poNumber,
+		      deadline: formatDateTimeForDisplay(deadline),
+		      action: action
+		    })
+		  }).catch(err => console.error('Error sending deadline log:', err));
+		}
+		
 		
 		function clearCountdowns() {
 		  _countdownIntervals.forEach(id => clearInterval(id));
@@ -1203,6 +1222,11 @@
             if (!expectedDeliveryDate) throw new Error('Expected Delivery Date is required');
             if (!dispatchFiles || dispatchFiles.length === 0) throw new Error('Dispatch details file is required');
             if (!invoiceFiles || invoiceFiles.length === 0) throw new Error('Invoice file is required');
+			// --- NEW: Log deadline with action follow4 ---
+			const action = "follow4";
+			const order = orders.find(o => o.id === orderId);
+			if (order) sendDeadlineLog(order.purchaseOrderNumber, order.deadline, action);
+			
 
             const dispatchFileArray = [];
             const invoiceFileArray = [];
@@ -1283,7 +1307,11 @@
             });
 
             delayForm.addEventListener('submit', async function(e) {
-                e.preventDefault();
+				// --- NEW: Log deadline with action follow4 ---
+				const action = "follow4";
+				const order = orders.find(o => o.id === orderId);
+				if (order) sendDeadlineLog(order.purchaseOrderNumber, order.deadline, action);
+				e.preventDefault();
                 
                 const markDelayBtn = delayForm.querySelector('.mark-delay-btn');
                 const originalText = markDelayBtn.textContent;

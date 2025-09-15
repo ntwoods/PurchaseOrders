@@ -1313,7 +1313,6 @@ function calculateDeadline(dispatchDate){
             delayForm.addEventListener('submit', async function(e) {
 			// --- NEW: Log deadline with action follow4 ---
 			const action = "follow4";
-			const action = "follow4";
 			const deadline = calculateDeadline(order.dispatchDate);
 			sendDeadlineLog(order.purchaseOrderNumber, deadline, action);			
 				e.preventDefault();

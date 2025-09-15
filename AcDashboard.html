@@ -44,7 +44,7 @@
         border-radius: 20px;
         border: 1px solid #0056b3;
         box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-        color: white; /* Changed header text to white for visibility */
+        color: white;
     }
 
     .header h1 {
@@ -58,7 +58,6 @@
         font-weight: 300;
         color: #E0FFFF;
     }
-
 
     /* Controls Section Styles */
     .controls {
@@ -175,7 +174,7 @@
         letter-spacing: 1px;
         font-size: 0.9rem;
         border-bottom: 2px solid #007BFF;
-        cursor: pointer; /* Added cursor pointer for clickable headers */
+        cursor: pointer;
     }
 
     th .sort-arrow {
@@ -218,6 +217,11 @@
 
     .supplier-name {
         color: #666666;
+    }
+
+    .deadline-timer {
+        font-weight: 600;
+        color: #333;
     }
 
     /* Action Buttons */
@@ -277,7 +281,6 @@
         cursor: not-allowed;
     }
 
-    /* Responsive Adjustments */
     @media (max-width: 768px) {
         .header h1 {
             font-size: 2rem;
@@ -324,12 +327,12 @@
                             <th onclick="sortTable(0)">Sr. No. <span class="sort-arrow"></span></th>
                             <th onclick="sortTable(1)">PO No. <span class="sort-arrow"></span></th>
                             <th onclick="sortTable(2)">Supplier Name <span class="sort-arrow"></span></th>
+                            <th>Deadline <span class="sort-arrow"></span></th>
                             <th onclick="sortTable(3)">Invoice <span class="sort-arrow"></span></th>
                             <th onclick="sortTable(4)">Action <span class="sort-arrow"></span></th>
                         </tr>
                     </thead>
-                    <tbody id="ordersTableBody">
-                    </tbody>
+                    <tbody id="ordersTableBody"></tbody>
                 </table>
             </div>
             
@@ -372,7 +375,7 @@
                 orders = data.data;
                 completedOrders = new Set(orders.filter(o => o.account_status === 'COMPLETED').map(o => o.purchaseOrderNumber));
                 
-                filterTable(); // Initially filter/render all data
+                filterTable();
                 updateLastUpdated();
                 
                 if (orders.length === 0) {
@@ -408,15 +411,23 @@
         filteredData.forEach((order, index) => {
             const row = document.createElement('tr');
             const isCompleted = completedOrders.has(order.purchaseOrderNumber);
-            
-            if (isCompleted) {
-                row.classList.add('completed');
+            if (isCompleted) row.classList.add('completed');
+
+            // NEW Deadline calculation
+            let deadlineCellHtml = 'N/A';
+            if (order.acknowledgedTimestamp) {
+                const deadline = new Date(order.acknowledgedTimestamp);
+                deadline.setDate(deadline.getDate() + 2);
+                const deadlineId = `deadline-${index}`;
+                deadlineCellHtml = `<span id="${deadlineId}" class="deadline-timer"></span>`;
+                startCountdown(deadline, deadlineId, row);
             }
-            
+
             row.innerHTML = `
                 <td class="sr-no">${index + 1}</td>
                 <td class="po-number">${order.purchaseOrderNumber}</td>
                 <td class="supplier-name">${order.supplierName}</td>
+                <td>${deadlineCellHtml}</td>
                 <td>
                     <div class="editable">
                         ${order.invoiceUrl ? 
@@ -439,9 +450,35 @@
                     </div>
                 </td>
             `;
-            
             tbody.appendChild(row);
         });
+    }
+
+    function startCountdown(deadline, elementId, rowElement) {
+        function update() {
+            const now = new Date();
+            const diff = deadline - now;
+            const el = document.getElementById(elementId);
+            if (!el) return;
+
+            if (diff <= 0) {
+                el.textContent = 'Overdue';
+                el.style.color = 'red';
+                rowElement.style.backgroundColor = 'rgba(255, 0, 0, 0.1)';
+                clearInterval(timer);
+                return;
+            }
+
+            const hours = Math.floor(diff / (1000 * 60 * 60));
+            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+            el.textContent = `${hours}h ${minutes}m ${seconds}s`;
+            el.style.color = diff < 3600000 ? 'red' : '#333';
+        }
+
+        update();
+        const timer = setInterval(update, 1000);
     }
 
     function filterTable() {
@@ -473,9 +510,7 @@
             await fetch(API_URL, {
                 method: 'POST',
                 mode: 'no-cors',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     action: 'markDone',
                     timestamp: order.timestamp,
@@ -484,21 +519,17 @@
             });
 
             completedOrders.add(poNumber);
-            
             buttonElement.innerHTML = '<i class="fas fa-check"></i> Done!';
             buttonElement.className = 'action-btn completed';
             buttonElement.disabled = true;
 
             setTimeout(() => {
                 const row = buttonElement.closest('tr');
-                if (row) {
-                    row.classList.add('completed');
-                }
-                filterTable(); // Re-render table with search filter applied
+                if (row) row.classList.add('completed');
+                filterTable();
             }, 1500);
         } catch (error) {
             console.error('Fetch failed:', error);
-            console.error('Network error — request not sent. Please try again.');
             buttonElement.innerHTML = originalButtonHtml;
             buttonElement.className = originalButtonClass;
             buttonElement.disabled = false;
@@ -511,20 +542,15 @@
 
     function updateLastUpdated() {
         const now = new Date();
-        const timeString = now.toLocaleTimeString('en-US', { 
-            hour12: true, 
-            hour: 'numeric', 
-            minute: '2-digit' 
-        });
+        const timeString = now.toLocaleTimeString('en-US', { hour12: true, hour: 'numeric', minute: '2-digit' });
         document.getElementById('lastUpdated').textContent = `Last updated: ${timeString}`;
     }
 
     function sortTable(columnIndex) {
-        const columns = ['serial', 'purchaseOrderNumber', 'supplierName', 'invoice', 'action']; // Mapped column names
+        const columns = ['serial', 'purchaseOrderNumber', 'supplierName', 'deadline', 'invoice', 'action'];
         const columnKey = columns[columnIndex];
-        
         sortDirection[columnKey] = (sortDirection[columnKey] === 'asc') ? 'desc' : 'asc';
-        
+
         orders.sort((a, b) => {
             let valA = a[columnKey] || '';
             let valB = b[columnKey] || '';
@@ -538,7 +564,7 @@
                 valB = orders.indexOf(b);
                 return sortDirection[columnKey] === 'asc' ? valA - valB : valB - valA;
             } else {
-                return 0; // No specific sorting for other columns
+                return 0;
             }
         });
 
@@ -552,15 +578,12 @@
             }
         });
 
-        filterTable(); // Re-render the table with the new sort order
+        filterTable();
     }
 
-    // Auto-refresh orders every 30 seconds
     setInterval(fetchOrders, 30000);
-
-    // Initial load of orders when the page loads
     fetchOrders();
 </script>
-   <script src="https://ntwoods.github.io/ordertodispatch/js/viewOnly.js"></script>
+<script src="https://ntwoods.github.io/ordertodispatch/js/viewOnly.js"></script>
 </body>
 </html>

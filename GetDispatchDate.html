@@ -184,6 +184,9 @@
         orders=result.data;
         renderOrders();
         updateStatus();
+        if (typeof setReadOnlyMode === "function") {
+          setReadOnlyMode();
+        }        
         document.getElementById('loading').style.display='none';
       }
     }catch(err){

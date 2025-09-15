@@ -299,6 +299,14 @@ function startCountdowns(){
     loadOrders(); refreshInterval=setInterval(loadOrders,120000);
   });
 </script>
-<script src="https://ntwoods.github.io/ordertodispatch/js/viewOnly.js></script>
+    <script src="https://ntwoods.github.io/ordertodispatch/js/viewOnly.js"></script>
+    <script>
+      // Wait until DOM is loaded, then check and apply readonly mode
+      document.addEventListener('DOMContentLoaded', () => {
+        if (typeof setReadOnlyMode === "function") {
+          setReadOnlyMode();
+        }
+      });
+    </script>
 </body>
 </html>

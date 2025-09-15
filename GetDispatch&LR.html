@@ -1124,7 +1124,12 @@
             setupDelayModal();
         }
 
-        function formatTimestamp(timestamp) {
+function calculateDeadline(dispatchDate){
+  const deadline = new Date(dispatchDate);
+  deadline.setHours(20,0,0,0); // 8:00 PM same day
+  return deadline;
+}
+		function formatTimestamp(timestamp) {
             if (!timestamp) return 'No timestamp';
             const date = new Date(timestamp);
             return date.toLocaleString();

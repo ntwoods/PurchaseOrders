@@ -186,7 +186,7 @@
     c.innerHTML=orders.map((o,i)=>`
       <div class="order-card">
         <div class="requester-name">👤 ${o.supplierName}</div>
-        <div class="po-number">${o.purchaseOrderNumber}</div>
+        <div class="timestamp">${o.purchaseOrderNumber}</div>
         <div class="timestamp">
           🕒 Sent: ${new Date(o.timestamp).toLocaleString()}
         </div>

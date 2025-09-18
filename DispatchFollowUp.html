@@ -568,6 +568,8 @@
                 <div class="detail-group">
                     <div class="detail-row"><span class="detail-icon">👤</span><span class="detail-value bold-value">${order.supplierName||'N/A'}</span></div>
                     <div class="detail-row"><span class="detail-icon">📅</span><span class="detail-label">Dispatch Date:</span><span class="detail-value">${formatDateForDisplay(parseDate(order.dispatchDate))}</span></div>
+                    <div class="detail-row">
+                    <span class="detail-icon">🕒</span><span class="detail-label">Dispatch Timestamp:</span><span class="detail-value">${formatDateTimeForDisplay(parseDate(order.dispatchDateTimeStamp))}</span> </div>
                     <div class="detail-row"><span class="detail-icon">⏰</span><span class="detail-label">Confirmed On:</span><span class="detail-value">${formatDateTimeForDisplay(parseDate(order.dispatchDateTimeStamp))}</span></div>
                     ${order.deadline?`<div class="detail-row"><span class="detail-icon">🎯</span><span class="detail-label">Follow Up Deadline:</span><span class="detail-value">${formatDateTimeForDisplay(order.deadline)}</span></div>`:''}
                             ${order.category ? `

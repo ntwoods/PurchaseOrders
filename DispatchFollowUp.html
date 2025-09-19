@@ -553,9 +553,12 @@
         if (t&&b) {t.classList.toggle('expanded'); b.textContent=t.classList.contains('expanded')?'see less':'see more';}
     }
 
-    function createOrderCard(order,index){
-        const isOverdue=order.deadline&&new Date()>order.deadline;
-        const statusClass=isOverdue?'status-overdue':'status-active';
+        function createOrderCard(order,index){
+        const isOverdue = order.deadline && new Date() > order.deadline;
+        const statusClass = isOverdue ? 'status-overdue' : 'status-active';
+    
+        // ✅ Define hasDelayedReason safely
+        const hasDelayedReason = order.delayedReason && order.delayedReason.trim() !== '';
         return `
         <div id="${order.id}" class="order-card ${isOverdue?'overdue-card':''}">
             <div class="order-header">

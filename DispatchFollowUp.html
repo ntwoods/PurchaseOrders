@@ -668,10 +668,46 @@
 
     document.addEventListener('DOMContentLoaded',()=>{loadOrders();setInterval(loadOrders,5*60*1000);});
 
-    function formatTimestampForSheet(dateString){
-        const d=new Date(dateString); if(isNaN(d.getTime())) return dateString;
-        return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}:${String(d.getSeconds()).padStart(2,'0')}`;
+    function formatTimestampForSheet(raw) {
+      if (!raw) return raw;
+    
+      // Already in correct DD/MM/YYYY HH:mm:ss format? return as-is
+      if (/^\d{2}\/\d{2}\/\d{4}\s+\d{2}:\d{2}:\d{2}$/.test(raw)) {
+        return raw;
+      }
+    
+      let d = new Date(raw); // try parsing directly
+    
+      // Fallback: manually parse US-style "M/D/YYYY, h:mm:ss AM/PM"
+      if (isNaN(d)) {
+        const m = raw.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4}),?\s+(\d{1,2}):(\d{2}):(\d{2})\s*(AM|PM)?$/i);
+        if (m) {
+          let [ , M, D, Y, h, mi, s, ampm ] = m;
+          M = +M; D = +D; Y = +Y; h = +h; mi = +mi; s = +s;
+          if (ampm) {
+            const isPM = ampm.toUpperCase() === 'PM';
+            if (h === 12) h = isPM ? 12 : 0; else if (isPM) h += 12;
+          }
+          d = new Date(Y, M - 1, D, h, mi, s);
+        }
+      }
+    
+      if (isNaN(d)) {
+        console.warn("Could not parse timestamp:", raw);
+        return raw; // fallback: send raw (but server may reject)
+      }
+    
+      // Format to DD/MM/YYYY HH:mm:ss
+      const dd = String(d.getDate()).padStart(2,'0');
+      const mm = String(d.getMonth()+1).padStart(2,'0');
+      const yyyy = d.getFullYear();
+      const HH = String(d.getHours()).padStart(2,'0');
+      const MM = String(d.getMinutes()).padStart(2,'0');
+      const SS = String(d.getSeconds()).padStart(2,'0');
+    
+      return `${dd}/${mm}/${yyyy} ${HH}:${MM}:${SS}`;
     }
+
 
     // 🔥 Common function to log PO + deadline
     function sendDeadlineLog(poNumber, deadline, action){

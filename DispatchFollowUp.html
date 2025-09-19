@@ -900,10 +900,21 @@
             return `${dd}/${mm}/${year} ${hh}:${min}:${ss}`;
         }
 
-dd
+    function sendDeadlineLog(poNumber, deadline, action){
+        if(!DEADLINE_LOG_URL) return;
+        fetch(DEADLINE_LOG_URL,{
+            method:'POST',mode:'no-cors',
+            headers:{'Content-Type':'application/json'},
+            body:JSON.stringify({poNumber:poNumber,deadline:formatDateTimeForDisplay(deadline),action:action})
+        }).catch(err=>console.error('Error sending deadline log:',err));
+    }
+        
         
         // Handle "On Time" action submission
         async function handleOnTime(timestamp, orderId) {
+            const action="follow1";
+            const order=orders.find(o=>o.id===orderId);
+            if(order) sendDeadlineLog(order.purchaseOrderNumber, order.deadline, action);            
             const button = event.target;
            
             try {
@@ -956,6 +967,9 @@ dd
             const nextDispatchDate = nextDispatchInput.value; // YYYY-MM-DD format from input type="date"
             const delayedRemarkInput = document.getElementById(`delayed-reason-${orderId}`);
             const delayedRemarkText = delayedRemarkInput.value; // YYYY-MM-DD format from input type="date"
+            const action="follow1";
+            const order=orders.find(o=>o.id===orderId);
+            if(order) sendDeadlineLog(order.purchaseOrderNumber, order.deadline, action);                        
             
             const submitButton = event.target;
             
@@ -1026,6 +1040,9 @@ dd
             const holdRemarkInput = document.getElementById(`hold-remark-${orderId}`);
             const holdUntilDate = holdUntilInput.value; // YYYY-MM-DD format
             const holdRemark = holdRemarkInput.value;
+            const action="follow1";
+            const order=orders.find(o=>o.id===orderId);
+            if(order) sendDeadlineLog(order.purchaseOrderNumber, order.deadline, action);                        
             const markHoldButton = event.target;
 
             if (!holdUntilDate && !holdRemark) {

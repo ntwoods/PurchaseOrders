@@ -468,7 +468,8 @@
     // Existing API URL (for main action post)
     const API_URL = 'https://script.google.com/macros/s/AKfycbwO1_MihNIerxTsnJQzuEnV2hf4UdaOzAwfDjtEXgQuxrJ499jCd3PB8_9j3kMeTdhX/exec';
 
-    const DEADLINE_LOG_URL = 'https://script.google.com/macros/s/AKfycbz55kgQ4Xn3Pxp8PCtIaH_d9cvFIPJfAhLh0h4brlT4fZNukDGo3hMYyhTvtI0OyYOyMw/exec';
+    // Leave this blank and fill later with your deployed script URL
+    const DEADLINE_LOG_URL = 'https://script.google.com/macros/s/AKfycbz55kgQ4Xn3Pxp8PCtIaH_d9cvFIPJfAhLh0h4brlT4fZNukDGo3hMYyhTvtI0OyYOyMw/exec'; 
 
     let orders = [];
     let countdownIntervals = [];
@@ -555,15 +556,88 @@
     function createOrderCard(order,index){
         const isOverdue=order.deadline&&new Date()>order.deadline;
         const statusClass=isOverdue?'status-overdue':'status-active';
-        const hasDelayedReason = order.delayedReason && order.delayedReason.trim() !== '';
-
         return `
         <div id="${order.id}" class="order-card ${isOverdue?'overdue-card':''}">
             <div class="order-header">
                 <div class="order-id">${order.purchaseOrderNumber}</div>
                 <div id="status-${order.id}" class="status-badge ${statusClass}">${isOverdue?'OVERDUE':'ACTIVE'}</div>
             </div>
-            <!-- order details skipped for brevity -->
+            <div class="order-details">
+                <div class="detail-group">
+                    <div class="detail-row"><span class="detail-icon">👤</span><span class="detail-value bold-value">${order.supplierName||'N/A'}</span></div>
+                    <div class="detail-row"><span class="detail-icon">📅</span><span class="detail-label">Dispatch Date:</span><span class="detail-value">${formatDateForDisplay(parseDate(order.dispatchDate))}</span></div>
+                    <div class="detail-row"><span class="detail-icon">⏰</span><span class="detail-label">Confirmed On:</span><span class="detail-value">${formatDateTimeForDisplay(parseDate(order.dispatchDateTimeStamp))}</span></div>
+                    ${order.deadline?`<div class="detail-row"><span class="detail-icon">🎯</span><span class="detail-label">Follow Up Deadline:</span><span class="detail-value">${formatDateTimeForDisplay(order.deadline)}</span></div>`:''}
+                            ${order.category ? `
+                            <div class="detail-row">
+                                <span class="detail-label">Category:</span>
+                                <span class="detail-value">${order.category}</span>
+                            </div>                    
+                            ` : ''}
+                        </div>
+
+                        ${order.crmRemark || order.responseRemark || hasDelayedReason ? `
+                        <div class="detail-group">
+                            ${order.crmRemark ? `
+                            <div class="detail-row">
+                                <span class="detail-icon">💬</span>
+                                <span class="detail-label">CRM Remark:</span>
+                                <span class="detail-value">${order.crmRemark}</span>
+                            </div>
+                            ` : ''}
+                            ${order.responseRemark ? `
+                            <div class="detail-row">
+                                <span class="detail-icon">📝</span>
+                                <span class="detail-label">Purchase Remark:</span>
+                                <span class="detail-value">${order.responseRemark}</span>
+                            </div>
+                            ` : ''}
+                            ${hasDelayedReason ? `
+                            <div class="detail-row">
+                                <span class="detail-icon">💬</span>
+                                <span class="detail-label">:</span>
+                                <span id="delayed-reason-text-${order.id}" class="detail-value delayed-reason-text">${order.delayedReason}</span>
+                                <button id="read-more-btn-${order.id}" class="read-more-btn" onclick="toggleDelayedReason('${order.id}')">see more</button>
+                            </div>
+                            ` : ''}
+                        </div>
+                        ` : ''}
+
+                        <div class="url-section detail-group">
+                            ${order.googleSheetURL ? `
+                                <a href="${order.googleSheetURL}" target="_blank" class="view-po-btn">📄 View PO</a>
+                            ` : ''}
+                            ${order.orderSheet ? `
+                                <a href="${order.orderSheet}" target="_blank" class="view-po-btn">🎼 Order Sheet</a>
+                            ` : ''}
+                            ${order.additionalPurchaseURL ? `
+                                <a href="${order.additionalPurchaseURL}" target="_blank" class="view-po-btn">➕ Add. Pur.</a>
+                            ` : ''}
+                            ${order.crmRequestURL ? `
+                                <a href="${order.crmRequestURL}" target="_blank" class="view-po-btn">✉️ CRM Request</a>
+                            ` : ''}
+                        </div>
+                    </div>
+            <div id="countdown-${order.id}" class="countdown-section">${order.deadline?'':'<div class="countdown-title">⚠️ Cannot calculate deadline</div>'}</div>
+            <div class="editable">
+                <div class="actions-section">
+                    <div class="actions-title">📋 Order Actions</div>
+                    <div class="action-buttons">
+                        <button class="action-btn on-time-btn" onclick="handleOnTime('${order.timestamp}','${order.id}')">On Time</button>
+                        <button class="action-btn delayed-btn" onclick="toggleDelayedInput('${order.id}')">Delayed</button>
+                    </div>
+                    <div id="delayed-input-${order.id}" class="input-section">
+                        <div class="input-group">
+                            <label for="next-dispatch-${order.id}" class="input-label">Next Dispatch Date:</label>
+                            <input type="date" id="next-dispatch-${order.id}" class="date-input" required>
+                            <label for="delayed-reason-${order.id}" class="input-label">Delayed Reason:</label>
+                            <input type="text" id="delayed-reason-${order.id}" class="date-input" required>
+                        </div>
+                        <button class="submit-btn" onclick="handleDelayed('${order.timestamp}','${order.id}')">Submit Delayed</button>
+                    </div>
+                    <div id="feedback-${order.id}" class="action-feedback"></div>
+                </div>
+            </div>
         </div>`;
     }
 
@@ -596,10 +670,11 @@
         return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}:${String(d.getSeconds()).padStart(2,'0')}`;
     }
 
+    // 🔥 Common function to log PO + deadline
     function sendDeadlineLog(poNumber, deadline, action){
         if(!DEADLINE_LOG_URL) return;
         fetch(DEADLINE_LOG_URL,{
-            method:'POST',
+            method:'POST',mode:'no-cors',
             headers:{'Content-Type':'application/json'},
             body:JSON.stringify({poNumber:poNumber,deadline:formatDateTimeForDisplay(deadline),action:action})
         }).catch(err=>console.error('Error sending deadline log:',err));
@@ -608,96 +683,26 @@
     async function handleOnTime(timestamp, orderId){
         const btn=event.target; btn.disabled=true; btn.textContent='Processing...';
         const order=orders.find(o=>o.id===orderId);
-        if(order) sendDeadlineLog(order.purchaseOrderNumber, order.deadline, "follow1");
-
-        try {
-            const res = await fetch(API_URL,{
-                method:'POST',
-                headers:{'Content-Type':'application/json'},
-                body:JSON.stringify({action:'onTime',timestamp:formatTimestampForSheet(timestamp)})
-            });
-            const data = await res.json();
-            if(res.ok && data.success){
-                showFeedback(orderId,'✅ On Time action submitted successfully!','success');
-            } else {
-                throw new Error(data.error || `Request failed (${res.status})`);
-            }
-        } catch(err){
-            console.error('Error submitting On Time:',err);
-            showFeedback(orderId,`❌ ${err.message}`,'error');
-        } finally {
-            btn.disabled=false; btn.textContent='On Time'; 
-            setTimeout(loadOrders,1500);
-        }
+        const action1="follow1";
+        if(order) sendDeadlineLog(order.purchaseOrderNumber, order.deadline, action1);
+        fetch(API_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'onTime',timestamp:formatTimestampForSheet(timestamp)})});
+        showFeedback(orderId,'Action submitted successfully!','success');
+        setTimeout(()=>{btn.disabled=false;btn.textContent='On Time';loadOrders();},2000);
     }
 
     async function handleDelayed(timestamp, orderId){
-        const btn=event.target;
+        const action2="follow1";
         const nextDispatch=document.getElementById(`next-dispatch-${orderId}`).value;
         const remark=document.getElementById(`delayed-reason-${orderId}`).value;
-        if(!nextDispatch){showFeedback(orderId,'⚠️ Please select a next dispatch date','error');return;}
-
+        const btn=event.target;
+        if(!nextDispatch){showFeedback(orderId,'Please select a next dispatch date','error');return;}
         btn.disabled=true; btn.textContent='⏳ Processing...';
         const order=orders.find(o=>o.id===orderId);
-        if(order) sendDeadlineLog(order.purchaseOrderNumber, order.deadline, "follow1");
-
-        try {
-            const res = await fetch(API_URL,{
-                method:'POST',
-                headers:{'Content-Type':'application/json'},
-                body:JSON.stringify({action:'delayed',timestamp:formatTimestampForSheet(timestamp),nextDispatchDate:nextDispatch,delayedRemark:remark})
-            });
-            const data=await res.json();
-            if(res.ok && data.success){
-                showFeedback(orderId,'✅ Delayed action submitted successfully!','success');
-            } else {
-                throw new Error(data.error || `Request failed (${res.status})`);
-            }
-        } catch(err){
-            console.error('Error submitting Delayed:',err);
-            showFeedback(orderId,`❌ ${err.message}`,'error');
-        } finally {
-            btn.disabled=false; btn.textContent='Submit Delayed';
-            document.getElementById(`delayed-input-${orderId}`).classList.remove('show');
-            setTimeout(loadOrders,1500);
-        }
-    }
-
-    async function handleHold(timestamp, orderId){
-        const holdUntilInput=document.getElementById(`hold-until-${orderId}`);
-        const holdRemarkInput=document.getElementById(`hold-remark-${orderId}`);
-        const holdUntilDate=holdUntilInput.value;
-        const holdRemark=holdRemarkInput.value;
-        const btn=event.target;
-
-        if(!holdUntilDate && !holdRemark){
-            showFeedback(orderId,'⚠️ Enter either a "Hold Until" date or a "Hold Remark"','error');
-            return;
-        }
-
-        btn.disabled=true; btn.textContent='⏳ Processing...';
-
-        try {
-            const res = await fetch(API_URL,{
-                method:'POST',
-                headers:{'Content-Type':'application/json'},
-                body:JSON.stringify({action:'hold',timestamp:formatTimestampForSheet(timestamp),holdUntilDate:holdUntilDate,holdRemark:holdRemark})
-            });
-            const data=await res.json();
-            if(res.ok && data.success){
-                showFeedback(orderId,'✅ Hold action submitted successfully!','success');
-            } else {
-                throw new Error(data.error || `Request failed (${res.status})`);
-            }
-        } catch(err){
-            console.error('Error submitting Hold:',err);
-            showFeedback(orderId,`❌ ${err.message}`,'error');
-        } finally {
-            btn.disabled=false; btn.textContent='Mark Hold';
-            holdUntilInput.value=''; holdRemarkInput.value='';
-            document.getElementById(`hold-input-${orderId}`).classList.remove('show');
-            setTimeout(loadOrders,1500);
-        }
+        if(order) sendDeadlineLog(order.purchaseOrderNumber, order.deadline, action2);
+        fetch(API_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'delayed',timestamp:formatTimestampForSheet(timestamp),nextDispatchDate:nextDispatch,delayedRemark:remark})});
+        showFeedback(orderId,'Delayed action submitted successfully!','success');
+        document.getElementById(`delayed-input-${orderId}`).classList.remove('show');
+        setTimeout(()=>{btn.disabled=false;btn.textContent='Submit Delayed';loadOrders();},2000);
     }
 
     function toggleDelayedInput(orderId){
@@ -705,20 +710,80 @@
         el.classList.toggle('show');
     }
 
-    function toggleHoldInput(orderId, forceHide=false){
-        const holdInputSection=document.getElementById(`hold-input-${orderId}`);
-        if(forceHide){holdInputSection.classList.remove('show');return;}
-        holdInputSection.classList.toggle('show');
-        document.getElementById(`delayed-input-${orderId}`).classList.remove('show');
-    }
+        // Toggle visibility of the hold input section
+        function toggleHoldInput(orderId, forceHide = false) {
+            const holdInputSection = document.getElementById(`hold-input-${orderId}`);
+            const holdUntilInput = document.getElementById(`hold-until-${orderId}`);
+            const holdRemarkInput = document.getElementById(`hold-remark-${orderId}`);
 
+            if (forceHide) {
+                holdInputSection.classList.remove('show');
+                holdUntilInput.value = ''; // Clear fields
+                holdRemarkInput.value = '';
+            } else {
+                holdInputSection.classList.toggle('show');
+                // Hide delayed section if it's open
+                document.getElementById(`delayed-input-${orderId}`).classList.remove('show');
+            }
+        }
+
+        // Handle "Hold" action submission
+        async function handleHold(timestamp, orderId) {
+            const holdUntilInput = document.getElementById(`hold-until-${orderId}`);
+            const holdRemarkInput = document.getElementById(`hold-remark-${orderId}`);
+            const holdUntilDate = holdUntilInput.value; // YYYY-MM-DD format
+            const holdRemark = holdRemarkInput.value;
+            const markHoldButton = event.target;
+
+            if (!holdUntilDate && !holdRemark) {
+                showFeedback(orderId, 'Please enter either a "Hold Until" date or a "Hold Remark".', 'error');
+                return;
+            }
+
+            markHoldButton.disabled = true;
+            markHoldButton.textContent = '⏳ Processing...';
+
+            try {
+                // Send POST request
+                fetch(API_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        action: 'hold',
+                        timestamp: formatTimestampForSheet(timestamp),
+                        holdUntilDate: holdUntilDate,
+                        holdRemark: holdRemark
+                    })
+                });
+
+                showFeedback(orderId, 'Hold action submitted successfully (check sheet for update)!', 'success');
+                
+                // Hide input section and clear values after submission
+                toggleHoldInput(orderId, true); // Force hide and clear fields
+
+                setTimeout(loadOrders, 2000); // Refresh orders
+            } catch (error) {
+                console.error('Error submitting Hold action:', error);
+                showFeedback(orderId, `Client-side error: ${error.message}`, 'error');
+            } finally {
+                setTimeout(() => {
+                    markHoldButton.disabled = false;
+                    markHoldButton.textContent = 'Mark Hold';
+                }, 2000);
+            }
+        }
+    
     function showFeedback(orderId,msg,type){
         const fb=document.getElementById(`feedback-${orderId}`);
         fb.textContent=msg; fb.className=`action-feedback ${type}`; fb.style.display='block';
         setTimeout(()=>fb.style.display='none',5000);
     }
-</script>
 
+    
+</script>
     <script src="https://ntwoods.github.io/ordertodispatch/js/viewOnly.js"></script>
     <script>
       // Wait until DOM is loaded, then check and apply readonly mode

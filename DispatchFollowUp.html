@@ -464,113 +464,219 @@
         <div id="orders-container" class="orders-grid"></div>
     </div>
 
-<script>
-    // Existing API URL (for main action post)
-    const API_URL = 'https://script.google.com/macros/s/AKfycbwO1_MihNIerxTsnJQzuEnV2hf4UdaOzAwfDjtEXgQuxrJ499jCd3PB8_9j3kMeTdhX/exec';
+    <script>
+        // REPLACE THIS WITH YOUR DEPLOYED GOOGLE APPS SCRIPT WEB APP URL
+        const API_URL = 'https://script.google.com/macros/s/AKfycbwO1_MihNIerxTsnJQzuEnV2hf4UdaOzAwfDjtEXgQuxrJ499jCd3PB8_9j3kMeTdhX/exec';
+        let orders = [];
+        let countdownIntervals = [];
 
-    // Leave this blank and fill later with your deployed script URL
-    const DEADLINE_LOG_URL = 'https://script.google.com/macros/s/AKfycbz55kgQ4Xn3Pxp8PCtIaH_d9cvFIPJfAhLh0h4brlT4fZNukDGo3hMYyhTvtI0OyYOyMw/exec'; 
-
-    let orders = [];
-    let countdownIntervals = [];
-
-    function parseDate(dateStr) {
-        if (!dateStr) return null;
-        let date;
-        if (dateStr.includes('T') && dateStr.includes('Z')) date = new Date(dateStr);
-        else if (dateStr.includes('/') && dateStr.includes(':')) {
-            const [datePart, timePart] = dateStr.split(' ');
-            const [day, month, year] = datePart.split('/');
-            date = new Date(`${year}-${month}-${day}T${timePart}`);
-        } else if (dateStr.includes('/')) {
-            const [day, month, year] = dateStr.split('/');
-            date = new Date(`${year}-${month}-${day}`);
-        } else if (dateStr.match(/^\d{4}-\d{2}-\d{2}$/)) date = new Date(dateStr);
-        else if (dateStr.includes('-') && dateStr.includes(':')) {
-            const [datePart, timePart] = dateStr.split(' ');
-            const [day, month, year] = datePart.split('-');
-            date = new Date(`${year}-${month}-${day}T${timePart}`);
-        } else if (dateStr.includes('-')) {
-            const [day, month, year] = dateStr.split('-');
-            date = new Date(`${year}-${month}-${day}`);
-        } else date = new Date(dateStr);
-        return isNaN(date.getTime()) ? null : date;
-    }
-
-    function formatDateForDisplay(date) {
-        if (!date) return 'N/A';
-        const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-        return `${String(date.getDate()).padStart(2,'0')}-${months[date.getMonth()]}-${date.getFullYear()}`;
-    }
-
-    function formatDateTimeForDisplay(date) {
-        if (!date) return 'N/A';
-        return `${formatDateForDisplay(date)} ${String(date.getHours()).padStart(2,'0')}:${String(date.getMinutes()).padStart(2,'0')}:${String(date.getSeconds()).padStart(2,'0')}`;
-    }
-
-    function calculateDeadline(dispatchDate, dispatchDateTimeStamp) {
-        const dispatch = parseDate(dispatchDate);
-        const dispatchTimestamp = parseDate(dispatchDateTimeStamp);
-        if (!dispatch || !dispatchTimestamp) return null;
-        const diffDays = Math.round((dispatch.setHours(0,0,0,0)-dispatchTimestamp.setHours(0,0,0,0)) / (1000*60*60*24));
-        const reminderDays = Math.ceil(diffDays/2);
-        const deadline = new Date(dispatchTimestamp);
-        deadline.setDate(deadline.getDate()+reminderDays);
-        deadline.setHours(20,0,0,0);
-        if (deadline.getDay()===0) deadline.setDate(deadline.getDate()-1);
-        return deadline;
-    }
-
-    function formatCountdown(ms) {
-        if (ms<=0) return null;
-        const d=Math.floor(ms/(1000*60*60*24)),
-              h=Math.floor((ms%(1000*60*60*24))/(1000*60*60)),
-              m=Math.floor((ms%(1000*60*60))/(1000*60)),
-              s=Math.floor((ms%(1000*60))/1000);
-        return `${d}d ${h}h ${m}m ${s}s`;
-    }
-
-    function updateCountdown(orderId) {
-        const order=orders.find(o=>o.id===orderId);
-        if (!order || !order.deadline) return;
-        const now=new Date(), timeLeft=order.deadline-now;
-        const countdownEl=document.getElementById(`countdown-${orderId}`);
-        const cardEl=document.getElementById(orderId);
-        if (!countdownEl || !cardEl) return;
-        if (timeLeft<=0) {
-            countdownEl.innerHTML='<div class="countdown-overdue">⚠️ OVERDUE</div>';
-            document.getElementById(`status-${orderId}`).className='status-badge status-overdue';
-            cardEl.classList.add('overdue-card');
-        } else {
-            countdownEl.innerHTML=`<div class="countdown-title">⏰ Time Left to Follow-up</div><div class="countdown-timer">${formatCountdown(timeLeft)}</div>`;
-            cardEl.classList.remove('overdue-card');
+        // Function to parse various date string formats into a Date object
+        function parseDate(dateStr) {
+            if (!dateStr) return null;
+            
+            let date;
+            
+            // Handle ISO format with Z (e.g., 2025-06-19T18:30:00.000Z)
+            if (dateStr.includes('T') && dateStr.includes('Z')) {
+                date = new Date(dateStr);
+            }
+            // Handle DD/MM/YYYY HH:mm:ss format (e.g., 05/06/2025 11:09:44)
+            else if (dateStr.includes('/') && dateStr.includes(':')) {
+                const [datePart, timePart] = dateStr.split(' ');
+                const [day, month, year] = datePart.split('/');
+                date = new Date(`${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}T${timePart}`);
+            }
+            // Handle DD/MM/YYYY format
+            else if (dateStr.includes('/')) {
+                const [datePart] = dateStr.split(' ');
+                const [day, month, year] = datePart.split('/');
+                date = new Date(`${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`);
+            }
+            // Handle YYYY-MM-DD format (e.g., 2025-06-20)
+            else if (dateStr.includes('-') && dateStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
+                date = new Date(dateStr);
+            }
+            // Handle DD-MM-YYYY HH:mm:ss format
+            else if (dateStr.includes('-') && dateStr.includes(':')) {
+                const [datePart, timePart] = dateStr.split(' ');
+                const [day, month, year] = datePart.split('-');
+                date = new Date(`${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}T${timePart}`);
+            }
+            // Handle DD-MM-YYYY format
+            else if (dateStr.includes('-')) {
+                const [day, month, year] = dateStr.split('-');
+                date = new Date(`${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`);
+            }
+            // Try other formats (as a fallback)
+            else {
+                date = new Date(dateStr);
+            }
+            
+            return isNaN(date.getTime()) ? null : date;
         }
-    }
 
-    function toggleDelayedReason(orderId) {
-        const t=document.getElementById(`delayed-reason-text-${orderId}`);
-        const b=document.getElementById(`read-more-btn-${orderId}`);
-        if (t&&b) {t.classList.toggle('expanded'); b.textContent=t.classList.contains('expanded')?'see less':'see more';}
-    }
+        // Format a Date object for display in "dd-mmm-yyyy" format
+        function formatDateForDisplay(date) {
+            if (!date) return 'N/A';
+            
+            const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
+                           'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            
+            const day = date.getDate().toString().padStart(2, '0');
+            const month = months[date.getMonth()];
+            const year = date.getFullYear();
+            
+            return `${day}-${month}-${year}`;
+        }
 
-        function createOrderCard(order,index){
-        const isOverdue = order.deadline && new Date() > order.deadline;
-        const statusClass = isOverdue ? 'status-overdue' : 'status-active';
-    
-        // ✅ Define hasDelayedReason safely
-        const hasDelayedReason = order.delayedReason && order.delayedReason.trim() !== '';
-        return `
-        <div id="${order.id}" class="order-card ${isOverdue?'overdue-card':''}">
-            <div class="order-header">
-                <div class="order-id">${order.purchaseOrderNumber}</div>
-                <div id="status-${order.id}" class="status-badge ${statusClass}">${isOverdue?'OVERDUE':'ACTIVE'}</div>
-            </div>
-            <div class="order-details">
-                <div class="detail-group">
-                    <div class="detail-row"><span class="detail-icon">👤</span><span class="detail-value bold-value">${order.supplierName||'N/A'}</span></div>
-                    <div class="detail-row"><span class="detail-icon">📅</span><span class="detail-label">Dispatch Date:</span><span class="detail-value">${formatDateForDisplay(parseDate(order.dispatchDate))}</span></div>
-                    <div class="detail-row"><span class="detail-icon">⏰</span><span class="detail-label">Confirmed On:</span><span class="detail-value">${formatDateTimeForDisplay(parseDate(order.dispatchDateTimeStamp))}</span></div>
-                    ${order.deadline?`<div class="detail-row"><span class="detail-icon">🎯</span><span class="detail-label">Follow Up Deadline:</span><span class="detail-value">${formatDateTimeForDisplay(order.deadline)}</span></div>`:''}
+        // Format a Date object for display in "dd-mmm-yyyy hh:mm:ss" format
+        function formatDateTimeForDisplay(date) {
+            if (!date) return 'N/A';
+            
+            const dateStr = formatDateForDisplay(date);
+            const hours = date.getHours().toString().padStart(2, '0');
+            const minutes = date.getMinutes().toString().padStart(2, '0');
+            const seconds = date.getSeconds().toString().padStart(2, '0');
+            
+            return `${dateStr} ${hours}:${minutes}:${seconds}`;
+        }
+
+        // Calculate the follow-up deadline based on dispatch date and timestamp
+        function calculateDeadline(dispatchDate, dispatchDateTimeStamp) {
+            const dispatch = parseDate(dispatchDate);
+            const dispatchTimestamp = parseDate(dispatchDateTimeStamp);
+
+            if (!dispatch || !dispatchTimestamp) {
+                console.log('Invalid dates for deadline calculation:', { dispatchDate, dispatchDateTimeStamp, dispatch, dispatchTimestamp });
+                return null;
+            }
+
+            // Calculate difference in days (date level only - ignore time for diff)
+            const dispatchDateOnly = new Date(dispatch.getFullYear(), dispatch.getMonth(), dispatch.getDate());
+            const timestampDateOnly = new Date(dispatchTimestamp.getFullYear(), dispatchTimestamp.getMonth(), dispatchTimestamp.getDate());
+
+            const diffTime = dispatchDateOnly.getTime() - timestampDateOnly.getTime();
+            const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+
+            console.log('Date calculation for deadline:', {
+                dispatchDateOnly: dispatchDateOnly.toDateString(),
+                timestampDateOnly: timestampDateOnly.toDateString(),
+                diffDays,
+                halfDiff: Math.ceil(diffDays / 2)
+            });
+
+            // Half the difference and round up (take ceiling)
+            const reminderDays = Math.ceil(diffDays / 2);
+
+            // Add reminder days to the original dispatchDateTimeStamp (with time)
+            const deadline = new Date(dispatchTimestamp);
+            deadline.setDate(deadline.getDate() + reminderDays);
+            deadline.setHours(20, 0, 0, 0);
+            if (deadline.getDay() === 0) {
+                deadline.setDate(deadline.getDate() -1);
+            }
+            return deadline;
+            }
+
+
+        // Format time left for countdown timer
+        function formatCountdown(timeLeft) {
+            if (timeLeft <= 0) return null;
+            
+            const days = Math.floor(timeLeft / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
+            
+            return `${days}d ${hours}h ${minutes}m ${seconds}s`;
+        }
+
+        // Update countdown for a specific order card
+        function updateCountdown(orderId) {
+            const order = orders.find(o => o.id === orderId);
+            if (!order || !order.deadline) return;
+            
+            const now = new Date();
+            const timeLeft = order.deadline.getTime() - now.getTime();
+            const countdownElement = document.getElementById(`countdown-${orderId}`);
+            const cardElement = document.getElementById(orderId);
+            
+            if (!countdownElement || !cardElement) return;
+            
+            if (timeLeft <= 0) {
+                countdownElement.innerHTML = '<div class="countdown-overdue">⚠️ OVERDUE</div>';
+                const statusBadge = document.getElementById(`status-${orderId}`);
+                if (statusBadge) {
+                    statusBadge.textContent = 'OVERDUE';
+                    statusBadge.className = 'status-badge status-overdue';
+                }
+                // Add the red highlight class to the card
+                cardElement.classList.add('overdue-card');
+            } else {
+                const formattedTime = formatCountdown(timeLeft);
+                countdownElement.innerHTML = `
+                    <div class="countdown-title">⏰ Time Left to Follow-up</div>
+                    <div class="countdown-timer">${formattedTime}</div>
+                `;
+                // Ensure the highlight is removed if the time is somehow reset
+                cardElement.classList.remove('overdue-card');
+            }
+        }
+
+        // Toggle "see more" for delayed reason
+        function toggleDelayedReason(orderId) {
+            const textElement = document.getElementById(`delayed-reason-text-${orderId}`);
+            const buttonElement = document.getElementById(`read-more-btn-${orderId}`);
+
+            if (textElement && buttonElement) {
+                textElement.classList.toggle('expanded');
+                if (textElement.classList.contains('expanded')) {
+                    buttonElement.textContent = 'see less';
+                } else {
+                    buttonElement.textContent = 'see more';
+                }
+            }
+        }
+
+        // Create HTML structure for each order card
+        function createOrderCard(order, index) {
+            const isOverdue = order.deadline && new Date() > order.deadline;
+            const statusClass = isOverdue ? 'status-overdue' : 'status-active';
+            const statusText = isOverdue ? 'OVERDUE' : 'ACTIVE';
+            const overdueCardClass = isOverdue ? 'overdue-card' : '';
+
+            const hasDelayedReason = order.delayedReason && order.delayedReason.trim() !== '';
+
+            return `
+                <div id="${order.id}" class="order-card ${overdueCardClass}">
+                    <div class="order-header">
+                        <div class="order-id">${order.purchaseOrderNumber}</div>
+                        <div id="status-${order.id}" class="status-badge ${statusClass}">${statusText}</div>
+                    </div>
+
+                    <div class="order-details">
+                        <div class="detail-group">
+                            <div class="detail-row">
+                                <span class="detail-icon">👤</span>
+                                <span class="detail-value bold-value">${order.supplierName || 'N/A'}</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="detail-icon">📅</span>
+                                <span class="detail-label">Dispatch Date:</span>
+                                <span class="detail-value">${formatDateForDisplay(parseDate(order.dispatchDate))}</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="detail-icon">⏰</span>
+                                <span class="detail-label">Confirmed On:</span>
+                                <span class="detail-value">${formatDateTimeForDisplay(parseDate(order.dispatchDateTimeStamp))}</span>
+                            </div>
+                            ${order.deadline ? `
+                            <div class="detail-row">
+                                <span class="detail-icon">🎯</span>
+                                <span class="detail-label">Follow Up Deadline:</span>
+                                <span class="detail-value">${formatDateTimeForDisplay(order.deadline)}</span>
+                            </div>
+                            ` : ''}
                             ${order.category ? `
                             <div class="detail-row">
                                 <span class="detail-label">Category:</span>
@@ -621,133 +727,279 @@
                             ` : ''}
                         </div>
                     </div>
-            <div id="countdown-${order.id}" class="countdown-section">${order.deadline?'':'<div class="countdown-title">⚠️ Cannot calculate deadline</div>'}</div>
-            <div class="editable">
-                <div class="actions-section">
-                    <div class="actions-title">📋 Order Actions</div>
-                    <div class="action-buttons">
-                        <button class="action-btn on-time-btn" onclick="handleOnTime('${order.timestamp}','${order.id}')">On Time</button>
-                        <button class="action-btn delayed-btn" onclick="toggleDelayedInput('${order.id}')">Delayed</button>
+
+                    <div id="countdown-${order.id}" class="countdown-section">
+                        ${order.deadline ? '' : '<div class="countdown-title">⚠️ Cannot calculate deadline</div>'}
                     </div>
-                    <div id="delayed-input-${order.id}" class="input-section">
-                        <div class="input-group">
-                            <label for="next-dispatch-${order.id}" class="input-label">Next Dispatch Date:</label>
-                            <input type="date" id="next-dispatch-${order.id}" class="date-input" required>
-                            <label for="delayed-reason-${order.id}" class="input-label">Delayed Reason:</label>
-                            <input type="text" id="delayed-reason-${order.id}" class="date-input" required>
+                    <div class="editable">
+                        <div class="actions-section">
+                            <div class="actions-title">📋 Order Actions</div>
+                            <div class="action-buttons">
+                                <button class="action-btn on-time-btn" onclick="handleOnTime('${order.timestamp}', '${order.id}')">
+                                    On Time
+                                </button>
+                                <button class="action-btn delayed-btn" onclick="toggleDelayedInput('${order.id}')">
+                                    Delayed
+                                </button>
+                                <button class="action-btn hold-btn" onclick="toggleHoldInput('${order.id}')">
+                                    Hold
+                                </button>
+                            </div>
+
+                            <div id="delayed-input-${order.id}" class="input-section">
+                                <div class="input-group">
+                                    <label for="next-dispatch-${order.id}" class="input-label">Next Dispatch Date:</label>
+                                    <input type="date" id="next-dispatch-${order.id}" class="date-input" required>
+                                    <label for="delayed-reason-${order.id}" class="input-label">Delayed Reason:</label>
+                                    <input type="text" id="delayed-reason-${order.id}" class="date-input" required>
+                                </div>
+                                <button class="submit-btn" onclick="handleDelayed('${order.timestamp}', '${order.id}')">
+                                    Submit Delayed
+                                </button>
+                            </div>
+
+                            <div id="hold-input-${order.id}" class="input-section">
+                                <div class="input-group">
+                                    <label for="hold-until-${order.id}" class="input-label">Hold Until:</label>
+                                    <input type="date" id="hold-until-${order.id}" class="date-input">
+                                </div>
+                                <div class="input-group">
+                                    <label for="hold-remark-${order.id}" class="input-label">Hold Remark:</label>
+                                    <input type="text" id="hold-remark-${order.id}" class="text-input" placeholder="Enter remark">
+                                </div>
+                                <div class="action-buttons">
+                                    <button class="action-btn mark-hold-btn" onclick="handleHold('${order.timestamp}', '${order.id}')">
+                                        Mark Hold
+                                    </button>
+                                    <button class="action-btn cancel-hold-btn" onclick="toggleHoldInput('${order.id}', true)">
+                                        Cancel Hold
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div id="feedback-${order.id}" class="action-feedback"></div>
                         </div>
-                        <button class="submit-btn" onclick="handleDelayed('${order.timestamp}','${order.id}')">Submit Delayed</button>
                     </div>
-                    <div id="feedback-${order.id}" class="action-feedback"></div>
                 </div>
-            </div>
-        </div>`;
-    }
-
-    async function loadOrders(){
-        const loadingEl=document.getElementById('loading');
-        const errorEl=document.getElementById('error');
-        const containerEl=document.getElementById('orders-container');
-        loadingEl.style.display='block'; errorEl.style.display='none'; containerEl.innerHTML='';
-        countdownIntervals.forEach(i=>clearInterval(i)); countdownIntervals=[];
-        try{
-            const res=await fetch(API_URL);
-            if(!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-            const data=await res.json();
-            let ordersData=Array.isArray(data)?data:data.orders||data.data||data.results||[data];
-            orders=ordersData.map((item,i)=>({id:`order-${i}`,...item,deadline:calculateDeadline(item.dispatchDate,item.dispatchDateTimeStamp)}));
-            containerEl.innerHTML=orders.length?orders.map(createOrderCard).join(''):'<div class="error-message">📭 No orders found</div>';
-            startCountdownTimers();
-        }catch(err){
-            console.error('Error loading orders:',err);
-            errorEl.textContent=`❌ Error loading orders: ${err.message}`; errorEl.style.display='block';
-        }finally{loadingEl.style.display='none';}
-    }
-
-    function startCountdownTimers(){orders.forEach(o=>{if(o.deadline){updateCountdown(o.id);const t=setInterval(()=>updateCountdown(o.id),1000);countdownIntervals.push(t);}});}
-
-    document.addEventListener('DOMContentLoaded',()=>{loadOrders();setInterval(loadOrders,5*60*1000);});
-
-    function formatTimestampForSheet(raw) {
-      if (!raw) return raw;
-    
-      // Already in correct DD/MM/YYYY HH:mm:ss format? return as-is
-      if (/^\d{2}\/\d{2}\/\d{4}\s+\d{2}:\d{2}:\d{2}$/.test(raw)) {
-        return raw;
-      }
-    
-      let d = new Date(raw); // try parsing directly
-    
-      // Fallback: manually parse US-style "M/D/YYYY, h:mm:ss AM/PM"
-      if (isNaN(d)) {
-        const m = raw.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4}),?\s+(\d{1,2}):(\d{2}):(\d{2})\s*(AM|PM)?$/i);
-        if (m) {
-          let [ , M, D, Y, h, mi, s, ampm ] = m;
-          M = +M; D = +D; Y = +Y; h = +h; mi = +mi; s = +s;
-          if (ampm) {
-            const isPM = ampm.toUpperCase() === 'PM';
-            if (h === 12) h = isPM ? 12 : 0; else if (isPM) h += 12;
-          }
-          d = new Date(Y, M - 1, D, h, mi, s);
+            `;
         }
-      }
-    
-      if (isNaN(d)) {
-        console.warn("Could not parse timestamp:", raw);
-        return raw; // fallback: send raw (but server may reject)
-      }
-    
-      // Format to DD/MM/YYYY HH:mm:ss
-      const dd = String(d.getDate()).padStart(2,'0');
-      const mm = String(d.getMonth()+1).padStart(2,'0');
-      const yyyy = d.getFullYear();
-      const HH = String(d.getHours()).padStart(2,'0');
-      const MM = String(d.getMinutes()).padStart(2,'0');
-      const SS = String(d.getSeconds()).padStart(2,'0');
-    
-      return `${dd}/${mm}/${yyyy} ${HH}:${MM}:${SS}`;
-    }
+        // Load orders from the Google Apps Script API
+        async function loadOrders() {
+            const loadingEl = document.getElementById('loading');
+            const errorEl = document.getElementById('error');
+            const containerEl = document.getElementById('orders-container');
+            
+            loadingEl.style.display = 'block';
+            errorEl.style.display = 'none';
+            containerEl.innerHTML = '';
+            
+            // Clear existing countdown intervals
+            countdownIntervals.forEach(interval => clearInterval(interval));
+            countdownIntervals = [];
+            
+            try {
+                const response = await fetch(API_URL);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                // Handle different data formats from the API
+                let ordersData = [];
+                
+                if (Array.isArray(data)) {
+                    ordersData = data;
+                } else if (data && typeof data === 'object') {
+                    // If it's an object, try to extract orders from common properties
+                    if (data.orders && Array.isArray(data.orders)) {
+                        ordersData = data.orders;
+                    } else if (data.data && Array.isArray(data.data)) {
+                        ordersData = data.data;
+                    } else if (data.results && Array.isArray(data.results)) {
+                        ordersData = data.results;
+                    } else {
+                        // If it's a single object, treat it as one order
+                        ordersData = [data];
+                    }
+                } else {
+                    throw new Error('Invalid data format received from API');
+                }
+                
+                orders = ordersData.map((item, index) => {
+                    const deadline = calculateDeadline(item.dispatchDate, item.dispatchDateTimeStamp);
+                    return {
+                        id: `order-${index}`, // Assign a unique ID for DOM manipulation
+                        ...item,
+                        deadline
+                    };
+                });
+                
+                if (orders.length === 0) {
+                    containerEl.innerHTML = '<div class="error-message">📭 No orders found</div>';
+                    return;
+                }
+                
+                // Render order cards
+                containerEl.innerHTML = orders.map(createOrderCard).join('');
+                
+                // Start countdown timers for each order
+                startCountdownTimers();
+                if (typeof setReadOnlyMode === "function") {
+                  setReadOnlyMode();
+                }                
+                
+            } catch (error) {
+                console.error('Error loading orders:', error);
+                errorEl.textContent = `❌ Error loading orders: ${error.message}`;
+                errorEl.style.display = 'block';
+            } finally {
+                loadingEl.style.display = 'none';
+            }
+        }
 
+        // Start all countdown timers for currently displayed orders
+        function startCountdownTimers() {
+            orders.forEach(order => {
+                if (order.deadline) {
+                    // Update immediately upon load
+                    updateCountdown(order.id);
+                    
+                    // Set up interval to update every second
+                    const interval = setInterval(() => {
+                        updateCountdown(order.id);
+                    }, 1000);
+                    
+                    countdownIntervals.push(interval);
+                }
+            });
+        }
 
-    // 🔥 Common function to log PO + deadline
-    function sendDeadlineLog(poNumber, deadline, action){
-        if(!DEADLINE_LOG_URL) return;
-        fetch(DEADLINE_LOG_URL,{
-            method:'POST',mode:'no-cors',
-            headers:{'Content-Type':'application/json'},
-            body:JSON.stringify({poNumber:poNumber,deadline:formatDateTimeForDisplay(deadline),action:action})
-        }).catch(err=>console.error('Error sending deadline log:',err));
-    }
+        // Initialize the application when the DOM is ready
+        document.addEventListener('DOMContentLoaded', function() {
+            loadOrders();
+            
+            // Set up auto-refresh for orders every 5 minutes
+            setInterval(loadOrders, 5 * 60 * 1000);
+        });
 
-    async function handleOnTime(timestamp, orderId){
-        const btn=event.target; btn.disabled=true; btn.textContent='Processing...';
-        const order=orders.find(o=>o.id===orderId);
-        const action1="follow1";
-        if(order) sendDeadlineLog(order.purchaseOrderNumber, order.deadline, action1);
-        fetch(API_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'onTime',timestamp:formatTimestampForSheet(timestamp)})});
-        showFeedback(orderId,'Action submitted successfully!','success');
-        setTimeout(()=>{btn.disabled=false;btn.textContent='On Time';loadOrders();},2000);
-    }
+        // Format a Date object to "DD/MM/YYYY HH:mm:ss" matching the Google Sheet format
+        function formatTimestampForSheet(dateString) {
+            const date = new Date(dateString); 
+            if (isNaN(date.getTime())) {
+                console.error('Invalid date string for formatting:', dateString);
+                return dateString; 
+            }
 
-    async function handleDelayed(timestamp, orderId){
-        const action2="follow1";
-        const nextDispatch=document.getElementById(`next-dispatch-${orderId}`).value;
-        const remark=document.getElementById(`delayed-reason-${orderId}`).value;
-        const btn=event.target;
-        if(!nextDispatch){showFeedback(orderId,'Please select a next dispatch date','error');return;}
-        btn.disabled=true; btn.textContent='⏳ Processing...';
-        const order=orders.find(o=>o.id===orderId);
-        if(order) sendDeadlineLog(order.purchaseOrderNumber, order.deadline, action2);
-        fetch(API_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'delayed',timestamp:formatTimestampForSheet(timestamp),nextDispatchDate:nextDispatch,delayedRemark:remark})});
-        showFeedback(orderId,'Delayed action submitted successfully!','success');
-        document.getElementById(`delayed-input-${orderId}`).classList.remove('show');
-        setTimeout(()=>{btn.disabled=false;btn.textContent='Submit Delayed';loadOrders();},2000);
-    }
+            const dd = String(date.getDate()).padStart(2, '0');
+            const mm = String(date.getMonth() + 1).padStart(2, '0'); 
+            const year = date.getFullYear();
+            const hh = String(date.getHours()).padStart(2, '0');
+            const min = String(date.getMinutes()).padStart(2, '0');
+            const ss = String(date.getSeconds()).padStart(2, '0');
+            return `${dd}/${mm}/${year} ${hh}:${min}:${ss}`;
+        }
 
-    function toggleDelayedInput(orderId){
-        const el=document.getElementById(`delayed-input-${orderId}`);
-        el.classList.toggle('show');
-    }
+        // Handle "On Time" action submission
+        async function handleOnTime(timestamp, orderId) {
+            const button = event.target;
+           
+            try {
+                // Disable the button and show processing state
+                button.disabled = true;
+                button.textContent = 'Processing...';
+            
+                // Send POST request (using no-cors as it's a Google Apps Script Web App)
+                fetch(API_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        action: 'onTime',
+                        timestamp: formatTimestampForSheet(timestamp)
+                    })
+                });
+            
+                // Show success message immediately as no-cors doesn't provide direct feedback
+                showFeedback(orderId, 'Action submitted successfully (check sheet for update)!', 'success');
+            
+                // Refresh orders after a short delay to reflect changes in the UI
+                setTimeout(loadOrders, 2000);
+            
+            } catch (error) {
+                console.error('Error submitting On Time action:', error);
+                showFeedback(orderId, `Client-side error: ${error.message}`, 'error');
+            } finally {
+                // Re-enable button after a short delay
+                 setTimeout(() => {
+                    button.disabled = false;
+                    button.textContent = 'On Time';
+                }, 2000);
+            }
+        }
+
+        // Toggle visibility of the delayed input section
+        function toggleDelayedInput(orderId) {
+            const inputSection = document.getElementById(`delayed-input-${orderId}`);
+            inputSection.classList.toggle('show');
+            // Hide hold section if it's open
+            document.getElementById(`hold-input-${orderId}`).classList.remove('show');
+        }
+
+        // Handle "Delayed" action submission
+        async function handleDelayed(timestamp, orderId) {
+            const nextDispatchInput = document.getElementById(`next-dispatch-${orderId}`);
+            const nextDispatchDate = nextDispatchInput.value; // YYYY-MM-DD format from input type="date"
+            const delayedRemarkInput = document.getElementById(`delayed-reason-${orderId}`);
+            const delayedRemarkText = delayedRemarkInput.value; // YYYY-MM-DD format from input type="date"
+            
+            const submitButton = event.target;
+            
+            if (!nextDispatchDate) {
+                showFeedback(orderId, 'Please select a next dispatch date', 'error');
+                return;
+            }
+            
+            submitButton.disabled = true;
+            submitButton.textContent = '⏳ Processing...';
+            
+            try {
+                // Send POST request
+                fetch(API_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        action: 'delayed',
+                        timestamp: formatTimestampForSheet(timestamp),
+                        nextDispatchDate: nextDispatchDate,
+                        delayedRemark: delayedRemarkText                         
+                    })
+                });
+                            
+                // Show success message immediately
+                showFeedback(orderId, 'Delayed action submitted successfully (check sheet for update)!', 'success');
+            
+                // Hide input section and reset value
+                document.getElementById(`delayed-input-${orderId}`).classList.remove('show');
+                nextDispatchInput.value = '';
+            
+                // Refresh orders after a short delay
+                setTimeout(loadOrders, 2000);                
+            } catch (error) {
+                console.error('Error submitting Delayed action:', error);
+                showFeedback(orderId, `Client-side error: ${error.message}`, 'error');
+            } finally {
+                 setTimeout(() => {
+                    submitButton.disabled = false;
+                    submitButton.textContent = 'Submit Delayed';
+                }, 2000);
+            }
+        }
 
         // Toggle visibility of the hold input section
         function toggleHoldInput(orderId, forceHide = false) {
@@ -814,15 +1066,20 @@
                 }, 2000);
             }
         }
-    
-    function showFeedback(orderId,msg,type){
-        const fb=document.getElementById(`feedback-${orderId}`);
-        fb.textContent=msg; fb.className=`action-feedback ${type}`; fb.style.display='block';
-        setTimeout(()=>fb.style.display='none',5000);
-    }
 
-    
-</script>
+        // Display feedback messages to the user
+        function showFeedback(orderId, message, type) {
+            const feedback = document.getElementById(`feedback-${orderId}`);
+            feedback.textContent = message;
+            feedback.className = `action-feedback ${type}`;
+            feedback.style.display = 'block';
+            
+            // Hide feedback after 5 seconds
+            setTimeout(() => {
+                feedback.style.display = 'none';
+            }, 5000);
+        }
+    </script>
     <script src="https://ntwoods.github.io/ordertodispatch/js/viewOnly.js"></script>
     <script>
       // Wait until DOM is loaded, then check and apply readonly mode

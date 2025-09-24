@@ -662,6 +662,11 @@
                                 <span class="detail-value bold-value">${order.supplierName || 'N/A'}</span>
                             </div>
                             <div class="detail-row">
+                                <span class="detail-icon">🔄️</span>
+                                <span class="detail-label">Delay Count:</span>
+                                <span class="detail-value">${order.delayCount}</span>
+                            </div>
+                            <div class="detail-row">
                                 <span class="detail-icon">📅</span>
                                 <span class="detail-label">Send To Supplier:</span>
                                 <span class="detail-value">${formatDateForDisplay(parseDate(order.timestamp))}</span>

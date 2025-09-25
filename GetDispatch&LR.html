@@ -979,7 +979,7 @@
                             <h3>${order.supplierName || 'Unknown Supplier'}</h3>
                             <div class="po-number">${(order.purchaseOrderNumber)}</div>
                         </div>
-						<div class="order-timestamp">Send To supplier:${formatTimestamp(order.timestamp)}</div>
+						<div class="order-timestamp">${formatTimestamp(order.timestamp)}</div>
 						
 						<!-- NEW: Meta row with Dispatch Date + Countdown -->
 						<div class="meta-row">
@@ -990,7 +990,7 @@
 						  <span class="badge countdown" id="countdown${index}" title="Time remaining to dispatch">
 						    ⏳ --:--:--
 						  </span>
-						  <span class="badge overdue-tag" id="overdue${index}" style="display:none;">Overdue</span><span class="dot">Delay Count:${order.delayCount}</span>
+						  <span class="badge overdue-tag" id="overdue${index}" style="display:none;">Overdue</span>
 						</div>
 
                         <div class="button-group">

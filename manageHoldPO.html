@@ -262,6 +262,7 @@
                     <p class="text-sm mb-4">
                         <span class="font-medium">Remark:</span> ${order.holdRemark || 'No remark'}
                     </p>
+                    <div class="editable">
                     <div class="flex justify-end space-x-3">
                         <button class="btn-approve text-white py-2 px-4 rounded-md text-sm font-semibold shadow-md transform hover:scale-105"
                                 data-order-id="${order.timestamp}" data-po-number="${order.rawPoNumber}" data-action="Approve">
@@ -271,6 +272,7 @@
                                 data-order-id="${order.timestamp}" data-po-number="${order.rawPoNumber}" data-action="Cancel">
                             Cancel
                         </button>
+                    </div>
                     </div>
                 `;
                 ordersContainer.appendChild(orderCard);
@@ -341,5 +343,6 @@
         // Fetch orders when the window loads
         window.onload = fetchOrders;
     </script>
+    <script src="https://ntwoods.github.io/ordertodispatch/js/viewOnly.js"></script>
 </body>
 </html>

@@ -276,6 +276,9 @@
                     </div>
                 `;
                 ordersContainer.appendChild(orderCard);
+                if (typeof setReadOnlyMode === "function") {
+                  setReadOnlyMode();
+                }                
             });
 
             // Add event listeners to the dynamically created buttons
@@ -342,6 +345,9 @@
 
         // Fetch orders when the window loads
         window.onload = fetchOrders;
+        if (typeof setReadOnlyMode === "function") {
+          setReadOnlyMode();
+        }        
     </script>
     <script src="https://ntwoods.github.io/ordertodispatch/js/viewOnly.js"></script>
 </body>

@@ -78,12 +78,13 @@
             font-size: 1em;
         }
         .table-container {
-            max-width: 1400px;
+            max-width: 1600px;
             margin: auto;
             background-color: #ffffff;
             border-radius: 10px;
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
             padding: 20px;
+            overflow-x: auto;
         }
         table {
             width: 100%;
@@ -96,6 +97,7 @@
             padding: 12px 15px;
             text-align: left;
             border-bottom: 1px solid #e6f0fa;
+            white-space: nowrap;
         }
         th {
             background-color: #007bff;
@@ -129,6 +131,19 @@
         }
         td a:hover {
             text-decoration: underline;
+        }
+        .btn {
+            display: inline-block;
+            padding: 6px 12px;
+            background-color: #007bff;
+            color: #fff;
+            border-radius: 5px;
+            font-size: 0.85em;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        .btn:hover {
+            background-color: #005cbf;
         }
         .error {
             color: #d32f2f;
@@ -176,6 +191,7 @@
                     <th onclick="sortTable(9)">Invoice <span class="sort-arrow"></span></th>
                     <th onclick="sortTable(10)">CRM <span class="sort-arrow"></span></th>
                     <th onclick="sortTable(11)">CRM Requests <span class="sort-arrow"></span></th>
+                    <th onclick="sortTable(12)">Additional Purchase <span class="sort-arrow"></span></th>
                 </tr>
             </thead>
             <tbody id="orderTableBody"></tbody>
@@ -220,8 +236,6 @@
             const tbody = document.getElementById('orderTableBody');
             tbody.innerHTML = '';
             
-            const columns = ['poNumber', 'supplierName', 'orderType', 'orderDate', 'expectedDispatchDate', 'expectedDeliveryDate', 'acknowledgedTimestamp', 'poURL', 'dispatchDetailURL', 'invoiceUrl', 'crmName', 'crmRequestURL'];
-            
             filteredOrders.forEach(order => {
                 const row = document.createElement('tr');
                 row.innerHTML = `
@@ -232,11 +246,12 @@
                     <td>${formatDate(order.expectedDispatchDate)}</td>
                     <td>${formatDate(order.expectedDeliveryDate)}</td>
                     <td>${formatDate(order.acknowledgedTimestamp)}</td>
-                    <td>${order.poURL ? `<a href="${order.poURL}">Link</a>` : ''}</td>
-                    <td>${order.dispatchDetailURL ? `<a href="${order.dispatchDetailURL}">Link</a>` : ''}</td>
-                    <td>${order.invoiceUrl ? `<a href="${order.invoiceUrl}">Link</a>` : ''}</td>
-                    <td>${order.crmName ? `<a href="${order.crmName}">Link</a>` : ''}</td>
-                    <td>${order.crmRequestURL ? `<a href="${order.crmRequestURL}">Link</a>` : ''}</td>
+                    <td>${order.poURL ? `<a href="${order.poURL}" target="_blank">Link</a>` : ''}</td>
+                    <td>${order.dispatchDetailURL ? `<a href="${order.dispatchDetailURL}" target="_blank">Link</a>` : ''}</td>
+                    <td>${order.invoiceUrl ? `<a href="${order.invoiceUrl}" target="_blank">Link</a>` : ''}</td>
+                    <td>${order.crmName || ''}</td>
+                    <td>${order.crmRequestURL ? `<a href="${order.crmRequestURL}" target="_blank">Link</a>` : ''}</td>
+                    <td>${order.additionalPurchase ? `<a href="${order.additionalPurchase}" target="_blank" class="btn">Additional</a>` : ''}</td>
                 `;
                 tbody.appendChild(row);
             });
@@ -261,7 +276,6 @@
                 if (currentFilter === 'All') {
                     statusMatch = true;
                 } else if (currentFilter === 'In-Transit') {
-                    // Corrected logic: In-Transit are orders without an acknowledged timestamp
                     statusMatch = !order.acknowledgedTimestamp;
                 } else if (currentFilter === 'Received') {
                     statusMatch = !!order.acknowledgedTimestamp;
@@ -272,11 +286,9 @@
                     const orderDate = new Date(order.acknowledgedTimestamp);
                     const start = new Date(startDate);
                     const end = new Date(endDate);
-                    // Set end date to end of day to include the entire day
                     end.setHours(23, 59, 59, 999);
                     dateMatch = orderDate >= start && orderDate <= end;
                 } else if (startDate || endDate) {
-                    // If date filter is applied, but acknowledgedTimestamp is missing, it's not a match.
                     dateMatch = false;
                 }
                 return statusMatch && dateMatch;
@@ -285,11 +297,15 @@
         }
         
         function sortTable(columnIndex) {
-            const columns = ['poNumber', 'supplierName', 'orderType', 'orderDate', 'expectedDispatchDate', 'expectedDeliveryDate', 'acknowledgedTimestamp', 'poURL', 'dispatchDetailURL', 'invoiceUrl', 'crmName', 'crmRequestURL'];
+            const columns = [
+                'poNumber', 'supplierName', 'orderType', 'orderDate',
+                'expectedDispatchDate', 'expectedDeliveryDate', 'acknowledgedTimestamp',
+                'poURL', 'dispatchDetailURL', 'invoiceUrl',
+                'crmName', 'crmRequestURL', 'additionalPurchase'
+            ];
             const columnKey = columns[columnIndex];
-            const isDateColumn = ['expectedDispatchDate', 'expectedDeliveryDate', 'acknowledgedTimestamp'].includes(columnKey);
+            const isDateColumn = ['orderDate','expectedDispatchDate', 'expectedDeliveryDate', 'acknowledgedTimestamp'].includes(columnKey);
 
-            // Toggle sort direction
             sortDirection[columnKey] = (sortDirection[columnKey] === 'asc') ? 'desc' : 'asc';
 
             filteredOrders.sort((a, b) => {
@@ -297,7 +313,7 @@
                 let valB = b[columnKey] || '';
 
                 if (isDateColumn) {
-                    valA = valA ? new Date(valA) : new Date(0); // Use epoch for empty dates
+                    valA = valA ? new Date(valA) : new Date(0);
                     valB = valB ? new Date(valB) : new Date(0);
                     return sortDirection[columnKey] === 'asc' ? valA - valB : valB - valA;
                 } else {
@@ -308,7 +324,6 @@
                 }
             });
 
-            // Update table headers with sort indicators
             const headers = document.querySelectorAll('th');
             headers.forEach((header, index) => {
                 header.classList.remove('asc', 'desc');
@@ -322,7 +337,6 @@
             renderTable();
         }
 
-        // Fetch data on load
         fetchOrders();
     </script>
 </body>

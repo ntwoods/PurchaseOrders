@@ -245,12 +245,6 @@
         </select>
       </div>
 
-      <!-- Conditional Dealer Name field (only for non-Shubham Ji) -->
-      <div class="form-group conditional-field" id="dealerNameField">
-        <label>Dealer Name</label>
-        <input type="text" id="dealerName" name="Dealer Name" placeholder="Enter dealer name">
-      </div>
-
       <div class="form-group">
         <label>Goods Received On</label>
         <input type="date" name="Goods Received On" required>
@@ -294,26 +288,11 @@
   <script>
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzlQOit1O3GGI3N_kOSYD03PzLVGwqqjwyibkWddKsRD_nRDT96Ajg5jH4rcf5eqR0e_g/exec";
 
-    const crmSelect = document.getElementById('crmName');
     const supplierSelect = document.getElementById('supplier');
-    const dealerNameField = document.getElementById('dealerNameField');
-    const dealerNameInput = document.getElementById('dealerName');
     const fileInput = document.getElementById('images');
     const filePreview = document.getElementById('filePreview');
     const submitBtn = document.getElementById('submitBtn');
     let selectedFiles = [];
-
-    // Show/Hide Dealer Name based on CRM selection
-    crmSelect.addEventListener('change', (e) => {
-      if (e.target.value && e.target.value !== 'Shubham Ji') {
-        dealerNameField.style.display = 'block';
-        dealerNameInput.required = true;
-      } else {
-        dealerNameField.style.display = 'none';
-        dealerNameInput.required = false;
-        dealerNameInput.value = '';
-      }
-    });
 
     // Load suppliers
     fetch(`${SCRIPT_URL}?action=getSuppliers`)
@@ -368,6 +347,8 @@
       formData.forEach((value, key) => {
         if (value) payload[key] = value;
       });
+
+      // Add fixed CRM Name
       payload["CRM Name"] = "Shubham Ji";
 
       // Base64 encode images

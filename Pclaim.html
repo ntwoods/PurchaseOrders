@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Claim Request Form</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body { font-family: Arial; background:#f8f9fa; padding:20px; }
+    form { max-width:500px; margin:auto; background:white; padding:20px; border-radius:10px; box-shadow:0 0 10px #ccc; }
+    label { display:block; margin-top:10px; font-weight:bold; }
+    input, select, textarea { width:100%; padding:8px; margin-top:5px; box-sizing:border-box; }
+    button { background:#007bff; color:white; border:none; padding:10px; width:100%; margin-top:15px; font-size:16px; cursor:pointer; }
+    button:hover { background:#0056b3; }
+    h2 { text-align:center; }
+  </style>
+</head>
+<body>
+  <h2>Claim Request Form</h2>
+  <form id="claimForm">
+    <label>Supplier Name</label>
+    <select id="supplier" name="Supplier Name" required></select>
+
+    <label>Goods Received On</label>
+    <input type="date" name="Goods Received On" required>
+
+    <label>Product</label>
+    <input type="text" name="Product" required>
+
+    <label>Quantity</label>
+    <input type="number" name="Qty" required>
+
+    <label>Issue</label>
+    <textarea name="Issue" required></textarea>
+
+    <label>CRM Name</label>
+    <input type="text" name="CRM Name" placeholder="e.g. Shubham Ji" required>
+
+    <label>Images (Optional)</label>
+    <input type="file" id="images" multiple accept="image/*">
+
+    <button type="submit">Submit</button>
+  </form>
+
+  <script>
+    // 🟡 Replace with your own Deployed Apps Script Web App URL 👇
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzlQOit1O3GGI3N_kOSYD03PzLVGwqqjwyibkWddKsRD_nRDT96Ajg5jH4rcf5eqR0e_g/exec";
+
+    const supplierSelect = document.getElementById('supplier');
+
+    // Supplier list fetch
+    fetch(`${SCRIPT_URL}?action=getSuppliers`)
+      .then(res => res.json())
+      .then(data => {
+        supplierSelect.innerHTML = data.suppliers.map(name => `<option value="${name}">${name}</option>`).join('');
+      })
+      .catch(err => console.error('Supplier fetch error:', err));
+
+    // Form submit
+    document.getElementById('claimForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const formData = new FormData(e.target);
+      const payload = {};
+      formData.forEach((value, key) => payload[key] = value);
+
+      // Base64 encode images
+      const files = document.getElementById('images').files;
+      payload.Images = [];
+      for (const file of files) {
+        payload.Images.push(await toBase64(file));
+      }
+
+      const res = await fetch(SCRIPT_URL, {
+        method: 'POST',
+        body: JSON.stringify(payload)
+      });
+
+      const result = await res.json();
+      if (result.status === 'success') {
+        alert('✅ Claim Submitted! ID: ' + result.reqID);
+        e.target.reset();
+      } else {
+        alert('❌ Error: ' + result.message);
+      }
+    });
+
+    function toBase64(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = reject;
+      });
+    }
+  </script>
+</body>
+</html>

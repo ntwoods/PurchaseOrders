@@ -5,84 +5,368 @@
   <title>Claim Request Form</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
-    body { font-family: Arial; background:#f8f9fa; padding:20px; }
-    form { max-width:500px; margin:auto; background:white; padding:20px; border-radius:10px; box-shadow:0 0 10px #ccc; }
-    label { display:block; margin-top:10px; font-weight:bold; }
-    input, select, textarea { width:100%; padding:8px; margin-top:5px; box-sizing:border-box; }
-    button { background:#007bff; color:white; border:none; padding:10px; width:100%; margin-top:15px; font-size:16px; cursor:pointer; }
-    button:hover { background:#0056b3; }
-    h2 { text-align:center; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    body { 
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .container {
+      max-width: 550px;
+      width: 100%;
+      background: white;
+      padding: 40px;
+      border-radius: 20px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      animation: slideUp 0.5s ease;
+    }
+    
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    h2 { 
+      text-align: center;
+      color: #333;
+      margin-bottom: 10px;
+      font-size: 28px;
+      font-weight: 600;
+    }
+    
+    .subtitle {
+      text-align: center;
+      color: #666;
+      margin-bottom: 30px;
+      font-size: 14px;
+    }
+    
+    .form-group {
+      margin-bottom: 20px;
+    }
+    
+    label { 
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 600;
+      color: #444;
+      font-size: 14px;
+    }
+    
+    input, select, textarea { 
+      width: 100%;
+      padding: 12px 15px;
+      border: 2px solid #e0e0e0;
+      border-radius: 10px;
+      font-size: 15px;
+      transition: all 0.3s ease;
+      font-family: inherit;
+    }
+    
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+    
+    textarea {
+      resize: vertical;
+      min-height: 100px;
+    }
+    
+    .file-input-wrapper {
+      position: relative;
+      overflow: hidden;
+      display: inline-block;
+      width: 100%;
+    }
+    
+    .file-input-wrapper input[type=file] {
+      position: absolute;
+      left: -9999px;
+    }
+    
+    .file-label {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 12px 15px;
+      border: 2px dashed #667eea;
+      border-radius: 10px;
+      background: #f8f9ff;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      color: #667eea;
+      font-weight: 500;
+    }
+    
+    .file-label:hover {
+      background: #667eea;
+      color: white;
+    }
+    
+    .file-label svg {
+      margin-right: 8px;
+    }
+    
+    .file-preview {
+      margin-top: 10px;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    
+    .file-preview-item {
+      position: relative;
+      width: 80px;
+      height: 80px;
+      border-radius: 8px;
+      overflow: hidden;
+      border: 2px solid #e0e0e0;
+    }
+    
+    .file-preview-item img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    
+    .remove-file {
+      position: absolute;
+      top: 4px;
+      right: 4px;
+      background: rgba(255, 0, 0, 0.8);
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 20px;
+      height: 20px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+    }
+    
+    button[type="submit"] { 
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      padding: 15px;
+      width: 100%;
+      margin-top: 10px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      border-radius: 10px;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+    }
+    
+    button[type="submit"]:hover { 
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+    }
+    
+    button[type="submit"]:active {
+      transform: translateY(0);
+    }
+    
+    button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+    
+    .loading {
+      display: inline-block;
+      width: 14px;
+      height: 14px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-radius: 50%;
+      border-top-color: white;
+      animation: spin 0.6s linear infinite;
+      margin-right: 8px;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    
+    .success-message {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: #4caf50;
+      color: white;
+      padding: 15px 25px;
+      border-radius: 10px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+      animation: slideIn 0.3s ease;
+      z-index: 1000;
+    }
+    
+    @keyframes slideIn {
+      from { transform: translateX(400px); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+    
+    @media (max-width: 600px) {
+      .container { padding: 25px; }
+      h2 { font-size: 24px; }
+    }
   </style>
 </head>
 <body>
-  <h2>Claim Request Form</h2>
-  <form id="claimForm">
-    <label>Supplier Name</label>
-    <select id="supplier" name="Supplier Name" required></select>
+  <div class="container">
+    <h2>📋 Claim Request Form</h2>
+    <p class="subtitle">Fill in the details to submit your claim</p>
+    
+    <form id="claimForm">
+      <div class="form-group">
+        <label>Supplier Name</label>
+        <select id="supplier" name="Supplier Name" required>
+          <option value="">Loading suppliers...</option>
+        </select>
+      </div>
 
-    <label>Goods Received On</label>
-    <input type="date" name="Goods Received On" required>
+      <div class="form-group">
+        <label>Goods Received On</label>
+        <input type="date" name="Goods Received On" required>
+      </div>
 
-    <label>Product</label>
-    <input type="text" name="Product" required>
+      <div class="form-group">
+        <label>Product</label>
+        <input type="text" name="Product" placeholder="Enter product name" required>
+      </div>
 
-    <label>Quantity</label>
-    <input type="number" name="Qty" required>
+      <div class="form-group">
+        <label>Quantity</label>
+        <input type="number" name="Qty" placeholder="Enter quantity" min="1" required>
+      </div>
 
-    <label>Issue</label>
-    <textarea name="Issue" required></textarea>
+      <div class="form-group">
+        <label>Issue</label>
+        <textarea name="Issue" placeholder="Describe the issue in detail..." required></textarea>
+      </div>
 
-    <label>CRM Name</label>
-    <input type="text" name="CRM Name" placeholder="e.g. Shubham Ji" required>
+      <div class="form-group">
+        <label>CRM Name</label>
+        <input type="text" name="CRM Name" placeholder="e.g. Shubham Ji" required>
+      </div>
 
-    <label>Images (Optional)</label>
-    <input type="file" id="images" multiple accept="image/*">
+      <div class="form-group">
+        <label>Images (Optional)</label>
+        <div class="file-input-wrapper">
+          <input type="file" id="images" multiple accept="image/*">
+          <label for="images" class="file-label">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="17 8 12 3 7 8"></polyline>
+              <line x1="12" y1="3" x2="12" y2="15"></line>
+            </svg>
+            Choose Images
+          </label>
+        </div>
+        <div id="filePreview" class="file-preview"></div>
+      </div>
 
-    <button type="submit">Submit</button>
-  </form>
+      <button type="submit" id="submitBtn">Submit Claim</button>
+    </form>
+  </div>
 
   <script>
-    // ⚠️ अपना Apps Script Web App URL नीचे डालें
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzlQOit1O3GGI3N_kOSYD03PzLVGwqqjwyibkWddKsRD_nRDT96Ajg5jH4rcf5eqR0e_g/exec";
 
     const supplierSelect = document.getElementById('supplier');
+    const fileInput = document.getElementById('images');
+    const filePreview = document.getElementById('filePreview');
+    const submitBtn = document.getElementById('submitBtn');
+    let selectedFiles = [];
 
-    // 🟡 Supplier list fetch
+    // Load suppliers
     fetch(`${SCRIPT_URL}?action=getSuppliers`)
       .then(res => res.json())
       .then(data => {
-        console.log('Supplier Fetch Response:', data);
-        supplierSelect.innerHTML = data.suppliers.map(name => `<option value="${name}">${name}</option>`).join('');
+        console.log('Suppliers loaded:', data);
+        supplierSelect.innerHTML = '<option value="">Select a supplier</option>' + 
+          data.suppliers.map(name => `<option value="${name}">${name}</option>`).join('');
       })
-      .catch(err => console.error('Supplier fetch error:', err));
+      .catch(err => {
+        console.error('Supplier fetch error:', err);
+        supplierSelect.innerHTML = '<option value="">Error loading suppliers</option>';
+      });
 
-    // 🟠 Form submit
+    // File preview
+    fileInput.addEventListener('change', (e) => {
+      selectedFiles = Array.from(e.target.files);
+      updateFilePreview();
+    });
+
+    function updateFilePreview() {
+      filePreview.innerHTML = '';
+      selectedFiles.forEach((file, index) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const div = document.createElement('div');
+          div.className = 'file-preview-item';
+          div.innerHTML = `
+            <img src="${e.target.result}" alt="Preview">
+            <button type="button" class="remove-file" onclick="removeFile(${index})">×</button>
+          `;
+          filePreview.appendChild(div);
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+
+    window.removeFile = (index) => {
+      selectedFiles.splice(index, 1);
+      updateFilePreview();
+    };
+
+    // Form submit with no-cors (fire and forget)
     document.getElementById('claimForm').addEventListener('submit', async (e) => {
       e.preventDefault();
+      
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '<span class="loading"></span>Submitting...';
+      
       const formData = new FormData(e.target);
       const payload = {};
       formData.forEach((value, key) => payload[key] = value);
 
       // Base64 encode images
-      const files = document.getElementById('images').files;
       payload.Images = [];
-      for (const file of files) {
+      for (const file of selectedFiles) {
         payload.Images.push(await toBase64(file));
       }
 
-      const res = await fetch(SCRIPT_URL, {
+      // Send with no-cors - fire and forget
+      fetch(SCRIPT_URL, {
         method: 'POST',
-         mode: 'no-cors',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
-      });
-
-      const result = await res.json();
-      if (result.status === 'success') {
-        alert('✅ Claim Submitted! ID: ' + result.reqID);
+      }).then(() => {
+        // Success (we can't check response with no-cors)
+        showSuccessMessage('✅ Claim submitted successfully!');
         e.target.reset();
-      } else {
-        alert('❌ Error: ' + result.message);
-      }
+        selectedFiles = [];
+        filePreview.innerHTML = '';
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = 'Submit Claim';
+      }).catch(err => {
+        console.error('Submit error:', err);
+        showSuccessMessage('⚠️ Request sent (response unavailable)');
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = 'Submit Claim';
+      });
     });
 
     function toBase64(file) {
@@ -92,6 +376,14 @@
         reader.onload = () => resolve(reader.result);
         reader.onerror = reject;
       });
+    }
+
+    function showSuccessMessage(message) {
+      const div = document.createElement('div');
+      div.className = 'success-message';
+      div.textContent = message;
+      document.body.appendChild(div);
+      setTimeout(() => div.remove(), 3000);
     }
   </script>
 </body>

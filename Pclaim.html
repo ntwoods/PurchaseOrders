@@ -42,20 +42,21 @@
   </form>
 
   <script>
-    // 🟡 Replace with your own Deployed Apps Script Web App URL 👇
+    // ⚠️ अपना Apps Script Web App URL नीचे डालें
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzlQOit1O3GGI3N_kOSYD03PzLVGwqqjwyibkWddKsRD_nRDT96Ajg5jH4rcf5eqR0e_g/exec";
 
     const supplierSelect = document.getElementById('supplier');
 
-    // Supplier list fetch
+    // 🟡 Supplier list fetch
     fetch(`${SCRIPT_URL}?action=getSuppliers`)
       .then(res => res.json())
       .then(data => {
+        console.log('Supplier Fetch Response:', data);
         supplierSelect.innerHTML = data.suppliers.map(name => `<option value="${name}">${name}</option>`).join('');
       })
       .catch(err => console.error('Supplier fetch error:', err));
 
-    // Form submit
+    // 🟠 Form submit
     document.getElementById('claimForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       const formData = new FormData(e.target);
@@ -71,7 +72,6 @@
 
       const res = await fetch(SCRIPT_URL, {
         method: 'POST',
-        mode: 'no-cors',
         body: JSON.stringify(payload)
       });
 

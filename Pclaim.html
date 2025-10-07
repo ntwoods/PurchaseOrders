@@ -256,11 +256,6 @@
       </div>
 
       <div class="form-group">
-        <label>CRM Name</label>
-        <input type="text" name="CRM Name" placeholder="e.g. Shubham Ji" required>
-      </div>
-
-      <div class="form-group">
         <label>Images (Optional)</label>
         <div class="file-input-wrapper">
           <input type="file" id="images" multiple accept="image/*">
@@ -340,6 +335,7 @@
       const formData = new FormData(e.target);
       const payload = {};
       formData.forEach((value, key) => payload[key] = value);
+       payload.'CRM Name' ="Shubham Ji;
 
       // Base64 encode images
       payload.Images = [];

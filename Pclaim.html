@@ -160,6 +160,21 @@
           </select>
         </div>
 
+      <div class="form-group">
+        <label>Alphanumeric Code</label>
+        <input
+          type="text"
+          id="alphanumericField"
+          name="Alphanumeric Code"
+          placeholder="Enter code (A–Z, a–z, 0–9)"
+          pattern="[A-Za-z0-9]*"
+          inputmode="latin"
+          autocomplete="off"
+        />
+        <small style="color:#6b7280;">Only letters and numbers are allowed.</small>
+      </div>
+        
+
         <div class="form-group" id="dealerNameGroup" style="display:none;">
           <label>Dealer Name</label>
           <input type="text" id="dealerNameField" name="Dealer Name" placeholder="Enter dealer name">
@@ -245,6 +260,11 @@
     const submitBtn = document.getElementById('submitBtn');
     const dealerNameGroup = document.getElementById('dealerNameGroup');
     const dealerNameField = document.getElementById('dealerNameField');
+    const alphanumericField = document.getElementById('alphanumericField');
+    alphanumericField?.addEventListener('input', () => {
+      alphanumericField.value = alphanumericField.value.replace(/[^A-Za-z0-9]/g, '');
+    });
+    
 
     const productsTbody = document.getElementById('productsTbody');
     const addProductBtn = document.getElementById('addProductBtn');
@@ -351,6 +371,7 @@
       // Attach items & CRM
       payload.Items = rows.map(r => ({ Product: r.product, Details: r.details, Qty: r.qty, Issue: r.issue }));
       payload["CRM Name"] = "Shubham Ji";      // keep your previous static CRM until you wire auth
+      payload["Alphanumeric Code"] = document.getElementById('alphanumericField')?.value?.trim() ?? "";
       payload.Images = [];
 
       // Convert images to Base64

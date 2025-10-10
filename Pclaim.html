@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { 
+    body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       min-height: 100vh;
@@ -16,10 +16,10 @@
       justify-content: center;
     }
     .container {
-      max-width: 550px;
+      max-width: 980px; /* wider so the table breathes */
       width: 100%;
       background: white;
-      padding: 40px;
+      padding: 36px;
       border-radius: 20px;
       box-shadow: 0 20px 60px rgba(0,0,0,0.3);
       animation: slideUp 0.5s ease;
@@ -28,143 +28,121 @@
       from { opacity: 0; transform: translateY(30px); }
       to { opacity: 1; transform: translateY(0); }
     }
-    h2 { 
+    h2 {
       text-align: center;
       color: #333;
-      margin-bottom: 10px;
+      margin-bottom: 6px;
       font-size: 28px;
       font-weight: 600;
     }
     .subtitle {
       text-align: center;
       color: #666;
-      margin-bottom: 30px;
+      margin-bottom: 26px;
       font-size: 14px;
     }
-    .form-group { margin-bottom: 20px; }
-    label { 
+    .form-row{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:16px;
+      margin-bottom: 18px;
+    }
+    .form-group { margin-bottom: 18px; }
+    label {
       display: block;
       margin-bottom: 8px;
       font-weight: 600;
       color: #444;
       font-size: 14px;
     }
-    input, select, textarea { 
+    input, select, textarea {
       width: 100%;
-      padding: 12px 15px;
+      padding: 12px 14px;
       border: 2px solid #e0e0e0;
       border-radius: 10px;
       font-size: 15px;
       transition: all 0.3s ease;
       font-family: inherit;
+      background:#fff;
     }
     input:focus, select:focus, textarea:focus {
       outline: none;
       border-color: #667eea;
-      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.12);
     }
-    textarea {
-      resize: vertical;
-      min-height: 100px;
+    textarea { resize: vertical; min-height: 90px; }
+
+    /* Dynamic products table */
+    .products-card{
+      border:1px solid #e7e9f5;
+      border-radius: 12px;
+      padding: 14px;
+      background:#f8f9ff;
+      margin-bottom: 16px;
     }
-    .conditional-field { display: none; animation: fadeIn 0.3s ease; }
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(-10px); }
-      to { opacity: 1; transform: translateY(0); }
+    .products-head{
+      display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px;
     }
-    .file-input-wrapper { position: relative; overflow: hidden; display: inline-block; width: 100%; }
-    .file-input-wrapper input[type=file] { position: absolute; left: -9999px; }
-    .file-label {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 12px 15px;
-      border: 2px dashed #667eea;
-      border-radius: 10px;
-      background: #f8f9ff;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      color: #667eea;
-      font-weight: 500;
+    .products-head h3{margin:0;font-size:16px;color:#334155;}
+    .secondary-btn{
+      border:1px solid #c7d2fe;
+      background:#eef2ff;
+      color:#333;
+      padding:8px 12px;border-radius:8px;cursor:pointer;font-weight:600;
     }
-    .file-label:hover { background: #667eea; color: white; }
-    .file-label svg { margin-right: 8px; }
-    .file-preview { margin-top: 10px; display: flex; gap: 10px; flex-wrap: wrap; }
-    .file-preview-item {
-      position: relative;
-      width: 80px;
-      height: 80px;
-      border-radius: 8px;
-      overflow: hidden;
-      border: 2px solid #e0e0e0;
+    .secondary-btn:hover{background:#e0e7ff;}
+    .table-wrapper{
+      overflow:auto;max-height: 50vh;border:1px solid #e7e9f5;border-radius:10px;background:#fff;
     }
-    .file-preview-item img { width: 100%; height: 100%; object-fit: cover; }
-    .remove-file {
-      position: absolute;
-      top: 4px;
-      right: 4px;
-      background: rgba(255, 0, 0, 0.8);
-      color: white;
-      border: none;
-      border-radius: 50%;
-      width: 20px;
-      height: 20px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 12px;
+    table{width:100%;border-collapse:separate;border-spacing:0;table-layout:fixed;}
+    thead tr{background:#f3f6ff;}
+    th,td{padding:10px;border-bottom:1px solid #eef2f7;vertical-align:middle;word-wrap:break-word;}
+    th{font-size:13px;text-align:left;color:#334155;}
+    .row-idx{width:40px;color:#64748b;}
+    .qty-input{max-width:110px;}
+    .remove-row-btn{
+      border:none;background:#fce8e8;padding:6px 10px;border-radius:8px;cursor:pointer;font-weight:700;
     }
-    button[type="submit"] { 
+
+    .file-input-wrapper{ position: relative; overflow: hidden; display: inline-block; width: 100%; }
+    .file-input-wrapper input[type=file]{ position: absolute; left: -9999px; }
+    .file-label{
+      display:flex;align-items:center;justify-content:center;
+      padding: 12px 15px;border: 2px dashed #667eea;border-radius: 10px;background: #f8f9ff;
+      cursor: pointer;transition: all 0.3s ease;color: #667eea;font-weight: 600;
+    }
+    .file-label:hover{ background:#667eea;color:#fff; }
+    .file-label svg{ margin-right:8px; }
+    .file-preview{ margin-top: 10px; display:flex; gap:10px; flex-wrap:wrap; }
+    .file-preview-item{ position:relative;width:80px;height:80px;border-radius:8px;overflow:hidden;border:2px solid #e0e0e0;}
+    .file-preview-item img{ width:100%; height:100%; object-fit: cover; }
+    .remove-file{
+      position:absolute;top:4px;right:4px;background:rgba(255,0,0,0.85);color:#fff;border:none;border-radius:50%;
+      width:20px;height:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:12px;
+    }
+
+    button[type="submit"]{
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: white;
-      border: none;
-      padding: 15px;
-      width: 100%;
-      margin-top: 10px;
-      font-size: 16px;
-      font-weight: 600;
-      cursor: pointer;
-      border-radius: 10px;
-      transition: all 0.3s ease;
+      color: white;border: none;padding: 14px 16px;width: 100%;margin-top: 6px;font-size: 16px;
+      font-weight: 700;cursor: pointer;border-radius: 10px;transition: all 0.3s ease;
       box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
     }
-    button[type="submit"]:hover { 
-      transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+    button[type="submit"]:hover{ transform: translateY(-2px); box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6); }
+    button[type="submit"]:active{ transform: translateY(0); }
+    button:disabled{ opacity: 0.6; cursor: not-allowed; }
+    .loading{ display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,0.3);border-radius:50%;
+      border-top-color:white;animation:spin .6s linear infinite;margin-right:8px;}
+    @keyframes spin{ to{ transform: rotate(360deg);} }
+
+    .success-message{
+      position: fixed; top: 20px; right: 20px; background: #4caf50; color: white; padding: 15px 25px; border-radius: 10px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.2); animation: slideIn 0.3s ease; z-index: 1000;
     }
-    button[type="submit"]:active { transform: translateY(0); }
-    button:disabled { opacity: 0.6; cursor: not-allowed; }
-    .loading {
-      display: inline-block;
-      width: 14px;
-      height: 14px;
-      border: 2px solid rgba(255,255,255,0.3);
-      border-radius: 50%;
-      border-top-color: white;
-      animation: spin 0.6s linear infinite;
-      margin-right: 8px;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
-    .success-message {
-      position: fixed;
-      top: 20px;
-      right: 20px;
-      background: #4caf50;
-      color: white;
-      padding: 15px 25px;
-      border-radius: 10px;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-      animation: slideIn 0.3s ease;
-      z-index: 1000;
-    }
-    @keyframes slideIn {
-      from { transform: translateX(400px); opacity: 0; }
-      to { transform: translateX(0); opacity: 1; }
-    }
-    @media (max-width: 600px) {
-      .container { padding: 25px; }
-      h2 { font-size: 24px; }
+    @keyframes slideIn{ from{ transform: translateX(400px); opacity: 0;} to{ transform: translateX(0); opacity: 1;} }
+
+    @media (max-width: 720px){
+      .form-row{grid-template-columns: 1fr;}
+      .container{padding:24px}
     }
   </style>
 </head>
@@ -172,41 +150,72 @@
   <div class="container">
     <h2>📋 Claim Request Form</h2>
     <p class="subtitle">Fill in the details to submit your claim</p>
-    
+
     <form id="claimForm">
-      <div class="form-group">
-        <label>Supplier Name</label>
-        <select id="supplier" name="Supplier Name" required>
-          <option value="">Loading suppliers...</option>
-        </select>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Supplier Name</label>
+          <select id="supplier" name="Supplier Name" required>
+            <option value="">Loading suppliers...</option>
+          </select>
+        </div>
+
+        <div class="form-group" id="dealerNameGroup" style="display:none;">
+          <label>Dealer Name</label>
+          <input type="text" id="dealerNameField" name="Dealer Name" placeholder="Enter dealer name">
+        </div>
       </div>
 
-      <!-- Dealer Name (Hidden by default) -->
-      <div class="form-group" id="dealerNameGroup" style="display:none;">
-        <label>Dealer Name</label>
-        <input type="text" id="dealerNameField" name="Dealer Name" placeholder="Enter dealer name">
+      <div class="form-row">
+        <div class="form-group">
+          <label>Goods Received On</label>
+          <input type="date" name="Goods Received On" required>
+        </div>
+        <div class="form-group">
+          <label>Remark (optional)</label>
+          <input type="text" name="Remark" placeholder="Any overall remark for this claim">
+        </div>
       </div>
 
-      <div class="form-group">
-        <label>Goods Received On</label>
-        <input type="date" name="Goods Received On" required>
+      <!-- PRODUCTS BLOCK -->
+      <div class="products-card">
+        <div class="products-head">
+          <h3>Products</h3>
+          <button type="button" id="addProductBtn" class="secondary-btn">+ Add Product</button>
+        </div>
+
+        <div class="table-wrapper">
+          <table id="productsTable">
+            <colgroup>
+              <col style="width:44px;">
+              <col>
+              <col>
+              <col style="width:120px;">
+              <col>
+              <col style="width:70px;">
+            </colgroup>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Product</th>
+                <th>Details</th>
+                <th>Qty</th>
+                <th>Issue</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="productsTbody">
+              <!-- JS inserts the first row on load -->
+            </tbody>
+          </table>
+        </div>
+
+        <p style="font-size:12px;color:#6b7280;margin-top:8px;">
+          Tip: Add multiple products. Each row has its own Details, Qty, and Issue.
+        </p>
       </div>
 
-      <div class="form-group">
-        <label>Product</label>
-        <input type="text" name="Product" placeholder="Enter product name" required>
-      </div>
-
-      <div class="form-group">
-        <label>Quantity</label>
-        <input type="number" name="Qty" placeholder="Enter quantity" min="1" required>
-      </div>
-
-      <div class="form-group">
-        <label>Issue</label>
-        <textarea name="Issue" placeholder="Describe the issue in detail..." required></textarea>
-      </div>
-
+      <!-- Images -->
       <div class="form-group">
         <label>Images (Optional)</label>
         <div class="file-input-wrapper">
@@ -236,27 +245,29 @@
     const submitBtn = document.getElementById('submitBtn');
     const dealerNameGroup = document.getElementById('dealerNameGroup');
     const dealerNameField = document.getElementById('dealerNameField');
+
+    const productsTbody = document.getElementById('productsTbody');
+    const addProductBtn = document.getElementById('addProductBtn');
+
     let selectedFiles = [];
 
-    // Load suppliers
+    /* ---------------- Suppliers ---------------- */
     fetch(`${SCRIPT_URL}?action=getSuppliers`)
       .then(res => res.json())
       .then(data => {
-        console.log('Suppliers loaded:', data);
-        supplierSelect.innerHTML = '<option value="">Select a supplier</option>' + 
-          data.suppliers.map(name => `<option value="${name}">${name}</option>`).join('');
+        supplierSelect.innerHTML = '<option value="">Select a supplier</option>' +
+          (data?.suppliers || []).map(name => `<option value="${name}">${name}</option>`).join('');
       })
       .catch(err => {
         console.error('Supplier fetch error:', err);
         supplierSelect.innerHTML = '<option value="">Error loading suppliers</option>';
       });
 
-    // File preview
+    /* ---------------- Files preview ---------------- */
     fileInput.addEventListener('change', (e) => {
       selectedFiles = Array.from(e.target.files);
       updateFilePreview();
     });
-
     function updateFilePreview() {
       filePreview.innerHTML = '';
       selectedFiles.forEach((file, index) => {
@@ -273,34 +284,81 @@
         reader.readAsDataURL(file);
       });
     }
-
     window.removeFile = (index) => {
       selectedFiles.splice(index, 1);
       updateFilePreview();
     };
 
-    // Form submit with no-cors
+    /* ---------------- Dynamic products ---------------- */
+    function addProductRow(prefill = {}) {
+      const tr = document.createElement('tr');
+      tr.className = 'item-row';
+      tr.innerHTML = `
+        <td class="row-idx">#</td>
+        <td><input type="text" class="prod-input" placeholder="Product" required value="${prefill.product ?? ''}"></td>
+        <td><input type="text" class="details-input" placeholder="Details" value="${prefill.details ?? ''}"></td>
+        <td><input type="number" class="qty-input" min="1" placeholder="Qty" required value="${prefill.qty ?? ''}"></td>
+        <td><textarea class="issue-input" rows="1" placeholder="Issue" required>${prefill.issue ?? ''}</textarea></td>
+        <td style="text-align:center;"><button type="button" class="remove-row-btn" title="Remove">✕</button></td>
+      `;
+      productsTbody.appendChild(tr);
+      renumberRows();
+    }
+    function renumberRows(){
+      productsTbody.querySelectorAll('tr.item-row .row-idx').forEach((cell, i)=>{ cell.textContent = i+1; });
+    }
+    addProductBtn.addEventListener('click', ()=> addProductRow());
+    productsTbody.addEventListener('click', (e)=>{
+      if(e.target.classList.contains('remove-row-btn')){
+        const row = e.target.closest('tr.item-row');
+        row?.remove();
+        renumberRows();
+      }
+    });
+    // Ensure at least one row on load
+    addProductRow();
+
+    /* ---------------- Submit ---------------- */
     document.getElementById('claimForm').addEventListener('submit', async (e) => {
       e.preventDefault();
-      
+
+      // Collect items from table
+      const rows = [...productsTbody.querySelectorAll('tr.item-row')].map(row => {
+        const product = row.querySelector('.prod-input')?.value?.trim() ?? '';
+        const details = row.querySelector('.details-input')?.value?.trim() ?? '';
+        const qtyRaw  = row.querySelector('.qty-input')?.value?.trim() ?? '';
+        const issue   = row.querySelector('.issue-input')?.value?.trim() ?? '';
+        const qty = qtyRaw === '' ? NaN : parseInt(qtyRaw,10);
+        return { product, details, qty, issue };
+      });
+
+      // Basic validation
+      if(rows.length === 0 || rows.some(r => !r.product || !Number.isFinite(r.qty) || r.qty < 1 || !r.issue)){
+        showSuccessMessage('⚠️ Add at least one valid product row (Product, Qty ≥ 1, Issue).');
+        return;
+      }
+
       submitBtn.disabled = true;
       submitBtn.innerHTML = '<span class="loading"></span>Submitting...';
-      
+
+      // Build payload from standard fields
       const formData = new FormData(e.target);
       const payload = {};
       formData.forEach((value, key) => {
-        if (value) payload[key] = value;
+        if (value !== undefined && value !== null && value !== '') payload[key] = value;
       });
 
-      payload["CRM Name"] = "Shubham Ji";
-
+      // Attach items & CRM
+      payload.Items = rows.map(r => ({ Product: r.product, Details: r.details, Qty: r.qty, Issue: r.issue }));
+      payload["CRM Name"] = "Shubham Ji";      // keep your previous static CRM until you wire auth
       payload.Images = [];
+
+      // Convert images to Base64
       for (const file of selectedFiles) {
         payload.Images.push(await toBase64(file));
       }
 
-      console.log('Payload:', payload);
-
+      // POST (no-cors)
       fetch(SCRIPT_URL, {
         method: 'POST',
         mode: 'no-cors',
@@ -310,7 +368,9 @@
         e.target.reset();
         selectedFiles = [];
         filePreview.innerHTML = '';
-        dealerNameGroup.style.display = 'none';  // ✅ hide without error
+        productsTbody.innerHTML = '';
+        addProductRow(); // reset with a fresh row
+        dealerNameGroup.style.display = 'none';
         submitBtn.disabled = false;
         submitBtn.innerHTML = 'Submit Claim';
       }).catch(err => {

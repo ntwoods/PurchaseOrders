@@ -161,7 +161,7 @@
         </div>
 
       <div class="form-group">
-        <label>Invoice No.</label>
+        <label>Invoice No. (Optional)</label>
         <input
           type="text"
           id="alphanumericField"
@@ -183,8 +183,8 @@
 
       <div class="form-row">
         <div class="form-group">
-          <label>Goods Received On</label>
-          <input type="date" name="Goods Received On" required>
+          <label>Goods Received On (Optional)</label>
+          <input type="date" name="Goods Received On" >
         </div>
         <div class="form-group">
           <label>Remark (optional)</label>
@@ -315,8 +315,8 @@
       tr.className = 'item-row';
       tr.innerHTML = `
         <td class="row-idx">#</td>
-        <td><input type="text" class="prod-input" placeholder="Product" required value="${prefill.product ?? ''}"></td>
-        <td><input type="text" class="details-input" placeholder="Details" value="${prefill.details ?? ''}"></td>
+        <td><input type="text" class="prod-input" placeholder="Brand/Category" required value="${prefill.product ?? ''}"></td>
+        <td><input type="text" class="details-input" placeholder="Size/Shade" value="${prefill.details ?? ''}"></td>
         <td><input type="number" class="qty-input" min="1" placeholder="Qty" required value="${prefill.qty ?? ''}"></td>
         <td><textarea class="issue-input" rows="1" placeholder="Issue" required>${prefill.issue ?? ''}</textarea></td>
         <td style="text-align:center;"><button type="button" class="remove-row-btn" title="Remove">✕</button></td>

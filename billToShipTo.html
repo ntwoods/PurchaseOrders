@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1, viewport-fit=cover"
+  />
+  <title>Bill To Ship To — Orders</title>
+
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Tailwind (CDN, stable 2.x to match your ecosystem) -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+
+  <!-- Tom Select for searchable multi-select -->
+  <link href="https://cdn.jsdelivr.net/npm/tom-select@2.4.2/dist/css/tom-select.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/tom-select@2.4.2/dist/js/tom-select.complete.min.js" defer></script>
+
+  <style>
+    :root {
+      --ntw-bg: #f7fafc;          /* very light blue-gray */
+      --ntw-card: #ffffff;
+      --ntw-blue-600: #2563eb;    /* primary blue */
+      --ntw-blue-700: #1d4ed8;
+      --ntw-blue-50:  #eff6ff;
+      --ntw-text: #0f172a;
+      --ntw-muted: #475569;
+      --ntw-border: #e2e8f0;
+      --ntw-success: #16a34a;
+      --ntw-danger: #ef4444;
+      --ntw-danger-soft: #fee2e2;
+    }
+    html, body {
+      height: 100%;
+      background: var(--ntw-bg);
+      color: var(--ntw-text);
+      font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, 'Helvetica Neue', Arial, 'Noto Sans', 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol';
+    }
+    .container-max {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    .app-card {
+      background: var(--ntw-card);
+      border: 1px solid var(--ntw-border);
+      border-radius: 1rem; /* 2xl-ish */
+      box-shadow: 0 10px 20px rgba(2, 17, 37, 0.04);
+      transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+    }
+    .app-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 18px 30px rgba(2, 17, 37, 0.08);
+    }
+    .card-title {
+      font-weight: 700;
+      line-height: 1.25;
+      color: var(--ntw-blue-700);
+      word-break: break-word;
+    }
+    .label {
+      font-size: 0.75rem;
+      color: var(--ntw-muted);
+      letter-spacing: .02em;
+      text-transform: uppercase;
+      font-weight: 600;
+    }
+    .value {
+      font-weight: 600;
+      color: #0b1324;
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: .6rem .9rem;
+      border-radius: .75rem;
+      font-weight: 600;
+      transition: background .15s ease, color .15s ease, box-shadow .15s ease, transform .15s ease;
+      border: 1px solid transparent;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .btn-primary {
+      background: var(--ntw-blue-600);
+      color: white;
+    }
+    .btn-primary:hover {
+      background: var(--ntw-blue-700);
+      box-shadow: 0 8px 16px rgba(37, 99, 235, 0.2);
+    }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: .4rem;
+      background: var(--ntw-blue-50);
+      color: var(--ntw-blue-700);
+      padding: .3rem .55rem;
+      border-radius: 999px;
+      font-weight: 700;
+      font-size: .72rem;
+      letter-spacing: .02em;
+    }
+    .badge.overdue {
+      background: var(--ntw-danger-soft);
+      color: var(--ntw-danger);
+    }
+    .overdue-card {
+      background: #fff6f6 !important;
+      border-color: #fecaca !important;
+    }
+    /* loader */
+    .spinner {
+      width: 28px; height: 28px; border: 3px solid #e5e7eb; border-top-color: var(--ntw-blue-600);
+      border-radius: 50%; animation: spin 0.9s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* toast */
+    .toast {
+      position: fixed; right: 16px; bottom: 16px; z-index: 9999;
+      background: #0b1324; color: #fff; padding: .8rem 1rem; border-radius: .75rem;
+      box-shadow: 0 12px 24px rgba(0,0,0,.2); opacity: 0; transform: translateY(10px);
+      transition: opacity .2s ease, transform .2s ease;
+    }
+    .toast.show { opacity: 1; transform: translateY(0); }
+    .toast.success { background: var(--ntw-success); }
+    .toast.error { background: var(--ntw-danger); }
+    .toast.info { background: var(--ntw-blue-600); }
+    /* Tom Select tweaks */
+    .ts-wrapper.multi .ts-control > div {
+      background: var(--ntw-blue-50);
+      color: var(--ntw-blue-700);
+      border: 1px solid #dbeafe;
+      border-radius: .5rem;
+      padding: .2rem .5rem;
+      font-weight: 600;
+    }
+    .ts-dropdown .active { background: #eef2ff; color: #1e3a8a; }
+    .section-title {
+      font-weight: 800; font-size: 1.5rem; color: #0b1324;
+    }
+    .subtle {
+      color: var(--ntw-muted);
+      font-size: .9rem;
+    }
+  </style>
+</head>
+<body>
+  <header class="border-b border-gray-200 bg-white">
+    <div class="container-max px-4 py-5 flex items-center justify-between">
+      <div>
+        <h1 class="text-2xl font-extrabold tracking-tight text-gray-900">Bill To Ship To — Orders</h1>
+        <p class="subtle">White &amp; Shades of Blue • Elegant • Aligned • Responsive</p>
+      </div>
+      <button id="refreshBtn" class="btn btn-primary">Refresh</button>
+    </div>
+  </header>
+
+  <main class="container-max px-4 py-6">
+    <!-- Info -->
+    <div class="mb-5">
+      <div class="badge">Working Hours: 10:00–18:30 (Sun off)</div>
+    </div>
+
+    <!-- Loader -->
+    <div id="loader" class="w-full flex items-center justify-center py-16">
+      <div class="spinner"></div>
+      <span class="ml-3 text-gray-600 font-semibold">Loading orders...</span>
+    </div>
+
+    <!-- Grid -->
+    <div id="grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5"></div>
+
+    <!-- Empty -->
+    <div id="empty" class="hidden text-center text-gray-500 font-semibold py-12">
+      No orders found.
+    </div>
+  </main>
+
+  <!-- Toast -->
+  <div id="toast" class="toast"></div>
+
+  <script>
+    // ========= CONFIG =========
+    // 👇 Isse aap apna Apps Script web app deployment URL dal den (ending with /exec)
+    const API_BASE_URL = 'https://script.google.com/macros/s/AKfycbw97iwaNC6mnFRYaI_sYXOZsEGJWtP2cxTmoDMpBdPG_LCUFLmxcDcHJwCUGALvfYYj/exec';
+
+    const ENDPOINTS = {
+      orders: API_BASE_URL + '?action=orders',
+      poList: API_BASE_URL + '?action=poList'
+    };
+
+    // ========= UTIL =========
+    const IST_TZ_OFFSET_MIN = 330; // Asia/Kolkata (+05:30)
+
+    function showToast(message, type = 'info', ttl = 2200) {
+      const el = document.getElementById('toast');
+      el.textContent = message;
+      el.className = 'toast show ' + type;
+      setTimeout(() => el.className = 'toast ' + type, ttl);
+    }
+
+    function parseISOOrNull(s) {
+      if (!s) return null;
+      const d = new Date(s);
+      return isNaN(d.getTime()) ? null : d;
+    }
+
+    function isSunday(d) {
+      return d.getDay() === 0; // 0=Sun
+    }
+
+    function atTime(d, hour, minute) {
+      const nd = new Date(d);
+      nd.setHours(hour, minute, 0, 0);
+      return nd;
+    }
+
+    function nextWorkingDayStart(d) {
+      // Move to next day 10:00; if Sunday, skip to Monday
+      let nd = new Date(d);
+      nd.setDate(nd.getDate() + 1);
+      nd = atTime(nd, 10, 0);
+      while (isSunday(nd)) {
+        nd.setDate(nd.getDate() + 1);
+        nd = atTime(nd, 10, 0);
+      }
+      return nd;
+    }
+
+    /**
+     * Add working minutes considering work window [10:00, 18:30], Sunday off.
+     * Implements the 4 PM case: remaining + carryover next day start.
+     */
+    function addWorkingMinutes(ts, minutes) {
+      if (!ts) return null;
+      let cur = new Date(ts);
+
+      const DAY_START_H = 10, DAY_START_M = 0;
+      const DAY_END_H = 18, DAY_END_M = 30;
+
+      // If Sunday, start next working day 10:00
+      if (isSunday(cur)) {
+        cur = nextWorkingDayStart(cur);
+      }
+
+      // If before day start -> start at day start
+      const dayStart = atTime(cur, DAY_START_H, DAY_START_M);
+      const dayEnd   = atTime(cur, DAY_END_H, DAY_END_M);
+
+      if (cur < dayStart) cur = dayStart;
+
+      while (minutes > 0) {
+        // If after day end, move to next working day 10:00
+        if (cur >= dayEnd) {
+          cur = nextWorkingDayStart(cur);
+        }
+
+        // recompute today's window
+        const start = (cur < dayStart) ? dayStart : cur;
+        const end = dayEnd;
+
+        if (isSunday(start)) {
+          cur = nextWorkingDayStart(start);
+          continue;
+        }
+
+        const remainingTodayMin = Math.max(0, Math.round((end - start) / 60000));
+        if (remainingTodayMin === 0) {
+          cur = nextWorkingDayStart(start);
+          continue;
+        }
+
+        const consume = Math.min(remainingTodayMin, minutes);
+        cur = new Date(start.getTime() + consume * 60000);
+        minutes -= consume;
+
+        if (minutes > 0) {
+          // carry to next working day
+          cur = nextWorkingDayStart(cur);
+        }
+      }
+      return cur;
+    }
+
+    function formatShortDateTime(d) {
+      // 02 Nov 2025, 10:30 AM IST
+      const opts = { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' };
+      const s = d.toLocaleString('en-IN', opts);
+      return s + ' IST';
+    }
+
+    function msToCountdown(ms) {
+      if (ms <= 0) return { d:0,h:0,m:0,s:0 };
+      const totalSec = Math.floor(ms / 1000);
+      const d = Math.floor(totalSec / 86400);
+      const h = Math.floor((totalSec % 86400) / 3600);
+      const m = Math.floor((totalSec % 3600) / 60);
+      const s = totalSec % 60;
+      return { d, h, m, s };
+    }
+
+    // ========= DATA FETCH =========
+    async function fetchJSON(url) {
+      const res = await fetch(url, { method: 'GET', cache: 'no-cache' });
+      if (!res.ok) throw new Error('Network error: ' + res.status);
+      const j = await res.json();
+      if (j.status !== 'success') throw new Error(j.message || 'API error');
+      return j.data || [];
+    }
+
+    // ========= RENDER =========
+    const state = {
+      orders: [],
+      poOptions: [],
+      timers: [] // intervals for countdown
+    };
+
+    function clearTimers() {
+      state.timers.forEach(id => clearInterval(id));
+      state.timers = [];
+    }
+
+    async function init() {
+      document.getElementById('loader').classList.remove('hidden');
+      document.getElementById('grid').innerHTML = '';
+      document.getElementById('empty').classList.add('hidden');
+      clearTimers();
+
+      try {
+        const [orders, po] = await Promise.all([
+          fetchJSON(ENDPOINTS.orders),
+          fetchJSON(ENDPOINTS.poList)
+        ]);
+
+        state.orders = orders;
+        state.poOptions = po;
+
+        renderGrid();
+        document.getElementById('loader').classList.add('hidden');
+        if (!orders.length) document.getElementById('empty').classList.remove('hidden');
+        showToast('Loaded successfully', 'success', 1400);
+      } catch (err) {
+        document.getElementById('loader').classList.add('hidden');
+        document.getElementById('empty').classList.remove('hidden');
+        console.error(err);
+        showToast('Failed to load: ' + err.message, 'error', 3500);
+      }
+    }
+
+    function renderGrid() {
+      const grid = document.getElementById('grid');
+      grid.innerHTML = '';
+
+      state.orders.forEach((o, idx) => {
+        const ts = parseISOOrNull(o.timestamp); // incoming ISO string
+        const deadline = addWorkingMinutes(ts, 180); // 3 hours = 180 min
+        const isOverdue = deadline ? (new Date() > deadline) : false;
+        const deadlineStr = deadline ? formatShortDateTime(deadline) : '—';
+
+        const card = document.createElement('div');
+        card.className = 'app-card p-5 flex flex-col ' + (isOverdue ? 'overdue-card' : '');
+        card.dataset.idx = idx;
+
+        card.innerHTML = `
+          <div class="flex items-start justify-between mb-3">
+            <div class="pr-2">
+              <div class="card-title text-lg">${escapeHTML(o.dealerName || '—')}</div>
+              <div class="text-sm text-gray-500">CRM: <span class="font-semibold text-gray-800">${escapeHTML(o.crm || '—')}</span></div>
+            </div>
+            <div class="text-right">
+              <div class="label">Deadline</div>
+              <div class="value">${deadlineStr}</div>
+              <div class="mt-1">
+                <span class="badge ${isOverdue ? 'overdue' : ''}" id="badge-${idx}">
+                  ${isOverdue ? 'Overdue' : 'On Time'}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3 mb-4">
+            <div>
+              <div class="label">Marketing Person</div>
+              <div class="value">${escapeHTML(o.marketingPersonName || '—')}</div>
+            </div>
+            <div>
+              <div class="label">Location</div>
+              <div class="value">${escapeHTML(o.location || '—')}</div>
+            </div>
+            <div>
+              <div class="label">Order Timestamp</div>
+              <div class="value">${o.timestamp ? new Date(o.timestamp).toLocaleString('en-IN') + ' IST' : '—'}</div>
+            </div>
+            <div class="flex items-end">
+              <a class="btn btn-primary w-full" href="${escapeURL(o.orderFile)}" target="_blank" rel="noopener noreferrer">Order File</a>
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <div class="label mb-2">Order in PO No.</div>
+            <select id="po-${idx}" multiple placeholder="Select PO(s)..." autocomplete="off"></select>
+          </div>
+
+          <div class="flex items-center justify-between mt-2">
+            <div class="text-sm text-gray-600">
+              <span class="label">Time Remaining</span>
+              <span class="ml-2 font-extrabold" id="cd-${idx}">—</span>
+            </div>
+            <div class="space-x-2">
+              <!-- Submit to be wired later -->
+              <button class="btn border border-gray-300 text-gray-800 hover:bg-gray-50" disabled>Submit (coming next)</button>
+            </div>
+          </div>
+        `;
+
+        grid.appendChild(card);
+
+        // Init Tom Select for this card
+        const sel = card.querySelector(`#po-${idx}`);
+        state.poOptions.forEach(opt => {
+          const option = document.createElement('option');
+          option.value = opt;
+          option.textContent = opt;
+          sel.appendChild(option);
+        });
+        new TomSelect(sel, {
+          plugins: ['remove_button'],
+          create: false,
+          maxOptions: 1000,
+          maxItems: 100,
+          searchField: ['text'],
+          placeholder: 'Select PO(s)...'
+        });
+
+        // Start countdown timer
+        startCountdown(idx, deadline, card);
+      });
+    }
+
+    function startCountdown(idx, deadline, card) {
+      const el = card.querySelector(`#cd-${idx}`);
+      const badge = card.querySelector(`#badge-${idx}`);
+
+      function tick() {
+        if (!deadline) {
+          el.textContent = '—';
+          return;
+        }
+        const now = new Date();
+        const diff = deadline - now;
+        if (diff <= 0) {
+          el.textContent = '00:00:00';
+          badge.textContent = 'Overdue';
+          badge.classList.add('overdue');
+          card.classList.add('overdue-card');
+          return;
+        }
+        const { d, h, m, s } = msToCountdown(diff);
+        const hh = String(h + d * 24).padStart(2, '0'); // show days folded into hours
+        el.textContent = `${hh}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+      }
+
+      tick();
+      const id = setInterval(tick, 1000);
+      state.timers.push(id);
+    }
+
+    function escapeHTML(s) {
+      return (s || '').toString().replace(/[&<>"']/g, c => ({
+        '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+      }[c]));
+    }
+    function escapeURL(s) {
+      try { return new URL(s).toString(); } catch(e) { return '#'; }
+    }
+
+    // ========= Events =========
+    document.getElementById('refreshBtn').addEventListener('click', init);
+
+    // Boot
+    window.addEventListener('DOMContentLoaded', init);
+  </script>
+</body>
+</html>

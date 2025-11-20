@@ -817,6 +817,8 @@ async function checkMissingSuppliers(googleSheetURL) {
         }
 
         const csvText = await response.text();
+
+        // --- CSV parsing ---
         const rows = csvText.split('\n').map(row => {
             const cells = [];
             let currentCell = '';
@@ -841,15 +843,15 @@ async function checkMissingSuppliers(googleSheetURL) {
 
         let missingOrders = [];
         let completedOrders = [];
-        let categoriesWithSuppliers = new Set(); // To store unique categories with suppliers
+        let categoriesWithSuppliers = new Set(); // unique categories jinke supplier diye gaye hain
 
-        // Column A-C block (Order-1, Order-3, ...)
+        // ===== LEFT BLOCK: columns A–C (Order-1, Order-3, ...) =====
         for (let i = 0; i < rows.length; i++) {
             const orderCell = rows[i][0] || '';
             if (orderCell.toLowerCase().includes('order-')) {
-                const categoryCell = rows[i][1] || '';
-                const supplierCell = rows[i][2] || '';
-                const orderInfo = `${orderCell} (${categoryCell})`;
+                const categoryCell  = rows[i][1] || '';
+                const supplierCell  = rows[i][2] || '';
+                const orderInfo     = `${orderCell} (${categoryCell})`;
 
                 if (!supplierCell || supplierCell.toLowerCase() === 'supplier name') {
                     missingOrders.push(orderInfo);
@@ -862,13 +864,13 @@ async function checkMissingSuppliers(googleSheetURL) {
             }
         }
 
-        // Column F-H block (Order-2, Order-4, ...)
+        // ===== RIGHT BLOCK: columns F–H (Order-2, Order-4, ...) =====
         for (let i = 0; i < rows.length; i++) {
             const orderCell = rows[i][5] || '';
             if (orderCell.toLowerCase().includes('order-')) {
-                const categoryCell = rows[i][6] || '';
-                const supplierCell = rows[i][7] || '';
-                const orderInfo = `${orderCell} (${categoryCell})`;
+                const categoryCell  = rows[i][6] || '';
+                const supplierCell  = rows[i][7] || '';
+                const orderInfo     = `${orderCell} (${categoryCell})`;
 
                 if (!supplierCell || supplierCell.toLowerCase() === 'supplier name') {
                     missingOrders.push(orderInfo);
@@ -881,42 +883,43 @@ async function checkMissingSuppliers(googleSheetURL) {
             }
         }
 
-        // Now, fetch all specifications from the backend, then filter based on categoriesWithSuppliers
-        const allSpecsResponse = await fetch(`${API_URL}?action=getSpecificationsForAllCategories&sourceUrl=${encodeURIComponent(googleSheetURL)}`);
+        // ==== Ab backend se saare categories ke specs lao ====
+        const allSpecsResponse = await fetch(
+            `${API_URL}?action=...AllCategories&sourceUrl=${encodeURIComponent(googleSheetURL)}`
+        );
         if (!allSpecsResponse.ok) {
             const errorText = await allSpecsResponse.text();
             throw new Error(`HTTP error! status: ${allSpecsResponse.status}. Response: ${errorText}`);
         }
         const allSpecs = await allSpecsResponse.json();
 
-let filteredSpecsForEditor = [];
+        // ==== Yahan se naya logic ====
+        // allSpecs ki keys lowercase me hain → normalize karo
+        // aur har supplier wali category ko hamesha editor me dikhाओ
+        let filteredSpecsForEditor = [];
 
-if (allSpecs && typeof allSpecs === 'object') {
-    for (const originalCategory of categoriesWithSuppliers) {
+        if (allSpecs && typeof allSpecs === 'object') {
+            for (const originalCategory of categoriesWithSuppliers) {
+                const key = String(originalCategory).trim().toLowerCase();
 
-        // Backend keys are lowercase → normalize here
-        const key = String(originalCategory).trim().toLowerCase();
+                let specsRaw   = allSpecs[key];
+                let specsArray = [];
 
-        // Pull specs (may be undefined)
-        let specsRaw = allSpecs[key];
-        let specsArray = [];
+                if (Array.isArray(specsRaw)) {
+                    specsArray = specsRaw;
+                } else if (typeof specsRaw === 'string' && specsRaw.length > 0) {
+                    specsArray = [specsRaw];
+                } else {
+                    // agar default spec nahi mili to blank allow karo
+                    specsArray = [];
+                }
 
-        if (Array.isArray(specsRaw)) {
-            specsArray = specsRaw;
-        } else if (typeof specsRaw === 'string' && specsRaw.length > 0) {
-            specsArray = [specsRaw];
-        } else {
-            // No default spec: allow blank editor
-            specsArray = [];
+                filteredSpecsForEditor.push({
+                    category: originalCategory,   // UI me original text
+                    specifications: specsArray
+                });
+            }
         }
-
-        // ALWAYS include category (supplier provided)
-        filteredSpecsForEditor.push({
-            category: originalCategory,
-            specifications: specsArray
-        });
-    }
-}
 
         return { missingOrders, completedOrders, filteredSpecsForEditor };
     } catch (error) {
@@ -924,6 +927,7 @@ if (allSpecs && typeof allSpecs === 'object') {
         throw new Error('Unable to check supplier information. Please ensure the Google Sheet is publicly accessible.');
     }
 }
+
 document.addEventListener('DOMContentLoaded', () => {
     // Add event listener for the "Next" button
     const nextBtn = document.getElementById('nextCategoryBtn');
@@ -1429,4 +1433,5 @@ document.getElementById('saveSpecsAndConfirmBtn').addEventListener('click', () =
     <script src="https://ntwoods.github.io/ordertodispatch/js/viewOnly.js"></script>	
 </body>
 </html>
+
 

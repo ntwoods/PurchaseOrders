@@ -884,44 +884,41 @@ async function checkMissingSuppliers(googleSheetURL) {
         }
 
         // ==== Ab backend se saare categories ke specs lao ====
-        const allSpecsResponse = await fetch(
-            `${API_URL}?action=...AllCategories&sourceUrl=${encodeURIComponent(googleSheetURL)}`
-        );
-        if (!allSpecsResponse.ok) {
-            const errorText = await allSpecsResponse.text();
-            throw new Error(`HTTP error! status: ${allSpecsResponse.status}. Response: ${errorText}`);
-        }
         const allSpecs = await allSpecsResponse.json();
 
-        // ==== Yahan se naya logic ====
-        // allSpecs ki keys lowercase me hain → normalize karo
-        // aur har supplier wali category ko hamesha editor me dikhाओ
-        let filteredSpecsForEditor = [];
+        // Debug ke liye (optional – agar console dekhna chaho)
+        console.log('allSpecs from backend:', allSpecs);
+        console.log('categoriesWithSuppliers (unique):', Array.from(categoriesWithSuppliers));
 
-        if (allSpecs && typeof allSpecs === 'object') {
-            for (const originalCategory of categoriesWithSuppliers) {
-                const key = String(originalCategory).trim().toLowerCase();
+        // Yahan se ham hamesha *har supplier wali category* ko editor me bhejenge
+        const filteredSpecsForEditor = [];
 
-                let specsRaw   = allSpecs[key];
-                let specsArray = [];
+        // allSpecs ek object hai jisme keys lowercase me hain
+        for (const originalCategory of categoriesWithSuppliers) {
+            const key = String(originalCategory).trim().toLowerCase();
 
-                if (Array.isArray(specsRaw)) {
-                    specsArray = specsRaw;
-                } else if (typeof specsRaw === 'string' && specsRaw.length > 0) {
-                    specsArray = [specsRaw];
-                } else {
-                    // agar default spec nahi mili to blank allow karo
-                    specsArray = [];
-                }
+            let raw = (allSpecs && typeof allSpecs === 'object')
+                ? allSpecs[key]
+                : null;
 
-                filteredSpecsForEditor.push({
-                    category: originalCategory,   // UI me original text
-                    specifications: specsArray
-                });
+            let specsArray;
+            if (Array.isArray(raw)) {
+                specsArray = raw;
+            } else if (typeof raw === 'string' && raw.length > 0) {
+                specsArray = [raw];
+            } else {
+                // Default spec nahi mili – user blank se fill karega
+                specsArray = [];
             }
+
+            filteredSpecsForEditor.push({
+                category: originalCategory,   // UI me original naam (PRA GJN PLY, PVC/WPC BOARD, ...)
+                specifications: specsArray
+            });
         }
 
         return { missingOrders, completedOrders, filteredSpecsForEditor };
+
     } catch (error) {
         console.error('Error checking suppliers:', error);
         throw new Error('Unable to check supplier information. Please ensure the Google Sheet is publicly accessible.');
@@ -1433,5 +1430,6 @@ document.getElementById('saveSpecsAndConfirmBtn').addEventListener('click', () =
     <script src="https://ntwoods.github.io/ordertodispatch/js/viewOnly.js"></script>	
 </body>
 </html>
+
 
 

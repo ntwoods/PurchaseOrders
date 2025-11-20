@@ -889,17 +889,35 @@ async function checkMissingSuppliers(googleSheetURL) {
         }
         const allSpecs = await allSpecsResponse.json();
 
-        let filteredSpecsForEditor = [];
-        if (allSpecs && typeof allSpecs === 'object') {
-            for (const category of categoriesWithSuppliers) {
-                if (allSpecs[category]) {
-                    filteredSpecsForEditor.push({
-                        category: category,
-                        specifications: Array.isArray(allSpecs[category]) ? allSpecs[category] : [String(allSpecs[category])]
-                    });
-                }
-            }
+let filteredSpecsForEditor = [];
+
+if (allSpecs && typeof allSpecs === 'object') {
+    for (const originalCategory of categoriesWithSuppliers) {
+
+        // Backend keys are lowercase → normalize here
+        const key = String(originalCategory).trim().toLowerCase();
+
+        // Pull specs (may be undefined)
+        let specsRaw = allSpecs[key];
+        let specsArray = [];
+
+        if (Array.isArray(specsRaw)) {
+            specsArray = specsRaw;
+        } else if (typeof specsRaw === 'string' && specsRaw.length > 0) {
+            specsArray = [specsRaw];
+        } else {
+            // No default spec: allow blank editor
+            specsArray = [];
         }
+
+        // ALWAYS include category (supplier provided)
+        filteredSpecsForEditor.push({
+            category: originalCategory,
+            specifications: specsArray
+        });
+    }
+}
+
         return { missingOrders, completedOrders, filteredSpecsForEditor };
     } catch (error) {
         console.error('Error checking suppliers:', error);
@@ -1411,3 +1429,4 @@ document.getElementById('saveSpecsAndConfirmBtn').addEventListener('click', () =
     <script src="https://ntwoods.github.io/ordertodispatch/js/viewOnly.js"></script>	
 </body>
 </html>
+

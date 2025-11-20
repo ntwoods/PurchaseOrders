@@ -883,23 +883,44 @@ async function checkMissingSuppliers(googleSheetURL) {
             }
         }
 
-        // ==== Ab backend se saare categories ke specs lao ====
-        const allSpecs = await allSpecsResponse.json();
+           // ==== Ab backend se saare categories ke specs lao ====
+        const params = new URLSearchParams();
+        params.append('action', 'getSpecificationsForAllCategories');
+        params.append('sourceUrl', googleSheetURL);
 
-        // Debug ke liye (optional – agar console dekhna chaho)
+        const specsUrl = `${API_URL}?${params.toString()}`;
+
+        // Backend ko call karo
+        const allSpecsResponse = await fetch(specsUrl, { method: 'GET' });
+        if (!allSpecsResponse.ok) {
+            const errText = await allSpecsResponse.text().catch(() => '');
+            console.error('Specs HTTP error:', allSpecsResponse.status, errText);
+            throw new Error('Unable to fetch specifications from backend.');
+        }
+
+        const allSpecsRaw = await allSpecsResponse.json();
+
+        // Agar backend ne {success:false, ...} bheja ho to empty object treat karo
+        const allSpecs =
+            allSpecsRaw && allSpecsRaw.success === false
+                ? {}
+                : (allSpecsRaw || {});
+
+        // Debug ke liye (optional)
         console.log('allSpecs from backend:', allSpecs);
         console.log('categoriesWithSuppliers (unique):', Array.from(categoriesWithSuppliers));
 
         // Yahan se ham hamesha *har supplier wali category* ko editor me bhejenge
         const filteredSpecsForEditor = [];
 
-        // allSpecs ek object hai jisme keys lowercase me hain
+        // allSpecs ke keys lowercase me hain, isliye category ko lowercase me map karenge
         for (const originalCategory of categoriesWithSuppliers) {
             const key = String(originalCategory).trim().toLowerCase();
 
-            let raw = (allSpecs && typeof allSpecs === 'object')
-                ? allSpecs[key]
-                : null;
+            let raw =
+                allSpecs && typeof allSpecs === 'object'
+                    ? allSpecs[key]
+                    : null;
 
             let specsArray;
             if (Array.isArray(raw)) {
@@ -912,7 +933,7 @@ async function checkMissingSuppliers(googleSheetURL) {
             }
 
             filteredSpecsForEditor.push({
-                category: originalCategory,   // UI me original naam (PRA GJN PLY, PVC/WPC BOARD, ...)
+                category: originalCategory,  // UI me original naam hi dikhayenge
                 specifications: specsArray
             });
         }
@@ -1430,6 +1451,7 @@ document.getElementById('saveSpecsAndConfirmBtn').addEventListener('click', () =
     <script src="https://ntwoods.github.io/ordertodispatch/js/viewOnly.js"></script>	
 </body>
 </html>
+
 
 
 

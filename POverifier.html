@@ -801,8 +801,10 @@ let temporaryEditedSpecs = {};
         }
 
         // Function to check Google Sheets for missing supplier names
+// Google Sheet me suppliers check karo + sirf un categories ke specs lao jinke paas supplier hai
 async function checkMissingSuppliers(googleSheetURL) {
     try {
+        // 1) Sheet ko CSV ke form me fetch karo
         let csvUrl = googleSheetURL;
         if (googleSheetURL.includes('/edit')) {
             const sheetId = googleSheetURL.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
@@ -818,7 +820,7 @@ async function checkMissingSuppliers(googleSheetURL) {
 
         const csvText = await response.text();
 
-        // --- CSV parsing ---
+        // 2) CSV parsing (comma + quotes safe)
         const rows = csvText.split('\n').map(row => {
             const cells = [];
             let currentCell = '';
@@ -841,57 +843,61 @@ async function checkMissingSuppliers(googleSheetURL) {
             return cells;
         });
 
-        let missingOrders = [];
-        let completedOrders = [];
-        let categoriesWithSuppliers = new Set(); // unique categories jinke supplier diye gaye hain
+        // 3) Orders find karo + supplier status nikaalo
+        const missingOrders = [];
+        const completedOrders = [];
+        const categoriesWithSuppliersSet = new Set();   // UNIQUE categories jinke paas supplier hai
 
-        // ===== LEFT BLOCK: columns A–C (Order-1, Order-3, ...) =====
+        // LEFT block: columns A–C
         for (let i = 0; i < rows.length; i++) {
             const orderCell = rows[i][0] || '';
             if (orderCell.toLowerCase().includes('order-')) {
-                const categoryCell  = rows[i][1] || '';
-                const supplierCell  = rows[i][2] || '';
-                const orderInfo     = `${orderCell} (${categoryCell})`;
+                const categoryCell = rows[i][1] || '';
+                const supplierCell = rows[i][2] || '';
+                const orderInfo = `${orderCell} (${categoryCell})`;
 
                 if (!supplierCell || supplierCell.toLowerCase() === 'supplier name') {
                     missingOrders.push(orderInfo);
                 } else {
                     completedOrders.push(`${orderInfo} - ${supplierCell}`);
                     if (categoryCell) {
-                        categoriesWithSuppliers.add(categoryCell.trim());
+                        categoriesWithSuppliersSet.add(String(categoryCell).trim());
                     }
                 }
             }
         }
 
-        // ===== RIGHT BLOCK: columns F–H (Order-2, Order-4, ...) =====
+        // RIGHT block: columns F–H
         for (let i = 0; i < rows.length; i++) {
             const orderCell = rows[i][5] || '';
             if (orderCell.toLowerCase().includes('order-')) {
-                const categoryCell  = rows[i][6] || '';
-                const supplierCell  = rows[i][7] || '';
-                const orderInfo     = `${orderCell} (${categoryCell})`;
+                const categoryCell = rows[i][6] || '';
+                const supplierCell = rows[i][7] || '';
+                const orderInfo = `${orderCell} (${categoryCell})`;
 
                 if (!supplierCell || supplierCell.toLowerCase() === 'supplier name') {
                     missingOrders.push(orderInfo);
                 } else {
                     completedOrders.push(`${orderInfo} - ${supplierCell}`);
                     if (categoryCell) {
-                        categoriesWithSuppliers.add(categoryCell.trim());
+                        categoriesWithSuppliersSet.add(String(categoryCell).trim());
                     }
                 }
             }
         }
 
-           // ==== Ab backend se saare categories ke specs lao ====
+        // Ab humare paas saare UNIQUE categories hain jinke supplier filled hai
+        const categoriesWithSuppliers = Array.from(categoriesWithSuppliersSet);
+        console.log('Unique categories with suppliers:', categoriesWithSuppliers);
+
+        // 4) Apps Script se SAARE categories ke specs lao (Specification sheet + linked PO)
         const params = new URLSearchParams();
         params.append('action', 'getSpecificationsForAllCategories');
         params.append('sourceUrl', googleSheetURL);
 
         const specsUrl = `${API_URL}?${params.toString()}`;
-
-        // Backend ko call karo
         const allSpecsResponse = await fetch(specsUrl, { method: 'GET' });
+
         if (!allSpecsResponse.ok) {
             const errText = await allSpecsResponse.text().catch(() => '');
             console.error('Specs HTTP error:', allSpecsResponse.status, errText);
@@ -899,28 +905,14 @@ async function checkMissingSuppliers(googleSheetURL) {
         }
 
         const allSpecsRaw = await allSpecsResponse.json();
-
-        // Agar backend ne {success:false, ...} bheja ho to empty object treat karo
-        const allSpecs =
-            allSpecsRaw && allSpecsRaw.success === false
-                ? {}
-                : (allSpecsRaw || {});
-
-        // Debug ke liye (optional)
+        // Apps Script se plain object aata hai: { "pra occ ply": [ ... ], "pvc/wpc board": [] }
+        const allSpecs = allSpecsRaw || {};
         console.log('allSpecs from backend:', allSpecs);
-        console.log('categoriesWithSuppliers (unique):', Array.from(categoriesWithSuppliers));
 
-        // Yahan se ham hamesha *har supplier wali category* ko editor me bhejenge
-        const filteredSpecsForEditor = [];
-
-        // allSpecs ke keys lowercase me hain, isliye category ko lowercase me map karenge
-        for (const originalCategory of categoriesWithSuppliers) {
+        // 5) Ab sirf unhi categories ka editor data banao jinke paas supplier hai
+        const filteredSpecsForEditor = categoriesWithSuppliers.map(originalCategory => {
             const key = String(originalCategory).trim().toLowerCase();
-
-            let raw =
-                allSpecs && typeof allSpecs === 'object'
-                    ? allSpecs[key]
-                    : null;
+            let raw = (allSpecs && typeof allSpecs === 'object') ? allSpecs[key] : null;
 
             let specsArray;
             if (Array.isArray(raw)) {
@@ -928,15 +920,17 @@ async function checkMissingSuppliers(googleSheetURL) {
             } else if (typeof raw === 'string' && raw.length > 0) {
                 specsArray = [raw];
             } else {
-                // Default spec nahi mili – user blank se fill karega
+                // Default spec nahi hai → blank textarea allow karo
                 specsArray = [];
             }
 
-            filteredSpecsForEditor.push({
-                category: originalCategory,  // UI me original naam hi dikhayenge
+            return {
+                category: originalCategory,   // UI me original naam (e.g. PRA GJN PLY)
                 specifications: specsArray
-            });
-        }
+            };
+        });
+
+        console.log('filteredSpecsForEditor (final):', filteredSpecsForEditor);
 
         return { missingOrders, completedOrders, filteredSpecsForEditor };
 
@@ -1451,6 +1445,7 @@ document.getElementById('saveSpecsAndConfirmBtn').addEventListener('click', () =
     <script src="https://ntwoods.github.io/ordertodispatch/js/viewOnly.js"></script>	
 </body>
 </html>
+
 
 
 

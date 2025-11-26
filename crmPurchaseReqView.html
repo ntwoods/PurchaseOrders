@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>CRM Requests Dashboard — With Deadline & Countdown</title>
     <style>
-        /* (kept your CSS unchanged except kept here for completeness) */
         :root {
             --color-primary: #1976d2;
             --color-secondary: #42a5f5;
@@ -76,7 +75,7 @@
         .toast.error { background-color: rgba(229,57,53,0.9); }
         .overdue-text { color:#e53935; font-weight:600; }
         .countdown-red { color:#ef5350; font-weight:600; }
-        .countdown-yellow { color:#ffb300; font-weight:600; } /* changed from yellow hex to more visible */
+        .countdown-yellow { color:#ffb300; font-weight:600; }
         .countdown-green { color:#66bb6a; font-weight:600; }
         @media (max-width:768px) {
             .header h1 { font-size:1.75rem; }
@@ -184,9 +183,9 @@
                 if (!Array.isArray(result.data)) throw new Error("Expected 'data' to be an array");
                 requests = result.data;
                 renderRequests();
-				if (typeof setReadOnlyMode === "function") {
-				  setReadOnlyMode();
-				}                
+                if (typeof setReadOnlyMode === "function") {
+                    setReadOnlyMode();
+                }
             } catch (error) {
                 console.error('Error fetching requests:', error);
                 showToast('Error loading requests. Please try again.', 'error');
@@ -205,8 +204,7 @@
                 const jsonText = text.substring(text.indexOf('{'), text.lastIndexOf('}') + 1);
                 const data = JSON.parse(jsonText);
 
-                // Adjusted indices according to your comments
-                // This filtering logic mirrors your original - adapt indices if needed.
+                // Filtering logic similar to your original
                 poNumbers = data.table.rows
                     .filter(row => row.c[8]?.v === "Done" && (!row.c[20] || row.c[20].v === ""))
                     .map(row => row.c[37]?.v)
@@ -242,20 +240,20 @@
 
             requests.forEach((request) => {
                 const card = createRequestCard(request);
-                // append card to DOM first
                 container.appendChild(card);
 
-                // After append, if poReceivedTimestamp dataset exists, start countdown using element reference
-
-				if (card.dataset && card.dataset.deadlineTimestamp) {
-				    const deadlineTimestamp = parseInt(card.dataset.deadlineTimestamp, 10);
-				    const countdownEl = card.querySelector(`#countdown-${cssSafeId(request.id)}`);
-				    if (countdownEl) {
-				        startCountdown(deadlineTimestamp, countdownEl, card);
-				    } else {
-				        console.warn('Countdown element not found after append for', request.id);
-				    }
-				}	
+                // After append, agar deadlineTimestamp set hai to countdown start karo
+                if (card.dataset && card.dataset.deadlineTimestamp) {
+                    const deadlineTimestamp = parseInt(card.dataset.deadlineTimestamp, 10);
+                    const countdownEl = card.querySelector(`#countdown-${cssSafeId(request.id)}`);
+                    if (countdownEl) {
+                        startCountdown(deadlineTimestamp, countdownEl, card);
+                    } else {
+                        console.warn('Countdown element not found after append for', request.id);
+                    }
+                }
+            });
+        }
 
         // Helper: make an ID safe (remove spaces and problematic chars)
         function cssSafeId(raw) {
@@ -263,7 +261,7 @@
             return String(raw).replace(/[^a-zA-Z0-9\-_:.]/g, '_');
         }
 
-        // Parse ISO 8601 explicitly (keeps your robust parsing)
+        // Parse ISO 8601 explicitly (robust parsing)
         function parseIsoDateTime(isoString) {
             if (!isoString || typeof isoString !== 'string') return null;
             const parts = isoString.match(/(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.(\d{1,3}))?Z/);
@@ -281,256 +279,255 @@
             return date;
         }
 
-			function calculateDeadlineWithSundaySkip(startMs) {
-			    const ONE_DAY = 24 * 60 * 60 * 1000;
-			
-			    // Basic 24 hours deadline
-			    let deadline = startMs + ONE_DAY;
-			
-			    const d = new Date(deadline);
-			    // Agar deadline Sunday par aa raha hai to 1 day aur aage (Monday)
-			    if (d.getDay() === 0) { // 0 = Sunday
-			        deadline += ONE_DAY;
-			    }
-			
-			    return deadline;
-			}
+        // G column ke timestamp se deadline banane ke liye (24 hrs + Sunday skip)
+        function calculateDeadlineWithSundaySkip(startMs) {
+            const ONE_DAY = 24 * 60 * 60 * 1000;
 
-       function createRequestCard(request) {
-    const card = document.createElement('div');
-    card.className = 'request-card';
+            // Basic 24 hours deadline
+            let deadline = startMs + ONE_DAY;
 
-    // Agar responseRemark hai to highlight
-    if (request.responseRemark && request.responseRemark.trim() !== '') {
-        card.classList.add('highlighted');
-    }
-
-    // 🔹 K column (poDetail) ke basis par decide karenge ke timer chalega ya nahi
-    const hasPoDetail = !!(request.poDetail && String(request.poDetail).trim() !== '');
-
-    // ---- PO Received display (old logic, sirf show ke liye, timer ke liye nahi) ----
-    let poReceivedDisplay = 'N/A';
-    if (request.poReceived) {
-        const parsedPoReceived = parseIsoDateTime(request.poReceived);
-        if (parsedPoReceived && !isNaN(parsedPoReceived.getTime())) {
-            poReceivedDisplay = parsedPoReceived.toLocaleString('en-IN', {
-                timeZone: 'Asia/Kolkata',
-                year: 'numeric',
-                month: '2-digit',
-                day: '2-digit',
-                hour: '2-digit',
-                minute: '2-digit',
-                second: '2-digit',
-                hour12: true
-            });
-        }
-    }
-
-    // ---- Deadline & countdown G column se (timeStamp) ----
-    let deadlineTimestamp = null;
-    let deadlineDisplay = '';
-
-    if (!hasPoDetail && request.timeStamp) { // ❗ K column me value ho to timer NAHI chalega
-        const parsedGTime = parseIsoDateTime(request.timeStamp);
-        if (parsedGTime && !isNaN(parsedGTime.getTime())) {
-            const startMs = parsedGTime.getTime();
-
-            // 24 hrs + Sunday skip
-            deadlineTimestamp = calculateDeadlineWithSundaySkip(startMs);
-
-            // dataset me store karenge taaki renderRequests me countdown start ho sake
-            card.dataset.deadlineTimestamp = String(deadlineTimestamp);
-
-            const deadlineDateForDisplay = new Date(deadlineTimestamp);
-            deadlineDisplay = deadlineDateForDisplay.toLocaleString('en-IN', {
-                timeZone: 'Asia/Kolkata',
-                year: 'numeric',
-                month: '2-digit',
-                day: '2-digit',
-                hour: '2-digit',
-                minute: '2-digit',
-                second: '2-digit',
-                hour12: true
-            });
-
-            // Agar already overdue hai to card ko highlight karo
-            if (Date.now() > deadlineTimestamp) {
-                card.classList.add('overdue-card-highlight');
+            const d = new Date(deadline);
+            // Agar deadline Sunday par aa raha hai to 1 day aur aage (Monday)
+            if (d.getDay() === 0) { // 0 = Sunday
+                deadline += ONE_DAY;
             }
+
+            return deadline;
         }
-    }
 
-    // CRM value link handle
-    let crmValue = request.crm || 'N/A';
-    if (crmValue !== 'N/A' && (crmValue.startsWith('http://') || crmValue.startsWith('https://'))) {
-        crmValue = `<a href="${crmValue}" target="_blank" style="color: var(--color-primary); text-decoration: none;">View CRM</a>`;
-    }
+        function createRequestCard(request) {
+            const card = document.createElement('div');
+            card.className = 'request-card';
 
-    // Product / file handle
-    let productHtml = '';
-    if (request.product && (request.product.startsWith('http://') || request.product.startsWith('https://'))) {
-        productHtml = `
-            <div class="field-group">
-                <span class="field-label">File:</span>
-                <a href="${request.product}" target="_blank" class="view-file-button">View File</a>
-            </div>`;
-    } else {
-        productHtml = `
-            <div class="field-group">
-                <span class="field-label">Product:</span>
-                <div class="field-value">${request.product || 'N/A'}</div>
-            </div>`;
-    }
+            // Agar responseRemark hai to highlight
+            if (request.responseRemark && request.responseRemark.trim() !== '') {
+                card.classList.add('highlighted');
+            }
 
-    const watermarkHtml = request.crmStatus === 'Cancel' ? '<div class="watermark">Cancelled</div>' : '';
-    const buttonText = (request.responseRemark && request.responseRemark.trim() !== '') ? 'Modify Response' : 'Mark Response';
+            // 🔹 K column (poDetail) ke basis par decide karenge ke timer chalega ya nahi
+            const hasPoDetail = !!(request.poDetail && String(request.poDetail).trim() !== '');
 
-    let receivedButtonHtml = '';
-    if (request.poReceived && request.poReceived.trim() !== '') {
-        receivedButtonHtml = `
-            <button class="received-button" onclick="markAsReceived('${request.id}')">
-                Received
-            </button>`;
-    }
+            // ---- PO Received display (sirf display ke liye) ----
+            let poReceivedDisplay = 'N/A';
+            if (request.poReceived) {
+                const parsedPoReceived = parseIsoDateTime(request.poReceived);
+                if (parsedPoReceived && !isNaN(parsedPoReceived.getTime())) {
+                    poReceivedDisplay = parsedPoReceived.toLocaleString('en-IN', {
+                        timeZone: 'Asia/Kolkata',
+                        year: 'numeric',
+                        month: '2-digit',
+                        day: '2-digit',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        second: '2-digit',
+                        hour12: true
+                    });
+                }
+            }
 
-    // Sirf tab show karenge jab deadlineTimestamp hai (matlab K blank tha)
-    const deadlineHtml = deadlineTimestamp ? `
-        <div class="field-group">
-            <span class="field-label">Deadline:</span>
-            <div class="field-value" id="deadline-${cssSafeId(request.id)}">${deadlineDisplay}</div>
-        </div>
-        <div class="field-group">
-            <span class="field-label">Time Left:</span>
-            <div class="field-value" id="countdown-${cssSafeId(request.id)}"></div>
-        </div>
-    ` : '';
+            // ---- Deadline & countdown G column se (timeStamp) ----
+            let deadlineTimestamp = null;
+            let deadlineDisplay = '';
 
-    card.innerHTML = `
-        ${watermarkHtml}
-        <div class="card-content">
-            <div class="field-group">
-                <span class="field-label">Dealer Name:</span>
-                <div class="field-value">${request.dealer || 'N/A'}</div>
-            </div>
+            if (!hasPoDetail && request.timeStamp) { // ❗ K column me value ho to timer NAHI chalega
+                const parsedGTime = parseIsoDateTime(request.timeStamp);
+                if (parsedGTime && !isNaN(parsedGTime.getTime())) {
+                    const startMs = parsedGTime.getTime();
 
-            ${productHtml}
+                    // 24 hrs + Sunday skip
+                    deadlineTimestamp = calculateDeadlineWithSundaySkip(startMs);
 
-            <div class="field-group">
-                <span class="field-label">Req Dt.:</span>
-                <div class="field-value">
-                  ${request.timeStamp ? new Date(request.timeStamp).toLocaleDateString('en-GB') : 'N/A'}
-                </div>
-            </div>
+                    // dataset me store karenge taaki renderRequests me countdown start ho sake
+                    card.dataset.deadlineTimestamp = String(deadlineTimestamp);
 
-            <div class="field-group">
-                <span class="field-label">Priority:</span>
-                <div class="field-value">${request.priority || 'N/A'}</div>
-            </div>
+                    const deadlineDateForDisplay = new Date(deadlineTimestamp);
+                    deadlineDisplay = deadlineDateForDisplay.toLocaleString('en-IN', {
+                        timeZone: 'Asia/Kolkata',
+                        year: 'numeric',
+                        month: '2-digit',
+                        day: '2-digit',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        second: '2-digit',
+                        hour12: true
+                    });
 
-            <div class="field-group">
-                <span class="field-label">Remark:</span>
-                <div class="field-value">${request.remark || 'N/A'}</div>
-            </div>
+                    // Agar already overdue hai to card ko highlight karo
+                    if (Date.now() > deadlineTimestamp) {
+                        card.classList.add('overdue-card-highlight');
+                    }
+                }
+            }
 
-            ${request.poDetail ? `
-            <div class="field-group">
-                <span class="field-label">PO:</span>
-                <div class="field-value">${request.poDetail}</div>
-            </div>` : ''}
+            // CRM value link handle
+            let crmValue = request.crm || 'N/A';
+            if (crmValue !== 'N/A' && (crmValue.startsWith('http://') || crmValue.startsWith('https://'))) {
+                crmValue = `<a href="${crmValue}" target="_blank" style="color: var(--color-primary); text-decoration: none;">View CRM</a>`;
+            }
 
-            <div class="field-group">
-                <span class="field-label">CRM:</span>
-                <div class="field-value">${crmValue}</div>
-            </div>
+            // Product / file handle
+            let productHtml = '';
+            if (request.product && (request.product.startsWith('http://') || request.product.startsWith('https://'))) {
+                productHtml = `
+                    <div class="field-group">
+                        <span class="field-label">File:</span>
+                        <a href="${request.product}" target="_blank" class="view-file-button">View File</a>
+                    </div>`;
+            } else {
+                productHtml = `
+                    <div class="field-group">
+                        <span class="field-label">Product:</span>
+                        <div class="field-value">${request.product || 'N/A'}</div>
+                    </div>`;
+            }
 
-            ${request.poReceived ? `
+            const watermarkHtml = request.crmStatus === 'Cancel' ? '<div class="watermark">Cancelled</div>' : '';
+            const buttonText = (request.responseRemark && request.responseRemark.trim() !== '') ? 'Modify Response' : 'Mark Response';
+
+            let receivedButtonHtml = '';
+            if (request.poReceived && request.poReceived.trim() !== '') {
+                receivedButtonHtml = `
+                    <button class="received-button" onclick="markAsReceived('${request.id}')">
+                        Received
+                    </button>`;
+            }
+
+            // Sirf tab show karenge jab deadlineTimestamp hai (matlab K blank tha)
+            const deadlineHtml = deadlineTimestamp ? `
                 <div class="field-group">
-                    <span class="field-label">PO Received:</span>
-                    <div class="field-value">${poReceivedDisplay}</div>
+                    <span class="field-label">Deadline:</span>
+                    <div class="field-value" id="deadline-${cssSafeId(request.id)}">${deadlineDisplay}</div>
                 </div>
-            ` : ''}
+                <div class="field-group">
+                    <span class="field-label">Time Left:</span>
+                    <div class="field-value" id="countdown-${cssSafeId(request.id)}"></div>
+                </div>
+            ` : '';
 
-            ${deadlineHtml}
-        </div>
+            card.innerHTML = `
+                ${watermarkHtml}
+                <div class="card-content">
+                    <div class="field-group">
+                        <span class="field-label">Dealer Name:</span>
+                        <div class="field-value">${request.dealer || 'N/A'}</div>
+                    </div>
 
-        <div class="editable">
-            <button class="action-button" onclick="openModal('${request.id}')">
-                ${buttonText}
-            </button>
-            <button class="cancel-button" onclick="cancelRequest('${request.id}')">
-                Cancel Request
-            </button>
-            ${receivedButtonHtml}
-        </div>
-    `;
+                    ${productHtml}
 
-    return card;
-}
+                    <div class="field-group">
+                        <span class="field-label">Req Dt.:</span>
+                        <div class="field-value">
+                          ${request.timeStamp ? new Date(request.timeStamp).toLocaleDateString('en-GB') : 'N/A'}
+                        </div>
+                    </div>
 
+                    <div class="field-group">
+                        <span class="field-label">Priority:</span>
+                        <div class="field-value">${request.priority || 'N/A'}</div>
+                    </div>
 
-        // Start the countdown timer. Accepts poReceivedTimestamp (ms) and an element (DOM node) or element id string
-	function startCountdown(deadlineTimestamp, countdownElementOrId, cardElement) {
-	    let countdownElement = null;
-	    if (typeof countdownElementOrId === 'string') {
-	        countdownElement = document.getElementById(countdownElementOrId);
-	    } else {
-	        countdownElement = countdownElementOrId;
-	    }
-	    if (!countdownElement) {
-	        console.warn('Countdown element not found for', countdownElementOrId);
-	        return;
-	    }
-	
-	    const intervalKey = countdownElement.id || ('countdown_key_' + Math.random().toString(36).slice(2));
-	
-	    if (countdownIntervals[intervalKey]) {
-	        clearInterval(countdownIntervals[intervalKey]);
-	    }
-	
-	    const MILLIS = {
-	        sec: 1000,
-	        min: 1000 * 60,
-	        hour: 1000 * 60 * 60,
-	        day: 1000 * 60 * 60 * 24
-	    };
-	
-	    const update = () => {
-	        const now = Date.now();
-	        const timeRemaining = deadlineTimestamp - now;
-	
-	        if (timeRemaining <= 0) {
-	            clearInterval(countdownIntervals[intervalKey]);
-	            countdownElement.innerHTML = '<span class="overdue-text">Overdue</span>';
-	            if (cardElement) cardElement.classList.add('overdue-card-highlight');
-	            return;
-	        }
-	
-	        const days = Math.floor(timeRemaining / MILLIS.day);
-	        const hours = Math.floor((timeRemaining % MILLIS.day) / MILLIS.hour);
-	        const minutes = Math.floor((timeRemaining % MILLIS.hour) / MILLIS.min);
-	        const seconds = Math.floor((timeRemaining % MILLIS.min) / MILLIS.sec);
-	
-	        let countdownClass = 'countdown-green';
-	        if (timeRemaining < 1 * MILLIS.hour) {
-	            countdownClass = 'countdown-red';
-	        } else if (timeRemaining < 4 * MILLIS.hour) {
-	            countdownClass = 'countdown-yellow';
-	        }
-	
-	        countdownElement.innerHTML = `<span class="${countdownClass}">` +
-	            `${days > 0 ? days + 'd ' : ''}` +
-	            `${String(hours).padStart(2,'0')}h ` +
-	            `${String(minutes).padStart(2,'0')}m ` +
-	            `${String(seconds).padStart(2,'0')}s` +
-	            `</span>`;
-	    };
-	
-	    update();
-	    countdownIntervals[intervalKey] = setInterval(update, 1000);
-	}
+                    <div class="field-group">
+                        <span class="field-label">Remark:</span>
+                        <div class="field-value">${request.remark || 'N/A'}</div>
+                    </div>
 
+                    ${request.poDetail ? `
+                    <div class="field-group">
+                        <span class="field-label">PO:</span>
+                        <div class="field-value">${request.poDetail}</div>
+                    </div>` : ''}
 
-        // Modal & form logic (kept same)
+                    <div class="field-group">
+                        <span class="field-label">CRM:</span>
+                        <div class="field-value">${crmValue}</div>
+                    </div>
+
+                    ${request.poReceived ? `
+                        <div class="field-group">
+                            <span class="field-label">PO Received:</span>
+                            <div class="field-value">${poReceivedDisplay}</div>
+                        </div>
+                    ` : ''}
+
+                    ${deadlineHtml}
+                </div>
+
+                <div class="editable">
+                    <button class="action-button" onclick="openModal('${request.id}')">
+                        ${buttonText}
+                    </button>
+                    <button class="cancel-button" onclick="cancelRequest('${request.id}')">
+                        Cancel Request
+                    </button>
+                    ${receivedButtonHtml}
+                </div>
+            `;
+
+            return card;
+        }
+
+        // Start the countdown timer. Ab yeh direct deadlineTimestamp accept karega
+        function startCountdown(deadlineTimestamp, countdownElementOrId, cardElement) {
+            let countdownElement = null;
+            if (typeof countdownElementOrId === 'string') {
+                countdownElement = document.getElementById(countdownElementOrId);
+            } else {
+                countdownElement = countdownElementOrId;
+            }
+            if (!countdownElement) {
+                console.warn('Countdown element not found for', countdownElementOrId);
+                return;
+            }
+
+            const intervalKey = countdownElement.id || ('countdown_key_' + Math.random().toString(36).slice(2));
+
+            if (countdownIntervals[intervalKey]) {
+                clearInterval(countdownIntervals[intervalKey]);
+            }
+
+            const MILLIS = {
+                sec: 1000,
+                min: 1000 * 60,
+                hour: 1000 * 60 * 60,
+                day: 1000 * 60 * 60 * 24
+            };
+
+            const update = () => {
+                const now = Date.now();
+                const timeRemaining = deadlineTimestamp - now;
+
+                if (timeRemaining <= 0) {
+                    clearInterval(countdownIntervals[intervalKey]);
+                    countdownElement.innerHTML = '<span class="overdue-text">Overdue</span>';
+                    if (cardElement) cardElement.classList.add('overdue-card-highlight');
+                    return;
+                }
+
+                const days = Math.floor(timeRemaining / MILLIS.day);
+                const hours = Math.floor((timeRemaining % MILLIS.day) / MILLIS.hour);
+                const minutes = Math.floor((timeRemaining % MILLIS.hour) / MILLIS.min);
+                const seconds = Math.floor((timeRemaining % MILLIS.min) / MILLIS.sec);
+
+                let countdownClass = 'countdown-green';
+                if (timeRemaining < 1 * MILLIS.hour) {
+                    countdownClass = 'countdown-red';
+                } else if (timeRemaining < 4 * MILLIS.hour) {
+                    countdownClass = 'countdown-yellow';
+                }
+
+                countdownElement.innerHTML = `<span class="${countdownClass}">` +
+                    `${days > 0 ? days + 'd ' : ''}` +
+                    `${String(hours).padStart(2,'0')}h ` +
+                    `${String(minutes).padStart(2,'0')}m ` +
+                    `${String(seconds).padStart(2,'0')}s` +
+                    `</span>`;
+            };
+
+            update();
+            countdownIntervals[intervalKey] = setInterval(update, 1000);
+        }
+
+        // ===== Modal & form logic (as in original) =====
         function openModal(requestId) {
             selectedRequest = requests.find(req => req.id === requestId);
             if (!selectedRequest) {
@@ -605,10 +602,12 @@
                 }
                 if (e.key === 'ArrowDown') {
                     e.preventDefault();
+                    if (resultsDivs.length === 0) return;
                     currentFocus = (currentFocus + 1) % resultsDivs.length;
                     focusResult(resultsDivs, currentFocus);
                 } else if (e.key === 'ArrowUp') {
                     e.preventDefault();
+                    if (resultsDivs.length === 0) return;
                     currentFocus = (currentFocus - 1 + resultsDivs.length) % resultsDivs.length;
                     focusResult(resultsDivs, currentFocus);
                 } else if (e.key === 'Enter' && currentFocus > -1) {

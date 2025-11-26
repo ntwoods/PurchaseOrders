@@ -246,18 +246,16 @@
                 container.appendChild(card);
 
                 // After append, if poReceivedTimestamp dataset exists, start countdown using element reference
-                if (card.dataset && card.dataset.poReceivedTimestamp) {
-                    const poReceivedTimestamp = parseInt(card.dataset.poReceivedTimestamp, 10);
-                    const countdownEl = card.querySelector(`#countdown-${cssSafeId(request.id)}`);
-                    // only start if element found
-                    if (countdownEl) {
-                        startCountdown(poReceivedTimestamp, countdownEl, card);
-                    } else {
-                        console.warn('Countdown element not found after append for', request.id);
-                    }
-                }
-            });
-        }
+
+				if (card.dataset && card.dataset.deadlineTimestamp) {
+				    const deadlineTimestamp = parseInt(card.dataset.deadlineTimestamp, 10);
+				    const countdownEl = card.querySelector(`#countdown-${cssSafeId(request.id)}`);
+				    if (countdownEl) {
+				        startCountdown(deadlineTimestamp, countdownEl, card);
+				    } else {
+				        console.warn('Countdown element not found after append for', request.id);
+				    }
+				}	
 
         // Helper: make an ID safe (remove spaces and problematic chars)
         function cssSafeId(raw) {
@@ -283,229 +281,254 @@
             return date;
         }
 
-        function createRequestCard(request) {
-            const card = document.createElement('div');
-            card.className = 'request-card';
+			function calculateDeadlineWithSundaySkip(startMs) {
+			    const ONE_DAY = 24 * 60 * 60 * 1000;
+			
+			    // Basic 24 hours deadline
+			    let deadline = startMs + ONE_DAY;
+			
+			    const d = new Date(deadline);
+			    // Agar deadline Sunday par aa raha hai to 1 day aur aage (Monday)
+			    if (d.getDay() === 0) { // 0 = Sunday
+			        deadline += ONE_DAY;
+			    }
+			
+			    return deadline;
+			}
 
-            if (request.responseRemark && request.responseRemark.trim() !== '') {
-                card.classList.add('highlighted');
-            }
+       function createRequestCard(request) {
+    const card = document.createElement('div');
+    card.className = 'request-card';
 
-            let poReceivedTimestamp = null;
-            let deadlineDisplay = '';
-            if (request.poReceived) {
-                const parsedDate = parseIsoDateTime(request.poReceived);
-                if (parsedDate && !isNaN(parsedDate.getTime())) {
-                    poReceivedTimestamp = parsedDate.getTime();
-                    const deadline = poReceivedTimestamp + (24 * 60 * 60 * 1000); // +24 hours
-                    // Store as dataset for later usage (so renderRequests can start countdown after append)
-                    card.dataset.poReceivedTimestamp = String(poReceivedTimestamp);
+    // Agar responseRemark hai to highlight
+    if (request.responseRemark && request.responseRemark.trim() !== '') {
+        card.classList.add('highlighted');
+    }
 
-                    // deadline absolute display in IST
-                    deadlineDisplay = new Date(deadline).toLocaleString('en-IN', {
-                        timeZone: 'Asia/Kolkata',
-                        year: 'numeric',
-                        month: '2-digit',
-                        day: '2-digit',
-                        hour: '2-digit',
-                        minute: '2-digit',
-                        second: '2-digit',
-                        hour12: true
-                    });
+    // 🔹 K column (poDetail) ke basis par decide karenge ke timer chalega ya nahi
+    const hasPoDetail = !!(request.poDetail && String(request.poDetail).trim() !== '');
 
-                    // If already overdue, mark card
-                    if (Date.now() > deadline) {
-                        card.classList.add('overdue-card-highlight');
-                    }
-                } else {
-                    console.warn('Could not parse poReceived:', request.poReceived);
-                }
-            }
-
-            let crmValue = request.crm || 'N/A';
-            if (crmValue !== 'N/A' && (crmValue.startsWith('http://') || crmValue.startsWith('https://'))) {
-                crmValue = `<a href="${crmValue}" target="_blank" style="color: var(--color-primary); text-decoration: none;">View CRM</a>`;
-            }
-
-            let productHtml = '';
-            if (request.product && (request.product.startsWith('http://') || request.product.startsWith('https://'))) {
-                productHtml = `
-                    <div class="field-group">
-                        <span class="field-label">File:</span>
-                        <a href="${request.product}" target="_blank" class="view-file-button">View File</a>
-                    </div>`;
-            } else {
-                productHtml = `
-                    <div class="field-group">
-                        <span class="field-label">Product:</span>
-                        <div class="field-value">${request.product || 'N/A'}</div>
-                    </div>`;
-            }
-
-            let poReceivedDisplay = 'N/A';
-            if (poReceivedTimestamp) {
-                const parsedDate = new Date(poReceivedTimestamp);
-                poReceivedDisplay = parsedDate.toLocaleString('en-IN', {
-                    timeZone: 'Asia/Kolkata',
-                    year: 'numeric',
-                    month: '2-digit',
-                    day: '2-digit',
-                    hour: '2-digit',
-                    minute: '2-digit',
-                    second: '2-digit',
-                    hour12: true
-                });
-            }
-
-            const watermarkHtml = request.crmStatus === 'Cancel' ? '<div class="watermark">Cancelled</div>' : '';
-            const buttonText = (request.responseRemark && request.responseRemark.trim() !== '') ? 'Modify Response' : 'Mark Response';
-
-            let receivedButtonHtml = '';
-            if (request.poReceived && request.poReceived.trim() !== '') {
-                receivedButtonHtml = `
-                    <button class="received-button" onclick="markAsReceived('${request.id}')">
-                        Received
-                    </button>`;
-            }
-
-            // Always show absolute deadline (if poReceived present) and a dedicated countdown field
-            const deadlineHtml = poReceivedTimestamp ? `
-                <div class="field-group">
-                    <span class="field-label">Deadline:</span>
-                    <div class="field-value" id="deadline-${cssSafeId(request.id)}">${deadlineDisplay}</div>
-                </div>
-                <div class="field-group">
-                    <span class="field-label">Time Left:</span>
-                    <div class="field-value" id="countdown-${cssSafeId(request.id)}"></div>
-                </div>
-            ` : '';
-
-            card.innerHTML = `
-                ${watermarkHtml}
-                <div class="card-content">
-                    <div class="field-group">
-                        <span class="field-label">Dealer Name:</span>
-                        <div class="field-value">${request.dealer || 'N/A'}</div>
-                    </div>
-
-                    ${productHtml}
-
-                    <div class="field-group">
-                        <span class="field-label">Req Dt.:</span>
-                        <div class="field-value">
-                          ${request.timeStamp ? new Date(request.timeStamp).toLocaleDateString('en-GB') : 'N/A'}
-                        </div>
-                    </div>
-
-                    <div class="field-group">
-                        <span class="field-label">Priority:</span>
-                        <div class="field-value">${request.priority || 'N/A'}</div>
-                    </div>
-
-                    <div class="field-group">
-                        <span class="field-label">Remark:</span>
-                        <div class="field-value">${request.remark || 'N/A'}</div>
-                    </div>
-
-                    ${request.poDetail ? `
-                    <div class="field-group">
-                        <span class="field-label">PO:</span>
-                        <div class="field-value">${request.poDetail}</div>
-                    </div>` : ''}
-
-                    <div class="field-group">
-                        <span class="field-label">CRM:</span>
-                        <div class="field-value">${crmValue}</div>
-                    </div>
-
-                    ${poReceivedTimestamp ? `
-                        <div class="field-group">
-                            <span class="field-label">PO Received:</span>
-                            <div class="field-value">${poReceivedDisplay}</div>
-                        </div>
-                        ${deadlineHtml}
-                    ` : ''}
-                </div>
-        
-                <div class="editable">
-                    <button class="action-button" onclick="openModal('${request.id}')">
-                        ${buttonText}
-                    </button>
-                    <button class="cancel-button" onclick="cancelRequest('${request.id}')">
-                        Cancel Request
-                    </button>
-                    ${receivedButtonHtml}
-                </div>
-            `;
-
-            // don't start countdown here because card isn't appended yet — renderRequests will start it after append
-            return card;
+    // ---- PO Received display (old logic, sirf show ke liye, timer ke liye nahi) ----
+    let poReceivedDisplay = 'N/A';
+    if (request.poReceived) {
+        const parsedPoReceived = parseIsoDateTime(request.poReceived);
+        if (parsedPoReceived && !isNaN(parsedPoReceived.getTime())) {
+            poReceivedDisplay = parsedPoReceived.toLocaleString('en-IN', {
+                timeZone: 'Asia/Kolkata',
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: true
+            });
         }
+    }
+
+    // ---- Deadline & countdown G column se (timeStamp) ----
+    let deadlineTimestamp = null;
+    let deadlineDisplay = '';
+
+    if (!hasPoDetail && request.timeStamp) { // ❗ K column me value ho to timer NAHI chalega
+        const parsedGTime = parseIsoDateTime(request.timeStamp);
+        if (parsedGTime && !isNaN(parsedGTime.getTime())) {
+            const startMs = parsedGTime.getTime();
+
+            // 24 hrs + Sunday skip
+            deadlineTimestamp = calculateDeadlineWithSundaySkip(startMs);
+
+            // dataset me store karenge taaki renderRequests me countdown start ho sake
+            card.dataset.deadlineTimestamp = String(deadlineTimestamp);
+
+            const deadlineDateForDisplay = new Date(deadlineTimestamp);
+            deadlineDisplay = deadlineDateForDisplay.toLocaleString('en-IN', {
+                timeZone: 'Asia/Kolkata',
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: true
+            });
+
+            // Agar already overdue hai to card ko highlight karo
+            if (Date.now() > deadlineTimestamp) {
+                card.classList.add('overdue-card-highlight');
+            }
+        }
+    }
+
+    // CRM value link handle
+    let crmValue = request.crm || 'N/A';
+    if (crmValue !== 'N/A' && (crmValue.startsWith('http://') || crmValue.startsWith('https://'))) {
+        crmValue = `<a href="${crmValue}" target="_blank" style="color: var(--color-primary); text-decoration: none;">View CRM</a>`;
+    }
+
+    // Product / file handle
+    let productHtml = '';
+    if (request.product && (request.product.startsWith('http://') || request.product.startsWith('https://'))) {
+        productHtml = `
+            <div class="field-group">
+                <span class="field-label">File:</span>
+                <a href="${request.product}" target="_blank" class="view-file-button">View File</a>
+            </div>`;
+    } else {
+        productHtml = `
+            <div class="field-group">
+                <span class="field-label">Product:</span>
+                <div class="field-value">${request.product || 'N/A'}</div>
+            </div>`;
+    }
+
+    const watermarkHtml = request.crmStatus === 'Cancel' ? '<div class="watermark">Cancelled</div>' : '';
+    const buttonText = (request.responseRemark && request.responseRemark.trim() !== '') ? 'Modify Response' : 'Mark Response';
+
+    let receivedButtonHtml = '';
+    if (request.poReceived && request.poReceived.trim() !== '') {
+        receivedButtonHtml = `
+            <button class="received-button" onclick="markAsReceived('${request.id}')">
+                Received
+            </button>`;
+    }
+
+    // Sirf tab show karenge jab deadlineTimestamp hai (matlab K blank tha)
+    const deadlineHtml = deadlineTimestamp ? `
+        <div class="field-group">
+            <span class="field-label">Deadline:</span>
+            <div class="field-value" id="deadline-${cssSafeId(request.id)}">${deadlineDisplay}</div>
+        </div>
+        <div class="field-group">
+            <span class="field-label">Time Left:</span>
+            <div class="field-value" id="countdown-${cssSafeId(request.id)}"></div>
+        </div>
+    ` : '';
+
+    card.innerHTML = `
+        ${watermarkHtml}
+        <div class="card-content">
+            <div class="field-group">
+                <span class="field-label">Dealer Name:</span>
+                <div class="field-value">${request.dealer || 'N/A'}</div>
+            </div>
+
+            ${productHtml}
+
+            <div class="field-group">
+                <span class="field-label">Req Dt.:</span>
+                <div class="field-value">
+                  ${request.timeStamp ? new Date(request.timeStamp).toLocaleDateString('en-GB') : 'N/A'}
+                </div>
+            </div>
+
+            <div class="field-group">
+                <span class="field-label">Priority:</span>
+                <div class="field-value">${request.priority || 'N/A'}</div>
+            </div>
+
+            <div class="field-group">
+                <span class="field-label">Remark:</span>
+                <div class="field-value">${request.remark || 'N/A'}</div>
+            </div>
+
+            ${request.poDetail ? `
+            <div class="field-group">
+                <span class="field-label">PO:</span>
+                <div class="field-value">${request.poDetail}</div>
+            </div>` : ''}
+
+            <div class="field-group">
+                <span class="field-label">CRM:</span>
+                <div class="field-value">${crmValue}</div>
+            </div>
+
+            ${request.poReceived ? `
+                <div class="field-group">
+                    <span class="field-label">PO Received:</span>
+                    <div class="field-value">${poReceivedDisplay}</div>
+                </div>
+            ` : ''}
+
+            ${deadlineHtml}
+        </div>
+
+        <div class="editable">
+            <button class="action-button" onclick="openModal('${request.id}')">
+                ${buttonText}
+            </button>
+            <button class="cancel-button" onclick="cancelRequest('${request.id}')">
+                Cancel Request
+            </button>
+            ${receivedButtonHtml}
+        </div>
+    `;
+
+    return card;
+}
+
 
         // Start the countdown timer. Accepts poReceivedTimestamp (ms) and an element (DOM node) or element id string
-        function startCountdown(poReceivedTimestamp, countdownElementOrId, cardElement) {
-            // determine the countdown DOM element
-            let countdownElement = null;
-            if (typeof countdownElementOrId === 'string') {
-                countdownElement = document.getElementById(countdownElementOrId);
-            } else {
-                countdownElement = countdownElementOrId;
-            }
-            if (!countdownElement) {
-                console.warn('Countdown element not found for', countdownElementOrId);
-                return;
-            }
+	function startCountdown(deadlineTimestamp, countdownElementOrId, cardElement) {
+	    let countdownElement = null;
+	    if (typeof countdownElementOrId === 'string') {
+	        countdownElement = document.getElementById(countdownElementOrId);
+	    } else {
+	        countdownElement = countdownElementOrId;
+	    }
+	    if (!countdownElement) {
+	        console.warn('Countdown element not found for', countdownElementOrId);
+	        return;
+	    }
+	
+	    const intervalKey = countdownElement.id || ('countdown_key_' + Math.random().toString(36).slice(2));
+	
+	    if (countdownIntervals[intervalKey]) {
+	        clearInterval(countdownIntervals[intervalKey]);
+	    }
+	
+	    const MILLIS = {
+	        sec: 1000,
+	        min: 1000 * 60,
+	        hour: 1000 * 60 * 60,
+	        day: 1000 * 60 * 60 * 24
+	    };
+	
+	    const update = () => {
+	        const now = Date.now();
+	        const timeRemaining = deadlineTimestamp - now;
+	
+	        if (timeRemaining <= 0) {
+	            clearInterval(countdownIntervals[intervalKey]);
+	            countdownElement.innerHTML = '<span class="overdue-text">Overdue</span>';
+	            if (cardElement) cardElement.classList.add('overdue-card-highlight');
+	            return;
+	        }
+	
+	        const days = Math.floor(timeRemaining / MILLIS.day);
+	        const hours = Math.floor((timeRemaining % MILLIS.day) / MILLIS.hour);
+	        const minutes = Math.floor((timeRemaining % MILLIS.hour) / MILLIS.min);
+	        const seconds = Math.floor((timeRemaining % MILLIS.min) / MILLIS.sec);
+	
+	        let countdownClass = 'countdown-green';
+	        if (timeRemaining < 1 * MILLIS.hour) {
+	            countdownClass = 'countdown-red';
+	        } else if (timeRemaining < 4 * MILLIS.hour) {
+	            countdownClass = 'countdown-yellow';
+	        }
+	
+	        countdownElement.innerHTML = `<span class="${countdownClass}">` +
+	            `${days > 0 ? days + 'd ' : ''}` +
+	            `${String(hours).padStart(2,'0')}h ` +
+	            `${String(minutes).padStart(2,'0')}m ` +
+	            `${String(seconds).padStart(2,'0')}s` +
+	            `</span>`;
+	    };
+	
+	    update();
+	    countdownIntervals[intervalKey] = setInterval(update, 1000);
+	}
 
-            const deadline = poReceivedTimestamp + (24 * 60 * 60 * 1000);
-            const intervalKey = countdownElement.id || ('countdown_key_' + Math.random().toString(36).slice(2));
-
-            // clear existing interval if any
-            if (countdownIntervals[intervalKey]) {
-                clearInterval(countdownIntervals[intervalKey]);
-            }
-
-            const MILLIS = {
-                sec: 1000,
-                min: 1000 * 60,
-                hour: 1000 * 60 * 60,
-                day: 1000 * 60 * 60 * 24
-            };
-
-            const update = () => {
-                const now = Date.now();
-                const timeRemaining = deadline - now;
-
-                if (timeRemaining <= 0) {
-                    clearInterval(countdownIntervals[intervalKey]);
-                    countdownElement.innerHTML = '<span class="overdue-text">Overdue</span>';
-                    if (cardElement) cardElement.classList.add('overdue-card-highlight');
-                    return;
-                }
-
-                const days = Math.floor(timeRemaining / MILLIS.day);
-                const hours = Math.floor((timeRemaining % MILLIS.day) / MILLIS.hour);
-                const minutes = Math.floor((timeRemaining % MILLIS.hour) / MILLIS.min);
-                const seconds = Math.floor((timeRemaining % MILLIS.min) / MILLIS.sec);
-
-                let countdownClass = 'countdown-green';
-                if (timeRemaining < 1 * MILLIS.hour) {
-                    countdownClass = 'countdown-red';
-                } else if (timeRemaining < 4 * MILLIS.hour) {
-                    countdownClass = 'countdown-yellow';
-                }
-
-                countdownElement.innerHTML = `<span class="${countdownClass}">` +
-                    `${days > 0 ? days + 'd ' : ''}` +
-                    `${String(hours).padStart(2,'0')}h ` +
-                    `${String(minutes).padStart(2,'0')}m ` +
-                    `${String(seconds).padStart(2,'0')}s` +
-                    `</span>`;
-            };
-
-            // initial render then interval
-            update();
-            countdownIntervals[intervalKey] = setInterval(update, 1000);
-        }
 
         // Modal & form logic (kept same)
         function openModal(requestId) {

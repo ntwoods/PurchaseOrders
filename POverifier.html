@@ -1321,13 +1321,13 @@ function displayCurrentCategorySpecs() {
 
     const currentCategory = categoriesWithSpecs[currentCategoryIndex];
     document.getElementById('currentCategoryTitle').textContent = `Category: ${currentCategory.category}`;
+	
+	const specsToDisplay =
+	  Array.isArray(temp) ? temp.join('\n')
+	  : (typeof temp === 'string' ? temp : currentCategory.specifications.join('\n'));
+	
+	document.getElementById('specsTextarea').value = specsToDisplay;
 
-    // Use temporaryEditedSpecs if available, otherwise use original specs
-    const specsToDisplay = temporaryEditedSpecs[currentCategory.category] !== undefined
-        ? temporaryEditedSpecs[currentCategory.category]
-        : currentCategory.specifications.join('\n'); // Join array into a single string for textarea
-
-    document.getElementById('specsTextarea').value = specsToDisplay; // FIX: Changed from 'specEditorTextarea'
 
     document.getElementById('prevCategoryBtn').disabled = currentCategoryIndex === 0;
     document.getElementById('nextCategoryBtn').disabled = currentCategoryIndex === categoriesWithSpecs.length - 1;
@@ -1445,3 +1445,4 @@ document.getElementById('saveSpecsAndConfirmBtn').addEventListener('click', () =
     <script src="https://ntwoods.github.io/ordertodispatch/js/viewOnly.js"></script>	
 </body>
 </html>
+

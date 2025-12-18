@@ -529,14 +529,14 @@
 
           if (timePart) {
             const [hh, mi, ss = "0"] = timePart.split(":");
-            return new Date(yyyy, mm - 1, dd, 20, 0, 0);
+            return new Date(yyyy, mm - 1, dd, Number(hh), Number(mi), Number(ss));
           }
-          return new Date(yyyy, mm - 1, dd, 20, 0, 0);
+          return new Date(yyyy, mm - 1, dd, 0, 0, 0);
         }
 
         if (/^\d{2}-\d{2}-\d{4}$/.test(s)) {
           const [dd, mm, yyyy] = s.split("-").map(Number);
-          return new Date(yyyy, mm - 1, dd, 20, 0, 0);
+          return new Date(yyyy, mm - 1, dd, 0, 0, 0);
         }
 
         const d = new Date(s);

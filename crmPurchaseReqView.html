@@ -149,7 +149,7 @@
         let selectedPoNo = '';
         let countdownIntervals = {}; // store by element ID (or generated key)
 
-        const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycby7Iwfzy98sI8UFYs6lCZZF_ESoaTzFd3UWwZJWepffBD6rueQ9TdzgLq7oE98npIwpdQ/exec';
+        const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyUZUSsLk9ErMTDL8JaqZlPDJ7oOxgsoWlLHbkLtVa-1egoCTIgXOuSyPS9FNp7wJA83A/exec';
 
         document.addEventListener('DOMContentLoaded', function() {
             fetchRequests();
@@ -201,7 +201,10 @@
                 if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
                 const result = await response.json();
                 if (!Array.isArray(result.data)) throw new Error("Expected 'data' to be an array");
-                poNumbers = result.data.map(String);
+                poNumbers = result.data
+                    .map(normalizePoNumberValue)
+                    .filter(Boolean);
+                poNumbers = [...new Set(poNumbers)].sort((a, b) => a.localeCompare(b));
                 filteredPoNumbers = [...poNumbers];
                 populateSearchResults();
             } catch (error) {
@@ -212,6 +215,31 @@
                 filteredPoNumbers = [...poNumbers];
                 populateSearchResults();
             }
+        }
+
+        function normalizePoNumberValue(value) {
+            if (value === null || value === undefined) return '';
+            if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
+                return String(value).trim();
+            }
+            if (Array.isArray(value)) {
+                for (const item of value) {
+                    const normalized = normalizePoNumberValue(item);
+                    if (normalized) return normalized;
+                }
+                return '';
+            }
+            if (typeof value === 'object') {
+                const keys = ['text', 'label', 'name', 'title', 'fileName', 'filename', 'value', 'poNo', 'poNumber'];
+                for (const key of keys) {
+                    if (Object.prototype.hasOwnProperty.call(value, key)) {
+                        const normalized = normalizePoNumberValue(value[key]);
+                        if (normalized) return normalized;
+                    }
+                }
+                return '';
+            }
+            return String(value).trim();
         }
 
         function renderRequests() {

@@ -840,7 +840,7 @@
                 const payload = await response.json();
                 if (payload && payload.auth === false) {
                     signOut();
-                    elements.signInError.textContent = 'Access denied for this account.';
+                    elements.signInError.textContent = payload.error || 'Access denied for this account.';
                     return;
                 }
                 if (!payload || !payload.success || !Array.isArray(payload.data)) {
@@ -1063,4 +1063,3 @@
     <script src="https://ntwoods.github.io/ordertodispatch/js/viewOnly.js"></script>
 </body>
 </html>
-

@@ -3,595 +3,1064 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Orders Dashboard</title>
+    <title>Accounts Orders Portal</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-<style>
-    /* Import Poppins font from Google Fonts */
-    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap');
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap');
 
-    /* General Styles */
-    * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-    }
+        :root {
+            --bg: #f3f6fa;
+            --surface: #ffffff;
+            --surface-muted: #f8fafc;
+            --text: #1f2937;
+            --text-muted: #6b7280;
+            --border: #d9e1ea;
+            --primary: #0f4c81;
+            --primary-strong: #0b3d67;
+            --danger: #b42318;
+            --success: #166534;
+            --warning: #b54708;
+            --shadow: 0 8px 24px rgba(17, 24, 39, 0.08);
+            --radius: 12px;
+        }
 
-    body {
-        font-family: 'Poppins', sans-serif;
-        background: linear-gradient(135deg, #F0F8FF 0%, #E0FFFF 100%);
-        color: #333333;
-        min-height: 100vh;
-        padding: 20px;
-        animation: fadeIn 0.5s ease-in;
-    }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-    @keyframes fadeIn {
-        from { opacity: 0; }
-        to { opacity: 1; }
-    }
+        body {
+            font-family: 'Manrope', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            padding: 20px;
+        }
 
-    .container {
-        max-width: 1400px;
-        margin: 0 auto;
-    }
+        .page-shell {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
 
-    /* Header Styles */
-    .header {
-        text-align: center;
-        margin-bottom: 40px;
-        padding: 30px 0;
-        background: linear-gradient(135deg, #007BFF, #0056b3);
-        border-radius: 20px;
-        border: 1px solid #0056b3;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-        color: white;
-    }
+        .screen {
+            display: none;
+        }
 
-    .header h1 {
-        font-size: 2.5rem;
-        font-weight: 700;
-        margin-bottom: 10px;
-    }
+        .screen.active {
+            display: block;
+        }
 
-    .header p {
-        font-size: 1.1rem;
-        font-weight: 300;
-        color: #E0FFFF;
-    }
+        .signin-wrap {
+            min-height: calc(100vh - 40px);
+            display: grid;
+            place-items: center;
+        }
 
-    /* Controls Section Styles */
-    .controls {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 30px;
-        flex-wrap: wrap;
-        gap: 20px;
-    }
+        .signin-card {
+            width: min(460px, 100%);
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            box-shadow: var(--shadow);
+            padding: 30px;
+        }
 
-    .search-container {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-    }
+        .signin-card h1 {
+            font-size: 1.6rem;
+            margin-bottom: 8px;
+            color: #0b2239;
+        }
 
-    .search-container input {
-        padding: 12px;
-        border: 1px solid #ddd;
-        border-radius: 10px;
-        font-size: 1rem;
-        width: 250px;
-    }
+        .signin-card p {
+            color: var(--text-muted);
+            margin-bottom: 20px;
+            line-height: 1.4;
+        }
 
-    .refresh-btn {
-        background: linear-gradient(135deg, #007BFF, #0056b3);
-        color: #FFFFFF;
-        border: none;
-        padding: 12px 24px;
-        border-radius: 10px;
-        font-weight: 600;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        font-size: 0.95rem;
-    }
+        .signin-note {
+            margin-top: 14px;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
 
-    .refresh-btn:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 20px rgba(0, 123, 255, 0.4);
-    }
+        .signin-error {
+            margin-top: 14px;
+            color: var(--danger);
+            font-size: 0.9rem;
+            min-height: 1.2rem;
+        }
 
-    .last-updated {
-        color: #666666;
-        font-size: 0.9rem;
-    }
+        .app-header {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 16px 18px;
+            box-shadow: var(--shadow);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 14px;
+        }
 
-    /* Loading, Error, Empty State Styles */
-    .loading {
-        text-align: center;
-        padding: 40px;
-        color: #007BFF;
-        font-size: 1.2rem;
-    }
+        .app-title h1 {
+            font-size: 1.2rem;
+            margin-bottom: 4px;
+            color: #0b2239;
+            font-weight: 700;
+        }
 
-    .loading i {
-        animation: spin 1s linear infinite;
-        margin-right: 10px;
-    }
+        .app-title p {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
 
-    @keyframes spin {
-        from { transform: rotate(0deg); }
-        to { transform: rotate(360deg); }
-    }
+        .user-box {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
 
-    .error {
-        text-align: center;
-        padding: 40px;
-        color: #DC3545;
-        background: rgba(220, 53, 69, 0.1);
-        border-radius: 15px;
-        border: 1px solid rgba(220, 53, 69, 0.3);
-    }
+        .user-meta {
+            text-align: right;
+        }
 
-    .empty-state {
-        text-align: center;
-        padding: 60px 20px;
-        color: #999999;
-    }
+        .user-name {
+            font-weight: 700;
+            font-size: 0.92rem;
+        }
 
-    .empty-state i {
-        font-size: 4rem;
-        color: #CCCCCC;
-        margin-bottom: 20px;
-    }
+        .user-email {
+            color: var(--text-muted);
+            font-size: 0.82rem;
+        }
 
-    /* Table Styles */
-    .table-container {
-        background: linear-gradient(135deg, #FFFFFF, #F8F8FF);
-        border-radius: 20px;
-        overflow: hidden;
-        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.1);
-        border: 1px solid #DDDDDD;
-    }
+        .btn {
+            border: 1px solid transparent;
+            border-radius: 8px;
+            padding: 9px 14px;
+            cursor: pointer;
+            font-size: 0.86rem;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            line-height: 1;
+            transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+            white-space: nowrap;
+        }
 
-    table {
-        width: 100%;
-        border-collapse: collapse;
-    }
+        .btn-primary {
+            background: var(--primary);
+            color: #fff;
+        }
 
-    thead {
-        background: linear-gradient(135deg, #0056b3, #003F7F);
-    }
+        .btn-primary:hover {
+            background: var(--primary-strong);
+        }
 
-    th {
-        padding: 20px 15px;
-        text-align: left;
-        font-weight: 600;
-        color: #FFFFFF;
-        text-transform: uppercase;
-        letter-spacing: 1px;
-        font-size: 0.9rem;
-        border-bottom: 2px solid #007BFF;
-        cursor: pointer;
-    }
+        .btn-secondary {
+            background: #fff;
+            border-color: var(--border);
+            color: var(--text);
+        }
 
-    th .sort-arrow {
-        margin-left: 5px;
-    }
+        .btn-secondary:hover {
+            background: #f6f8fb;
+        }
 
-    tbody tr {
-        transition: all 0.3s ease;
-        border-bottom: 1px solid #EEEEEE;
-    }
+        .btn-success {
+            background: #166534;
+            color: #fff;
+        }
 
-    tbody tr:hover {
-        background: rgba(0, 123, 255, 0.05);
-        transform: scale(1.01);
-    }
+        .btn-success:hover {
+            background: #14532d;
+        }
 
-    tbody tr.completed {
-        opacity: 0.8;
-        background: rgba(144, 238, 144, 0.2);
-    }
+        .btn-success[disabled],
+        .btn-secondary[disabled],
+        .btn-primary[disabled] {
+            opacity: 0.65;
+            cursor: not-allowed;
+        }
 
-    td {
-        padding: 18px 15px;
-        color: #333333;
-        font-weight: 400;
-    }
+        .controls {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 12px 14px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-bottom: 10px;
+        }
 
-    .sr-no {
-        font-weight: 600;
-        color: #007BFF;
-        text-align: center;
-        width: 80px;
-    }
+        .search-wrap {
+            position: relative;
+            width: min(360px, 100%);
+            flex: 1 1 260px;
+        }
 
-    .po-number {
-        font-weight: 600;
-        color: #0056b3;
-        font-family: 'Poppins', sans-serif;
-    }
+        .search-wrap i {
+            position: absolute;
+            left: 11px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #9aa4b2;
+            font-size: 0.85rem;
+        }
 
-    .supplier-name {
-        color: #666666;
-    }
+        .search-wrap input {
+            width: 100%;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 9px 10px 9px 30px;
+            font-size: 0.9rem;
+            outline: none;
+        }
 
-    .deadline-timer {
-        font-weight: 600;
-        color: #333;
-    }
+        .search-wrap input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(15, 76, 129, 0.1);
+        }
 
-    /* Action Buttons */
-    .action-btn {
-        background: linear-gradient(135deg, #28a745, #20c997);
-        color: white;
-        border: none;
-        padding: 10px 20px;
-        border-radius: 8px;
-        cursor: pointer;
-        font-weight: 600;
-        transition: all 0.3s ease;
-        display: flex;
-        align-items: center;
-        gap: 6px;
-        font-size: 0.85rem;
-    }
+        .control-right {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
 
-    .action-btn:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 15px rgba(40, 167, 69, 0.4);
-    }
+        .status-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            margin: 8px 4px 10px;
+            font-size: 0.82rem;
+            color: var(--text-muted);
+        }
 
-    .action-btn.completed {
-        background: linear-gradient(135deg, #6c757d, #495057);
-        cursor: not-allowed;
-    }
+        .status-left {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+        }
 
-    .action-btn.completed:hover {
-        transform: none;
-        box-shadow: none;
-    }
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #9aa4b2;
+        }
 
-    /* Invoice Button Specific Styles */
-    .invoice-btn {
-        background: linear-gradient(135deg, #007bff, #0056b3);
-        color: white;
-        border: none;
-        padding: 10px 20px;
-        border-radius: 8px;
-        cursor: pointer;
-        font-weight: 600;
-        transition: all 0.3s ease;
-        display: flex;
-        align-items: center;
-        gap: 6px;
-        font-size: 0.85rem;
-    }
+        .status-dot.live {
+            background: #15803d;
+        }
 
-    .invoice-btn:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 15px rgba(0, 123, 255, 0.4);
-    }
+        .status-dot.loading {
+            background: #0f4c81;
+            animation: pulse 0.9s ease-in-out infinite;
+        }
 
-    .invoice-btn:disabled {
-        background: linear-gradient(135deg, #6c757d, #495057);
-        cursor: not-allowed;
-    }
+        @keyframes pulse {
+            0%, 100% { opacity: 0.5; }
+            50% { opacity: 1; }
+        }
 
-    @media (max-width: 768px) {
-        .header h1 {
-            font-size: 2rem;
+        .table-shell {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+
+        .table-scroll {
+            overflow: auto;
+            max-height: calc(100vh - 260px);
         }
 
         table {
-            font-size: 0.9rem;
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 950px;
         }
 
-        th, td {
-            padding: 12px 10px;
+        thead th {
+            position: sticky;
+            top: 0;
+            z-index: 5;
+            background: #f1f5f9;
+            border-bottom: 1px solid var(--border);
+            color: #344054;
+            text-align: left;
+            padding: 10px 12px;
+            font-size: 0.78rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            user-select: none;
         }
-    }
-</style>
+
+        th.sortable {
+            cursor: pointer;
+        }
+
+        th.sortable:hover {
+            background: #eaf0f7;
+        }
+
+        th .sort-arrow {
+            margin-left: 6px;
+            color: #64748b;
+        }
+
+        tbody td {
+            padding: 10px 12px;
+            border-bottom: 1px solid #edf2f7;
+            vertical-align: middle;
+            font-size: 0.87rem;
+            color: #1f2937;
+        }
+
+        tbody tr:hover {
+            background: #f8fbff;
+        }
+
+        tbody tr.completed {
+            background: #f5f9f6;
+        }
+
+        tbody tr.overdue {
+            background: #fff4f2;
+        }
+
+        .cell-muted {
+            color: var(--text-muted);
+        }
+
+        .po-cell {
+            font-weight: 700;
+            color: #0b3d67;
+            white-space: nowrap;
+        }
+
+        .deadline-live {
+            font-weight: 700;
+            color: #334155;
+            white-space: nowrap;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .deadline-live.warn {
+            color: var(--warning);
+        }
+
+        .deadline-live.overdue {
+            color: var(--danger);
+        }
+
+        .state-panel {
+            padding: 26px 14px;
+            text-align: center;
+            color: var(--text-muted);
+        }
+
+        .state-panel i {
+            font-size: 1.3rem;
+            margin-bottom: 8px;
+        }
+
+        .error-box {
+            color: var(--danger);
+            background: #fff2f2;
+            border: 1px solid #fecaca;
+            border-radius: 8px;
+            padding: 10px 12px;
+            margin: 0 10px 10px;
+            font-size: 0.88rem;
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+
+            .signin-card {
+                padding: 22px;
+                border-radius: 14px;
+            }
+
+            .app-header,
+            .controls {
+                padding: 12px;
+            }
+
+            .user-meta {
+                text-align: left;
+            }
+
+            .table-scroll {
+                max-height: calc(100vh - 300px);
+            }
+        }
+    </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1><i class="fas fa-id-badge"></i> For Accounts Section</h1>
-            <p>Mark the purchase orders, whether you have entered them or not.</p>
-        </div>
+    <div class="page-shell">
+        <section id="signInScreen" class="screen active">
+            <div class="signin-wrap">
+                <div class="signin-card">
+                    <h1><i class="fa-solid fa-shield-halved"></i> Accounts Portal Sign-In</h1>
+                    <p>Sign in with your Google account to access pending purchase order processing.</p>
+                    <div id="googleSignInButton"></div>
+                    <div id="signInError" class="signin-error"></div>
+                    <div class="signin-note">Access remains available on this browser until local storage is cleared or you sign out.</div>
+                </div>
+            </div>
+        </section>
 
-        <div class="controls">
-            <div class="search-container">
-                <input type="text" id="searchInput" placeholder="Search by PO No. or Supplier" onkeyup="filterTable()">
-            </div>
-            <button class="refresh-btn" onclick="fetchOrders()">
-                <i class="fas fa-sync-alt"></i> Refresh Data
-            </button>
-            <div class="last-updated" id="lastUpdated"></div>
-        </div>
+        <section id="portalScreen" class="screen">
+            <header class="app-header">
+                <div class="app-title">
+                    <h1><i class="fa-solid fa-clipboard-check"></i> Accounts Order Dashboard</h1>
+                    <p>Review pending orders and mark completed entries.</p>
+                </div>
+                <div class="user-box">
+                    <div class="user-meta">
+                        <div id="userName" class="user-name">-</div>
+                        <div id="userEmail" class="user-email">-</div>
+                    </div>
+                    <button id="signOutBtn" class="btn btn-secondary" type="button">
+                        <i class="fa-solid fa-right-from-bracket"></i> Sign Out
+                    </button>
+                </div>
+            </header>
 
-        <div class="table-container">
-            <div id="loading" class="loading" style="display: none;">
-                <i class="fas fa-spinner"></i> Loading orders...
+            <div class="controls">
+                <div class="search-wrap">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input id="searchInput" type="text" placeholder="Search by PO No. or supplier">
+                </div>
+                <div class="control-right">
+                    <button id="refreshBtn" class="btn btn-primary" type="button">
+                        <i class="fa-solid fa-rotate-right"></i> Refresh
+                    </button>
+                </div>
             </div>
-            
-            <div id="error" class="error" style="display: none;"></div>
-            
-            <div id="tableWrapper" style="display: none;">
-                <table>
-                    <thead>
-                        <tr>
-                            <th onclick="sortTable(0)">Sr. No. <span class="sort-arrow"></span></th>
-                            <th onclick="sortTable(1)">PO No. <span class="sort-arrow"></span></th>
-                            <th onclick="sortTable(2)">Supplier Name <span class="sort-arrow"></span></th>
-                            <th>Deadline <span class="sort-arrow"></span></th>
-                            <th onclick="sortTable(3)">Invoice <span class="sort-arrow"></span></th>
-                            <th onclick="sortTable(4)">Action <span class="sort-arrow"></span></th>
-                        </tr>
-                    </thead>
-                    <tbody id="ordersTableBody"></tbody>
-                </table>
+
+            <div class="status-bar">
+                <div class="status-left">
+                    <span id="refreshDot" class="status-dot"></span>
+                    <span id="refreshStatus">Idle</span>
+                </div>
+                <div id="lastUpdated">Last updated: --</div>
             </div>
-            
-            <div id="emptyState" class="empty-state" style="display: none;">
-                <i class="fas fa-inbox"></i>
-                <h3>No orders found</h3>
-                <p>There are currently no orders to display.</p>
-            </div>
-        </div>
+
+            <section class="table-shell">
+                <div id="errorBox" class="error-box"></div>
+                <div id="loadingState" class="state-panel">
+                    <i class="fa-solid fa-spinner fa-spin"></i>
+                    <div>Loading orders...</div>
+                </div>
+                <div id="emptyState" class="state-panel" style="display:none;">
+                    <i class="fa-regular fa-folder-open"></i>
+                    <div>No pending orders found.</div>
+                </div>
+                <div id="tableWrapper" class="table-scroll" style="display:none;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th class="sortable" data-sort-key="serial">Sr. No. <span class="sort-arrow"></span></th>
+                                <th class="sortable" data-sort-key="purchaseOrderNumber">PO No. <span class="sort-arrow"></span></th>
+                                <th class="sortable" data-sort-key="supplierName">Supplier <span class="sort-arrow"></span></th>
+                                <th class="sortable" data-sort-key="requesterName">Requester <span class="sort-arrow"></span></th>
+                                <th>Deadline</th>
+                                <th>Invoice</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ordersTableBody"></tbody>
+                    </table>
+                </div>
+            </section>
+        </section>
     </div>
 
-<script>
-    const API_URL = 'https://script.google.com/macros/s/AKfycbwYVf_pKrNX6WWyYF6lBSwsQwB7AIZcgAjoXU1PBR4vmTeb48huKWtagXHJXiDcjeSibw/exec';
-    
-    let orders = [];
-    let completedOrders = new Set();
-    let sortDirection = {};
+    <script>
+        const API_URL = 'https://script.google.com/macros/s/AKfycbw4CPM9BzR2I_zCi7HL7Rj5FE1sXA7Lv436KOUETNt0UHnkvv7mnbk0lSjvMlM64h5slA/exec';
+        const GOOGLE_CLIENT_ID = '360849757137-agopfs0m8rgmcj541ucpg22btep5olt3.apps.googleusercontent.com';
+        const AUTH_STORAGE_KEY = 'acportal_google_auth_v1';
+        const VIEW_STORAGE_KEY = 'acportal_view_state_v1';
+        const REFRESH_INTERVAL_MS = 30000;
+        const ALLOWED_EMAILS = new Set([
+            'mis01@ntwoods.com',
+            'pc01@ntwoods.com',
+            'accounts02@ntwoods.com'
+        ]);
 
-    async function fetchOrders() {
-        const loadingEl = document.getElementById('loading');
-        const errorEl = document.getElementById('error');
-        const tableWrapperEl = document.getElementById('tableWrapper');
-        const emptyStateEl = document.getElementById('emptyState');
-        
-        loadingEl.style.display = 'block';
-        errorEl.style.display = 'none';
-        tableWrapperEl.style.display = 'none';
-        emptyStateEl.style.display = 'none';
-        
-        try {
-            const response = await fetch(API_URL);
-            
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
+        let orders = [];
+        let completedOrders = new Set();
+        let sortState = { key: '', direction: 'asc' };
+        let refreshTimerId = null;
+        let isFetching = false;
+        let isAuthenticated = false;
+        let countdownTimers = [];
+        let currentAuth = null;
+
+        const elements = {
+            signInScreen: document.getElementById('signInScreen'),
+            portalScreen: document.getElementById('portalScreen'),
+            signInError: document.getElementById('signInError'),
+            googleButton: document.getElementById('googleSignInButton'),
+            userName: document.getElementById('userName'),
+            userEmail: document.getElementById('userEmail'),
+            signOutBtn: document.getElementById('signOutBtn'),
+            searchInput: document.getElementById('searchInput'),
+            refreshBtn: document.getElementById('refreshBtn'),
+            refreshDot: document.getElementById('refreshDot'),
+            refreshStatus: document.getElementById('refreshStatus'),
+            lastUpdated: document.getElementById('lastUpdated'),
+            errorBox: document.getElementById('errorBox'),
+            loadingState: document.getElementById('loadingState'),
+            emptyState: document.getElementById('emptyState'),
+            tableWrapper: document.getElementById('tableWrapper'),
+            tableBody: document.getElementById('ordersTableBody')
+        };
+
+        function decodeJwt(token) {
+            const parts = token.split('.');
+            if (parts.length !== 3) return null;
+            try {
+                const payload = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+                const decoded = atob(payload.padEnd(payload.length + (4 - payload.length % 4) % 4, '='));
+                return JSON.parse(decoded);
+            } catch (error) {
+                console.error('Failed to decode JWT:', error);
+                return null;
             }
-            
-            const data = await response.json();
-            
-            if (data.success && data.data) {
-                orders = data.data;
-                completedOrders = new Set(orders.filter(o => o.account_status === 'COMPLETED').map(o => o.purchaseOrderNumber));
-                
-                filterTable();
-                updateLastUpdated();
-                
-                if (orders.length === 0) {
-                    emptyStateEl.style.display = 'block';
-                } else {
-                    tableWrapperEl.style.display = 'block';
+        }
+
+        function persistAuth(authData) {
+            localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(authData));
+        }
+
+        function isAllowedEmail(email) {
+            return ALLOWED_EMAILS.has(String(email || '').toLowerCase());
+        }
+
+        function getStoredAuth() {
+            try {
+                const raw = localStorage.getItem(AUTH_STORAGE_KEY);
+                if (!raw) return null;
+                const parsed = JSON.parse(raw);
+                if (!parsed || !parsed.email || !parsed.name || !parsed.sub || !parsed.idToken) return null;
+                if (!isAllowedEmail(parsed.email)) return null;
+                return parsed;
+            } catch (error) {
+                return null;
+            }
+        }
+
+        function clearStoredAuth() {
+            localStorage.removeItem(AUTH_STORAGE_KEY);
+        }
+
+        function persistViewState() {
+            const viewState = {
+                searchText: elements.searchInput.value,
+                sortState
+            };
+            localStorage.setItem(VIEW_STORAGE_KEY, JSON.stringify(viewState));
+        }
+
+        function restoreViewState() {
+            try {
+                const raw = localStorage.getItem(VIEW_STORAGE_KEY);
+                if (!raw) return;
+                const state = JSON.parse(raw);
+                if (state.searchText) {
+                    elements.searchInput.value = state.searchText;
                 }
-            } else {
-                throw new Error('Invalid data format received from API');
+                if (state.sortState && state.sortState.key) {
+                    sortState = state.sortState;
+                }
+            } catch (error) {
+                console.warn('Unable to restore view state:', error);
             }
-        } catch (error) {
-            console.error('Error fetching orders:', error);
-            errorEl.textContent = `Error loading orders: ${error.message}`;
-            errorEl.style.display = 'block';
-        } finally {
-            loadingEl.style.display = 'none';
         }
-    }
 
-    function renderOrders(filteredData) {
-        const tbody = document.getElementById('ordersTableBody');
-        tbody.innerHTML = '';
-        
-        if (filteredData.length === 0) {
-            document.getElementById('emptyState').style.display = 'block';
-            document.getElementById('tableWrapper').style.display = 'none';
-            return;
-        } else {
-            document.getElementById('emptyState').style.display = 'none';
-            document.getElementById('tableWrapper').style.display = 'block';
+        function setAuthGate(isSignedIn) {
+            isAuthenticated = isSignedIn;
+            elements.signInScreen.classList.toggle('active', !isSignedIn);
+            elements.portalScreen.classList.toggle('active', isSignedIn);
         }
-        
-        filteredData.forEach((order, index) => {
-            const row = document.createElement('tr');
-            const isCompleted = completedOrders.has(order.purchaseOrderNumber);
-            if (isCompleted) row.classList.add('completed');
 
-            // NEW Deadline calculation
-            let deadlineCellHtml = 'N/A';
-            if (order.acknowledgedTimestamp) {
-                const deadline = new Date(order.acknowledgedTimestamp);
-                deadline.setDate(deadline.getDate() + 2);
-                const deadlineId = `deadline-${index}`;
-                deadlineCellHtml = `<span id="${deadlineId}" class="deadline-timer"></span>`;
-                startCountdown(deadline, deadlineId, row);
+        function renderUserDetails() {
+            if (!currentAuth) return;
+            elements.userName.textContent = currentAuth.name || 'Authenticated User';
+            elements.userEmail.textContent = currentAuth.email || '-';
+        }
+
+        function setStatus(text, mode) {
+            elements.refreshStatus.textContent = text;
+            elements.refreshDot.className = 'status-dot';
+            if (mode === 'loading') {
+                elements.refreshDot.classList.add('loading');
+            } else if (mode === 'live') {
+                elements.refreshDot.classList.add('live');
             }
+        }
 
-            row.innerHTML = `
-                <td class="sr-no">${index + 1}</td>
-                <td class="po-number">${order.purchaseOrderNumber}</td>
-                <td class="supplier-name">${order.supplierName}</td>
-                <td>${deadlineCellHtml}</td>
-                <td>
-                    <div class="editable">
-                        ${order.invoiceUrl ? 
-                            `<button class="invoice-btn" onclick="showInvoice('${order.invoiceUrl}')">
-                                <i class="fas fa-file-invoice"></i> Show Invoice
-                            </button>` 
-                            : 'N/A'
-                        }
-                    </div>
-                </td>
-                <td>
-                    <div class="editable">
-                        <button class="action-btn ${isCompleted ? 'completed' : ''}" 
-                                id="markDoneBtn-${order.purchaseOrderNumber}"
-                                onclick="markDone(this, '${order.purchaseOrderNumber}')"
-                                ${isCompleted ? 'disabled' : ''}>
-                            <i class="fas ${isCompleted ? 'fa-check' : 'fa-check-circle'}"></i>
-                            ${isCompleted ? 'Completed' : 'Mark Done'}
-                        </button>
-                    </div>
-                </td>
-            `;
-            tbody.appendChild(row);
-        });
-    }
+        function showError(message) {
+            elements.errorBox.textContent = message;
+            elements.errorBox.style.display = 'block';
+        }
 
-    function startCountdown(deadline, elementId, rowElement) {
-        function update() {
+        function hideError() {
+            elements.errorBox.textContent = '';
+            elements.errorBox.style.display = 'none';
+        }
+
+        function updateLastUpdated() {
             const now = new Date();
-            const diff = deadline - now;
-            const el = document.getElementById(elementId);
-            if (!el) return;
+            const formatted = now.toLocaleString('en-IN', {
+                day: '2-digit',
+                month: 'short',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
+            elements.lastUpdated.textContent = `Last updated: ${formatted}`;
+        }
 
-            if (diff <= 0) {
-                el.textContent = 'Overdue';
-                el.style.color = 'red';
-                rowElement.style.backgroundColor = 'rgba(255, 0, 0, 0.1)';
-                clearInterval(timer);
+        function clearCountdownTimers() {
+            countdownTimers.forEach(timerId => clearInterval(timerId));
+            countdownTimers = [];
+        }
+
+        function createCell(text, className) {
+            const td = document.createElement('td');
+            td.textContent = text;
+            if (className) td.className = className;
+            return td;
+        }
+        function startDeadlineTimer(deadline, targetSpan, row) {
+            const updateTimer = () => {
+                const now = new Date();
+                const diff = deadline - now;
+
+                targetSpan.className = 'deadline-live';
+                row.classList.remove('overdue');
+
+                if (diff <= 0) {
+                    targetSpan.textContent = 'Overdue';
+                    targetSpan.classList.add('overdue');
+                    row.classList.add('overdue');
+                    return;
+                }
+
+                const totalSeconds = Math.floor(diff / 1000);
+                const hours = Math.floor(totalSeconds / 3600);
+                const minutes = Math.floor((totalSeconds % 3600) / 60);
+                const seconds = totalSeconds % 60;
+                targetSpan.textContent = `${hours}h ${minutes}m ${seconds}s`;
+                if (diff < 3600000) {
+                    targetSpan.classList.add('warn');
+                }
+            };
+
+            updateTimer();
+            const timerId = setInterval(updateTimer, 1000);
+            countdownTimers.push(timerId);
+        }
+
+        function getFilteredOrders() {
+            const searchText = elements.searchInput.value.trim().toLowerCase();
+            if (!searchText) return [...orders];
+            return orders.filter(order => {
+                const po = String(order.purchaseOrderNumber || '').toLowerCase();
+                const supplier = String(order.supplierName || '').toLowerCase();
+                return po.includes(searchText) || supplier.includes(searchText);
+            });
+        }
+
+        function getSortedOrders(data) {
+            if (!sortState.key || sortState.key === 'serial') return data;
+
+            const sorted = [...data];
+            sorted.sort((a, b) => {
+                const valA = String(a[sortState.key] || '').toLowerCase();
+                const valB = String(b[sortState.key] || '').toLowerCase();
+                const compare = valA.localeCompare(valB, undefined, { numeric: true, sensitivity: 'base' });
+                return sortState.direction === 'asc' ? compare : -compare;
+            });
+            return sorted;
+        }
+
+        function updateSortIndicators() {
+            const headers = document.querySelectorAll('th.sortable');
+            headers.forEach(header => {
+                const arrow = header.querySelector('.sort-arrow');
+                const key = header.dataset.sortKey;
+                if (key === sortState.key) {
+                    arrow.textContent = sortState.direction === 'asc' ? '^' : 'v';
+                } else {
+                    arrow.textContent = '';
+                }
+            });
+        }
+
+        function renderOrders() {
+            clearCountdownTimers();
+            elements.tableBody.innerHTML = '';
+
+            const filtered = getFilteredOrders();
+            const displayData = getSortedOrders(filtered);
+
+            if (displayData.length === 0) {
+                elements.tableWrapper.style.display = 'none';
+                elements.emptyState.style.display = 'block';
                 return;
             }
 
-            const hours = Math.floor(diff / (1000 * 60 * 60));
-            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-            const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+            const fragment = document.createDocumentFragment();
 
-            el.textContent = `${hours}h ${minutes}m ${seconds}s`;
-            el.style.color = diff < 3600000 ? 'red' : '#333';
-        }
+            displayData.forEach((order, index) => {
+                const row = document.createElement('tr');
+                const isCompleted = completedOrders.has(order.purchaseOrderNumber);
+                if (isCompleted) row.classList.add('completed');
 
-        update();
-        const timer = setInterval(update, 1000);
-    }
+                row.appendChild(createCell(String(index + 1), 'cell-muted'));
+                row.appendChild(createCell(String(order.purchaseOrderNumber || '-'), 'po-cell'));
+                row.appendChild(createCell(String(order.supplierName || '-')));
+                row.appendChild(createCell(String(order.requesterName || '-'), 'cell-muted'));
 
-    function filterTable() {
-        const searchText = document.getElementById('searchInput').value.toLowerCase();
-        let filteredData = orders.filter(order => 
-            order.purchaseOrderNumber.toLowerCase().includes(searchText) || 
-            order.supplierName.toLowerCase().includes(searchText)
-        );
-        renderOrders(filteredData);
-                if (typeof setReadOnlyMode === "function") {
-                  setReadOnlyMode();
-                }                   
-    }
+                const deadlineCell = document.createElement('td');
+                if (order.acknowledgedTimestamp) {
+                    const acknowledged = new Date(order.acknowledgedTimestamp);
+                    if (!isNaN(acknowledged.getTime())) {
+                        const deadline = new Date(acknowledged);
+                        deadline.setDate(deadline.getDate() + 2);
+                        const timerSpan = document.createElement('span');
+                        timerSpan.className = 'deadline-live';
+                        deadlineCell.appendChild(timerSpan);
+                        startDeadlineTimer(deadline, timerSpan, row);
+                    } else {
+                        deadlineCell.textContent = 'N/A';
+                        deadlineCell.className = 'cell-muted';
+                    }
+                } else {
+                    deadlineCell.textContent = 'N/A';
+                    deadlineCell.className = 'cell-muted';
+                }
+                row.appendChild(deadlineCell);
 
-    async function markDone(buttonElement, poNumber) {
-        if (completedOrders.has(poNumber)) return;
+                const invoiceCell = document.createElement('td');
+                if (order.invoiceUrl) {
+                    const invoiceButton = document.createElement('button');
+                    invoiceButton.className = 'btn btn-secondary';
+                    invoiceButton.type = 'button';
+                    invoiceButton.innerHTML = '<i class="fa-solid fa-file-invoice"></i> Invoice';
+                    invoiceButton.addEventListener('click', () => showInvoice(order.invoiceUrl));
+                    const invoiceWrap = document.createElement('div');
+                    invoiceWrap.className = 'editable';
+                    invoiceWrap.appendChild(invoiceButton);
+                    invoiceCell.appendChild(invoiceWrap);
+                } else {
+                    invoiceCell.textContent = 'N/A';
+                    invoiceCell.className = 'cell-muted';
+                }
+                row.appendChild(invoiceCell);
 
-        const order = orders.find(o => o.purchaseOrderNumber === poNumber);
-        if (!order || !order.timestamp) {
-            console.error("Timestamp not found for the selected order.");
-            return;
-        }
+                const actionCell = document.createElement('td');
+                const actionButton = document.createElement('button');
+                actionButton.type = 'button';
+                actionButton.className = 'btn btn-success';
+                actionButton.innerHTML = isCompleted
+                    ? '<i class="fa-solid fa-check"></i> Completed'
+                    : '<i class="fa-solid fa-check-circle"></i> Mark Done';
+                actionButton.disabled = isCompleted;
+                actionButton.addEventListener('click', () => markDone(actionButton, order.purchaseOrderNumber));
+                const actionWrap = document.createElement('div');
+                actionWrap.className = 'editable';
+                actionWrap.appendChild(actionButton);
+                actionCell.appendChild(actionWrap);
+                row.appendChild(actionCell);
 
-        const originalButtonHtml = buttonElement.innerHTML;
-        const originalButtonClass = buttonElement.className;
-
-        buttonElement.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
-        buttonElement.className = 'action-btn completed';
-        buttonElement.disabled = true;
-
-        try {
-            await fetch(API_URL, {
-                method: 'POST',
-                mode: 'no-cors',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    action: 'markDone',
-                    timestamp: order.timestamp,
-                    purchaseOrderNumber: poNumber
-                })
+                fragment.appendChild(row);
             });
 
-            completedOrders.add(poNumber);
-            buttonElement.innerHTML = '<i class="fas fa-check"></i> Done!';
-            buttonElement.className = 'action-btn completed';
+            elements.tableBody.appendChild(fragment);
+            elements.emptyState.style.display = 'none';
+            elements.tableWrapper.style.display = 'block';
+
+            if (typeof setReadOnlyMode === 'function') {
+                setReadOnlyMode();
+            }
+        }
+
+        async function fetchOrders(options = {}) {
+            if (!isAuthenticated || isFetching) return;
+            const { silent = false } = options;
+            if (!currentAuth || !currentAuth.idToken) {
+                signOut();
+                elements.signInError.textContent = 'Please sign in again to continue.';
+                return;
+            }
+
+            isFetching = true;
+            setStatus('Refreshing data...', 'loading');
+            hideError();
+
+            if (!silent && orders.length === 0) {
+                elements.loadingState.style.display = 'block';
+                elements.tableWrapper.style.display = 'none';
+                elements.emptyState.style.display = 'none';
+            }
+
+            try {
+                const url = `${API_URL}?idToken=${encodeURIComponent(currentAuth.idToken)}`;
+                const response = await fetch(url);
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+
+                const payload = await response.json();
+                if (payload && payload.auth === false) {
+                    signOut();
+                    elements.signInError.textContent = 'Access denied for this account.';
+                    return;
+                }
+                if (!payload || !payload.success || !Array.isArray(payload.data)) {
+                    throw new Error('Invalid response format from server');
+                }
+
+                orders = payload.data;
+                completedOrders = new Set(
+                    orders
+                        .filter(order => String(order.account_status || '').toUpperCase() === 'COMPLETED')
+                        .map(order => order.purchaseOrderNumber)
+                );
+
+                renderOrders();
+                updateLastUpdated();
+                persistViewState();
+                setStatus('Live', 'live');
+            } catch (error) {
+                console.error('fetchOrders failed:', error);
+                showError(`Error loading data: ${error.message}`);
+                setStatus('Last refresh failed', '');
+            } finally {
+                elements.loadingState.style.display = 'none';
+                isFetching = false;
+            }
+        }
+
+        async function markDone(buttonElement, poNumber) {
+            if (completedOrders.has(poNumber)) return;
+            if (!currentAuth || !currentAuth.idToken) {
+                signOut();
+                elements.signInError.textContent = 'Please sign in again to continue.';
+                return;
+            }
+
+            const order = orders.find(item => item.purchaseOrderNumber === poNumber);
+            if (!order || !order.timestamp) {
+                console.error('Timestamp not found for selected order');
+                return;
+            }
+
+            const oldHtml = buttonElement.innerHTML;
+            buttonElement.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Processing';
             buttonElement.disabled = true;
 
-            setTimeout(() => {
-                const row = buttonElement.closest('tr');
-                if (row) row.classList.add('completed');
-                filterTable();
-            }, 1500);
-        } catch (error) {
-            console.error('Fetch failed:', error);
-            buttonElement.innerHTML = originalButtonHtml;
-            buttonElement.className = originalButtonClass;
-            buttonElement.disabled = false;
+            try {
+                await fetch(API_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        action: 'markDone',
+                        idToken: currentAuth.idToken,
+                        timestamp: order.timestamp,
+                        purchaseOrderNumber: poNumber
+                    })
+                });
+
+                completedOrders.add(poNumber);
+                buttonElement.innerHTML = '<i class="fa-solid fa-check"></i> Completed';
+                renderOrders();
+            } catch (error) {
+                console.error('markDone failed:', error);
+                buttonElement.innerHTML = oldHtml;
+                buttonElement.disabled = false;
+                showError('Unable to mark order as done. Please retry.');
+            }
         }
-    }
 
-    function showInvoice(invoiceUrl) {
-        window.open(invoiceUrl, '_blank');
-    }
+        function showInvoice(invoiceUrl) {
+            window.open(invoiceUrl, '_blank', 'noopener');
+        }
 
-    function updateLastUpdated() {
-        const now = new Date();
-        const timeString = now.toLocaleTimeString('en-US', { hour12: true, hour: 'numeric', minute: '2-digit' });
-        document.getElementById('lastUpdated').textContent = `Last updated: ${timeString}`;
-    }
+        function onSearchChange() {
+            renderOrders();
+            persistViewState();
+        }
 
-    function sortTable(columnIndex) {
-        const columns = ['serial', 'purchaseOrderNumber', 'supplierName', 'deadline', 'invoice', 'action'];
-        const columnKey = columns[columnIndex];
-        sortDirection[columnKey] = (sortDirection[columnKey] === 'asc') ? 'desc' : 'asc';
+        function onSortClick(event) {
+            const header = event.currentTarget;
+            const key = header.dataset.sortKey;
+            if (!key) return;
 
-        orders.sort((a, b) => {
-            let valA = a[columnKey] || '';
-            let valB = b[columnKey] || '';
-
-            if (columnKey === 'purchaseOrderNumber' || columnKey === 'supplierName') {
-                valA = String(valA).toLowerCase();
-                valB = String(valB).toLowerCase();
-                return sortDirection[columnKey] === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
-            } else if (columnKey === 'serial') {
-                valA = orders.indexOf(a);
-                valB = orders.indexOf(b);
-                return sortDirection[columnKey] === 'asc' ? valA - valB : valB - valA;
+            if (sortState.key === key) {
+                sortState.direction = sortState.direction === 'asc' ? '^' : 'v';
             } else {
-                return 0;
+                sortState = { key, direction: 'asc' };
             }
-        });
 
-        const headers = document.querySelectorAll('th');
-        headers.forEach((header, index) => {
-            const arrowSpan = header.querySelector('.sort-arrow');
-            if (index === columnIndex) {
-                arrowSpan.textContent = sortDirection[columnKey] === 'asc' ? '▲' : '▼';
+            updateSortIndicators();
+            renderOrders();
+            persistViewState();
+        }
+        function startAutoRefresh() {
+            stopAutoRefresh();
+            refreshTimerId = setInterval(() => {
+                fetchOrders({ silent: true });
+            }, REFRESH_INTERVAL_MS);
+        }
+
+        function stopAutoRefresh() {
+            if (refreshTimerId) {
+                clearInterval(refreshTimerId);
+                refreshTimerId = null;
+            }
+        }
+
+        function handleCredentialResponse(response) {
+            if (!response || !response.credential) {
+                elements.signInError.textContent = 'Sign-in failed. Please try again.';
+                return;
+            }
+
+            const payload = decodeJwt(response.credential);
+            if (!payload || !payload.email) {
+                elements.signInError.textContent = 'Unable to verify Google identity.';
+                return;
+            }
+            if (!isAllowedEmail(payload.email)) {
+                clearStoredAuth();
+                currentAuth = null;
+                setAuthGate(false);
+                elements.signInError.textContent = 'This email is not authorized for this portal.';
+                return;
+            }
+
+            currentAuth = {
+                sub: payload.sub || '',
+                name: payload.name || payload.email,
+                email: payload.email,
+                picture: payload.picture || '',
+                signedInAt: Date.now(),
+                idToken: response.credential
+            };
+            persistAuth(currentAuth);
+            elements.signInError.textContent = '';
+            activatePortal();
+        }
+
+        function activatePortal() {
+            setAuthGate(true);
+            renderUserDetails();
+            updateSortIndicators();
+            fetchOrders({ silent: false });
+            startAutoRefresh();
+        }
+
+        function signOut() {
+            stopAutoRefresh();
+            clearCountdownTimers();
+            setAuthGate(false);
+            orders = [];
+            completedOrders.clear();
+            elements.tableBody.innerHTML = '';
+            elements.tableWrapper.style.display = 'none';
+            elements.emptyState.style.display = 'none';
+            elements.loadingState.style.display = 'none';
+            hideError();
+
+            if (currentAuth && currentAuth.email && window.google && google.accounts && google.accounts.id) {
+                google.accounts.id.revoke(currentAuth.email, () => {});
+                google.accounts.id.disableAutoSelect();
+            }
+
+            clearStoredAuth();
+            currentAuth = null;
+        }
+
+        function initializeGoogleSignIn() {
+            if (!(window.google && google.accounts && google.accounts.id)) {
+                setTimeout(initializeGoogleSignIn, 300);
+                return;
+            }
+
+            google.accounts.id.initialize({
+                client_id: GOOGLE_CLIENT_ID,
+                callback: handleCredentialResponse,
+                ux_mode: 'popup'
+            });
+
+            elements.googleButton.innerHTML = '';
+            google.accounts.id.renderButton(elements.googleButton, {
+                theme: 'outline',
+                size: 'large',
+                shape: 'rectangular',
+                text: 'signin_with',
+                width: 300
+            });
+        }
+
+        function bindEvents() {
+            elements.searchInput.addEventListener('input', onSearchChange);
+            elements.refreshBtn.addEventListener('click', () => fetchOrders({ silent: false }));
+            elements.signOutBtn.addEventListener('click', signOut);
+
+            document.querySelectorAll('th.sortable').forEach(header => {
+                header.addEventListener('click', onSortClick);
+            });
+        }
+
+        function bootstrap() {
+            bindEvents();
+            restoreViewState();
+            updateSortIndicators();
+            initializeGoogleSignIn();
+
+            const auth = getStoredAuth();
+            if (auth) {
+                currentAuth = auth;
+                activatePortal();
             } else {
-                arrowSpan.textContent = '';
+                clearStoredAuth();
+                setAuthGate(false);
+                setStatus('Sign-in required', '');
             }
-        });
+        }
 
-        filterTable();
-    }
-
-    setInterval(fetchOrders, 40000);
-    fetchOrders();
-                    if (typeof setReadOnlyMode === "function") {
-                  setReadOnlyMode();
-                }           
-</script>
-<script src="https://ntwoods.github.io/ordertodispatch/js/viewOnly.js"></script>
+        bootstrap();
+    </script>
+    <script src="https://ntwoods.github.io/ordertodispatch/js/viewOnly.js"></script>
 </body>
 </html>
-
 

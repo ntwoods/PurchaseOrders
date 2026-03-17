@@ -149,7 +149,7 @@
         let selectedPoNo = '';
         let countdownIntervals = {}; // store by element ID (or generated key)
 
-        const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwn-_eexKOQC3_grcHy8qmxRkzrMYc0lNBOuqPtuKtm_Pb-s3ufV41J9xGiJCqJW7wWKQ/exec';
+        const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycby7Iwfzy98sI8UFYs6lCZZF_ESoaTzFd3UWwZJWepffBD6rueQ9TdzgLq7oE98npIwpdQ/exec';
 
         document.addEventListener('DOMContentLoaded', function() {
             fetchRequests();
@@ -232,14 +232,25 @@
                 const card = createRequestCard(request);
                 container.appendChild(card);
 
-                // After append, agar deadlineTimestamp set hai to countdown start karo
-                if (card.dataset && card.dataset.deadlineTimestamp) {
-                    const deadlineTimestamp = parseInt(card.dataset.deadlineTimestamp, 10);
+                // First countdown: request raised time (column G)
+                if (card.dataset && card.dataset.requestDeadlineTimestamp) {
+                    const deadlineTimestamp = parseInt(card.dataset.requestDeadlineTimestamp, 10);
                     const countdownEl = card.querySelector(`#countdown-${cssSafeId(request.id)}`);
                     if (countdownEl) {
                         startCountdown(deadlineTimestamp, countdownEl, card);
                     } else {
                         console.warn('Countdown element not found after append for', request.id);
+                    }
+                }
+
+                // Second countdown: PO received time (column L)
+                if (card.dataset && card.dataset.poReceivedDeadlineTimestamp) {
+                    const poReceivedDeadlineTimestamp = parseInt(card.dataset.poReceivedDeadlineTimestamp, 10);
+                    const poReceivedCountdownEl = card.querySelector(`#countdown-po-received-${cssSafeId(request.id)}`);
+                    if (poReceivedCountdownEl) {
+                        startCountdown(poReceivedDeadlineTimestamp, poReceivedCountdownEl, card);
+                    } else {
+                        console.warn('PO received countdown element not found after append for', request.id);
                     }
                 }
             });
@@ -253,7 +264,14 @@
 
         // Parse ISO 8601 explicitly (robust parsing)
         function parseIsoDateTime(isoString) {
-            if (!isoString || typeof isoString !== 'string') return null;
+            if (!isoString) return null;
+            if (isoString instanceof Date) {
+                return isNaN(isoString.getTime()) ? null : isoString;
+            }
+            if (typeof isoString !== 'string') {
+                const nativeDate = new Date(isoString);
+                return isNaN(nativeDate.getTime()) ? null : nativeDate;
+            }
             const parts = isoString.match(/(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.(\d{1,3}))?Z/);
             if (!parts) {
                 const nativeDate = new Date(isoString);
@@ -296,11 +314,13 @@
 
             // 🔹 K column (poDetail) ke basis par decide karenge ke timer chalega ya nahi
             const hasPoDetail = !!(request.poDetail && String(request.poDetail).trim() !== '');
+            const hasPoReceived = request.poReceived !== null && request.poReceived !== undefined && String(request.poReceived).trim() !== '';
 
             // ---- PO Received display (sirf display ke liye) ----
             let poReceivedDisplay = 'N/A';
-            if (request.poReceived) {
-                const parsedPoReceived = parseIsoDateTime(request.poReceived);
+            let parsedPoReceived = null;
+            if (hasPoReceived) {
+                parsedPoReceived = parseIsoDateTime(request.poReceived);
                 if (parsedPoReceived && !isNaN(parsedPoReceived.getTime())) {
                     poReceivedDisplay = parsedPoReceived.toLocaleString('en-IN', {
                         timeZone: 'Asia/Kolkata',
@@ -328,7 +348,7 @@
                     deadlineTimestamp = calculateDeadlineWithSundaySkip(startMs);
 
                     // dataset me store karenge taaki renderRequests me countdown start ho sake
-                    card.dataset.deadlineTimestamp = String(deadlineTimestamp);
+                    card.dataset.requestDeadlineTimestamp = String(deadlineTimestamp);
 
                     const deadlineDateForDisplay = new Date(deadlineTimestamp);
                     deadlineDisplay = deadlineDateForDisplay.toLocaleString('en-IN', {
@@ -346,6 +366,30 @@
                     if (Date.now() > deadlineTimestamp) {
                         card.classList.add('overdue-card-highlight');
                     }
+                }
+            }
+
+            // ---- Secondary deadline & countdown L column se (poReceived) ----
+            let poReceivedDeadlineTimestamp = null;
+            let poReceivedDeadlineDisplay = '';
+            if (parsedPoReceived && !isNaN(parsedPoReceived.getTime())) {
+                poReceivedDeadlineTimestamp = calculateDeadlineWithSundaySkip(parsedPoReceived.getTime());
+                card.dataset.poReceivedDeadlineTimestamp = String(poReceivedDeadlineTimestamp);
+
+                const poReceivedDeadlineDate = new Date(poReceivedDeadlineTimestamp);
+                poReceivedDeadlineDisplay = poReceivedDeadlineDate.toLocaleString('en-IN', {
+                    timeZone: 'Asia/Kolkata',
+                    year: 'numeric',
+                    month: '2-digit',
+                    day: '2-digit',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit',
+                    hour12: true
+                });
+
+                if (Date.now() > poReceivedDeadlineTimestamp) {
+                    card.classList.add('overdue-card-highlight');
                 }
             }
 
@@ -375,7 +419,7 @@
             const buttonText = (request.responseRemark && request.responseRemark.trim() !== '') ? 'Modify Response' : 'Mark Response';
 
             let receivedButtonHtml = '';
-            if (request.poReceived && request.poReceived.trim() !== '') {
+            if (hasPoReceived) {
                 receivedButtonHtml = `
                     <button class="received-button" onclick="markAsReceived('${request.id}')">
                         Received
@@ -391,6 +435,17 @@
                 <div class="field-group">
                     <span class="field-label">Time Left:</span>
                     <div class="field-value" id="countdown-${cssSafeId(request.id)}"></div>
+                </div>
+            ` : '';
+
+            const poReceivedDeadlineHtml = poReceivedDeadlineTimestamp ? `
+                <div class="field-group">
+                    <span class="field-label">PO Rec. Deadline:</span>
+                    <div class="field-value" id="deadline-po-received-${cssSafeId(request.id)}">${poReceivedDeadlineDisplay}</div>
+                </div>
+                <div class="field-group">
+                    <span class="field-label">PO Rec. Time Left:</span>
+                    <div class="field-value" id="countdown-po-received-${cssSafeId(request.id)}"></div>
                 </div>
             ` : '';
 
@@ -432,13 +487,14 @@
                         <div class="field-value">${crmValue}</div>
                     </div>
 
-                    ${request.poReceived ? `
+                    ${hasPoReceived ? `
                         <div class="field-group">
                             <span class="field-label">PO Received:</span>
                             <div class="field-value">${poReceivedDisplay}</div>
                         </div>
                     ` : ''}
 
+                    ${poReceivedDeadlineHtml}
                     ${deadlineHtml}
                 </div>
 

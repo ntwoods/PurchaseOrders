@@ -214,6 +214,8 @@ function formatDateTime(d){
             <div class="order-card" id="order-${i}">
               <div class="requester-name">👤 ${o.supplierName}</div>
               <div class="timestamp">🕒 Sent: ${new Date(o.timestamp).toLocaleString()}</div>
+              <div class="timestamp">#️⃣ ${o.purchaseOrderNumber}</div>
+          
               <div class="timestamp">📌 Deadline: ${formatDateTime(deadline)}</div>
               <div class="countdown-timer" id="countdown-${i}"></div>
         <div class="editable">

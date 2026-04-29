@@ -607,8 +607,8 @@ let temporaryEditedSpecs = {};
     let currentRequestIndex = null; // Used by confirmMarkDone
 
 // ... (other helper functions like showToast, closeModal, loadRequests, displayCurrentCategorySpecs)	
-    const API_URL = 'https://script.google.com/macros/s/AKfycbxnXt8Ti_RvyfVMRFGbZ-qCUAK-FhmRlN0-B1CDxdKGcVizExq6-MSNMHNCQIDekiiL/exec';
-    const API_URL2 = 'https://script.google.com/macros/s/AKfycbxnXt8Ti_RvyfVMRFGbZ-qCUAK-FhmRlN0-B1CDxdKGcVizExq6-MSNMHNCQIDekiiL/exec';
+    const API_URL = 'https://script.google.com/macros/s/AKfycbwFZWUyCdUw9VcVQ3N3SInwCs9z7EkIsli66n0XE-CGxwiw0n4GW-pp7X2d-UzeC3nv/exec';
+    const API_URL2 = 'https://script.google.com/macros/s/AKfycbwFZWUyCdUw9VcVQ3N3SInwCs9z7EkIsli66n0XE-CGxwiw0n4GW-pp7X2d-UzeC3nv/exec';
 
         // countdownIntervals removed as countdown functionality is removed
 
@@ -801,8 +801,10 @@ let temporaryEditedSpecs = {};
         }
 
         // Function to check Google Sheets for missing supplier names
+// Google Sheet me suppliers check karo + sirf un categories ke specs lao jinke paas supplier hai
 async function checkMissingSuppliers(googleSheetURL) {
     try {
+        // 1) Sheet ko CSV ke form me fetch karo
         let csvUrl = googleSheetURL;
         if (googleSheetURL.includes('/edit')) {
             const sheetId = googleSheetURL.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
@@ -817,6 +819,8 @@ async function checkMissingSuppliers(googleSheetURL) {
         }
 
         const csvText = await response.text();
+
+        // 2) CSV parsing (comma + quotes safe)
         const rows = csvText.split('\n').map(row => {
             const cells = [];
             let currentCell = '';
@@ -839,11 +843,12 @@ async function checkMissingSuppliers(googleSheetURL) {
             return cells;
         });
 
-        let missingOrders = [];
-        let completedOrders = [];
-        let categoriesWithSuppliers = new Set(); // To store unique categories with suppliers
+        // 3) Orders find karo + supplier status nikaalo
+        const missingOrders = [];
+        const completedOrders = [];
+        const categoriesWithSuppliersSet = new Set();   // UNIQUE categories jinke paas supplier hai
 
-        // Column A-C block (Order-1, Order-3, ...)
+        // LEFT block: columns A–C
         for (let i = 0; i < rows.length; i++) {
             const orderCell = rows[i][0] || '';
             if (orderCell.toLowerCase().includes('order-')) {
@@ -856,13 +861,13 @@ async function checkMissingSuppliers(googleSheetURL) {
                 } else {
                     completedOrders.push(`${orderInfo} - ${supplierCell}`);
                     if (categoryCell) {
-                        categoriesWithSuppliers.add(categoryCell.trim());
+                        categoriesWithSuppliersSet.add(String(categoryCell).trim());
                     }
                 }
             }
         }
 
-        // Column F-H block (Order-2, Order-4, ...)
+        // RIGHT block: columns F–H
         for (let i = 0; i < rows.length; i++) {
             const orderCell = rows[i][5] || '';
             if (orderCell.toLowerCase().includes('order-')) {
@@ -875,68 +880,97 @@ async function checkMissingSuppliers(googleSheetURL) {
                 } else {
                     completedOrders.push(`${orderInfo} - ${supplierCell}`);
                     if (categoryCell) {
-                        categoriesWithSuppliers.add(categoryCell.trim());
+                        categoriesWithSuppliersSet.add(String(categoryCell).trim());
                     }
                 }
             }
         }
 
-        // Now, fetch all specifications from the backend, then filter based on categoriesWithSuppliers
-        const allSpecsResponse = await fetch(`${API_URL}?action=getSpecificationsForAllCategories&sourceUrl=${encodeURIComponent(googleSheetURL)}`);
-        if (!allSpecsResponse.ok) {
-            const errorText = await allSpecsResponse.text();
-            throw new Error(`HTTP error! status: ${allSpecsResponse.status}. Response: ${errorText}`);
-        }
-        const allSpecs = await allSpecsResponse.json();
+        // Ab humare paas saare UNIQUE categories hain jinke supplier filled hai
+        const categoriesWithSuppliers = Array.from(categoriesWithSuppliersSet);
+        console.log('Unique categories with suppliers:', categoriesWithSuppliers);
 
-        let filteredSpecsForEditor = [];
-        if (allSpecs && typeof allSpecs === 'object') {
-            for (const category of categoriesWithSuppliers) {
-                if (allSpecs[category]) {
-                    filteredSpecsForEditor.push({
-                        category: category,
-                        specifications: Array.isArray(allSpecs[category]) ? allSpecs[category] : [String(allSpecs[category])]
-                    });
-                }
-            }
+        // 4) Apps Script se SAARE categories ke specs lao (Specification sheet + linked PO)
+        const params = new URLSearchParams();
+        params.append('action', 'getSpecificationsForAllCategories');
+        params.append('sourceUrl', googleSheetURL);
+
+        const specsUrl = `${API_URL}?${params.toString()}`;
+        const allSpecsResponse = await fetch(specsUrl, { method: 'GET' });
+
+        if (!allSpecsResponse.ok) {
+            const errText = await allSpecsResponse.text().catch(() => '');
+            console.error('Specs HTTP error:', allSpecsResponse.status, errText);
+            throw new Error('Unable to fetch specifications from backend.');
         }
+
+        const allSpecsRaw = await allSpecsResponse.json();
+        // Apps Script se plain object aata hai: { "pra occ ply": [ ... ], "pvc/wpc board": [] }
+        const allSpecs = allSpecsRaw || {};
+        console.log('allSpecs from backend:', allSpecs);
+
+        // 5) Ab sirf unhi categories ka editor data banao jinke paas supplier hai
+        const filteredSpecsForEditor = categoriesWithSuppliers.map(originalCategory => {
+            const key = String(originalCategory).trim().toLowerCase();
+            let raw = (allSpecs && typeof allSpecs === 'object') ? allSpecs[key] : null;
+
+            let specsArray;
+            if (Array.isArray(raw)) {
+                specsArray = raw;
+            } else if (typeof raw === 'string' && raw.length > 0) {
+                specsArray = [raw];
+            } else {
+                // Default spec nahi hai → blank textarea allow karo
+                specsArray = [];
+            }
+
+            return {
+                category: originalCategory,   // UI me original naam (e.g. PRA GJN PLY)
+                specifications: specsArray
+            };
+        });
+
+        console.log('filteredSpecsForEditor (final):', filteredSpecsForEditor);
+
         return { missingOrders, completedOrders, filteredSpecsForEditor };
+
     } catch (error) {
         console.error('Error checking suppliers:', error);
         throw new Error('Unable to check supplier information. Please ensure the Google Sheet is publicly accessible.');
     }
 }
-document.addEventListener('DOMContentLoaded', () => {
+
+//document.addEventListener('DOMContentLoaded', () => {
     // Add event listener for the "Next" button
-    const nextBtn = document.getElementById('nextCategoryBtn');
-    if (nextBtn) {
-        nextBtn.addEventListener('click', () => {
+  //  const nextBtn = document.getElementById('nextCategoryBtn');
+    //if (nextBtn) {
+      //  nextBtn.addEventListener('click', () => {
             // Check if there are more categories to display
-            if (currentCategoryIndex < categoriesWithSpecs.length - 1) {
-                currentCategoryIndex++; // Move to the next category
-                displayCurrentCategorySpecs(); // Update the modal content
-            }
-        });
-    } else {
-        console.error("Next Category Button not found!");
-    }
+        //    if (currentCategoryIndex < categoriesWithSpecs.length - 1) {
+          //      currentCategoryIndex++; // Move to the next category
+            //    displayCurrentCategorySpecs(); // Update the modal content
+            //}
+        //});
+    //} else {
+      //  console.error("Next Category Button not found!");
+    //}
 
     // Add event listener for the "Previous" button
-    const prevBtn = document.getElementById('prevCategoryBtn');
-    if (prevBtn) {
-        prevBtn.addEventListener('click', () => {
+  //  const prevBtn = document.getElementById('prevCategoryBtn');
+   // if (prevBtn) {
+       // prevBtn.addEventListener('click', () => {
             // Check if there are previous categories to display
-            if (currentCategoryIndex > 0) {
-                currentCategoryIndex--; // Move to the previous category
-                displayCurrentCategorySpecs(); // Update the modal content
-            }
-        });
-    } else {
-        console.error("Previous Category Button not found!");
-    }
-});	
+           // if (currentCategoryIndex > 0) {
+           //     currentCategoryIndex--; // Move to the previous category
+         //       displayCurrentCategorySpecs(); // Update the modal content
+       //     }
+     //   });
+   // } else {
+    //    console.error("Previous Category Button not found!");
+  //  }
+//});	
 	
-async function openSpecEditorModal(requestData, allCategories = null) {
+async function openSpecEditorModal(requestData, filteredCategoriesWithSpecs = null) {
     // Ensure categoriesWithSpecs is always initialized as an array
     categoriesWithSpecs = []; // Important: Initialize globally or within this function if not global
 
@@ -945,9 +979,9 @@ async function openSpecEditorModal(requestData, allCategories = null) {
     currentRequesterName = requestData.requesterName;
     currentSourceUrl = requestData.sourceUrl;
 
-    // Check if all categories are provided and are a valid non-empty array
-    if (Array.isArray(allCategories) && allCategories.length > 0) {
-        categoriesWithSpecs = allCategories;
+    // Check if filtered categories are provided and are a valid non-empty array
+    if (Array.isArray(filteredCategoriesWithSpecs) && filteredCategoriesWithSpecs.length > 0) {
+        categoriesWithSpecs = filteredCategoriesWithSpecs;
         currentCategoryIndex = 0; // Reset index to the first category
 
         // Display the first filtered category's specs
@@ -957,7 +991,7 @@ async function openSpecEditorModal(requestData, allCategories = null) {
         // Enable/disable navigation buttons based on current categoriesWithSpecs
         document.getElementById('prevCategoryBtn').disabled = currentCategoryIndex === 0;
         document.getElementById('nextCategoryBtn').disabled = categoriesWithSpecs.length === 1 || currentCategoryIndex === categoriesWithSpecs.length - 1;
-        showToast(`Displaying all ${categoriesWithSpecs.length} categories.`, "info");
+        showToast(`Displaying ${categoriesWithSpecs.length} categories with suppliers.`, "info");
 
     } else {
         // If no valid filtered categories, proceed to fetch all categories (as a fallback or default behavior)
@@ -1055,42 +1089,80 @@ async function markAsDone(index) {
     currentRequestIndex = index;
     const request = requestsData[index];
 
-    // No need to check for missing suppliers. Directly prepare to open the spec editor.
-    currentRequestDataForSpecs = {
-        timestamp: request.timestamp,
-        requesterName: request.requesterName,
-        sourceUrl: request.googleSheetURL
-    };
-    
-    // Fetch all categories for the spec editor
-    const params = new URLSearchParams();
-    params.append('action', 'getSpecificationsForAllCategories');
-    params.append('sourceUrl', currentRequestDataForSpecs.sourceUrl);
-    const fetchUrl = `${API_URL}?${params.toString()}`;
+    const modal = document.getElementById('confirmModal');
+    const modalContent = modal.querySelector('.modal-content');
+    modalContent.innerHTML = `
+        <div class="loader" style="width: 40px; height: 40px; margin: 20px auto;"></div>
+        <h3>Checking Supplier Information...</h3>
+        <p>Please wait while we verify the purchase order details.</p>
+    `;
+    modal.style.display = 'block';
 
     try {
-        const response = await fetch(fetchUrl, { method: 'GET' });
-        if (!response.ok) {
-            const errorText = await response.text();
-            throw new Error(`HTTP error! status: ${response.status}. Response: ${errorText}`);
-        }
-        const specsResult = await response.json();
+        const result = await checkMissingSuppliers(request.googleSheetURL);
+        const { missingOrders, completedOrders, filteredSpecsForEditor } = result; // Get the new data
 
-        if (specsResult && typeof specsResult === 'object') {
-            const allCategories = Object.keys(specsResult).map(category => ({
-                category: category,
-                specifications: Array.isArray(specsResult[category]) ? specsResult[category] : [String(specsResult[category])]
-            }));
+        currentRequestDataForSpecs = {
+            timestamp: request.timestamp,
+            requesterName: request.requesterName,
+            sourceUrl: request.googleSheetURL
+        };
 
-            // Open the spec editor with all categories
-            openSpecEditorModal(currentRequestDataForSpecs, allCategories);
+        if (Array.isArray(missingOrders) && missingOrders.length > 0) {
+	            // Display missing supplier information
+	            let completedSection = '';
+	            if (completedOrders.length > 0) {
+	                completedSection = `
+	                    <div style="margin-top: 20px;">
+	                        <h4 style="color: #27ae60; margin-bottom: 10px;">✅ Orders with Suppliers (${completedOrders.length})</h4>
+	                        <div style="max-height: 150px; overflow-y: auto; text-align: left; font-size: 0.85rem; background: #f8f9fa; padding: 10px; border-radius: 5px;">
+	                            <ul style="margin: 0; padding-left: 20px;">
+	                            ${completedOrders.map(o => `<li style="margin-bottom: 3px;">${o}</li>`).join('')}
+	                            </ul>
+	                        </div>
+	                    </div>
+	                `;
+	            }
+
+            modalContent.innerHTML = `
+                <h3>⚠️ Missing Supplier Information</h3>
+                <div>
+                    <h4 style="color: #e74c3c; margin-bottom: 10px;">❌ Missing Suppliers (${missingOrders.length})</h4>
+                    <div style="max-height: 200px; overflow-y: auto; text-align: left; font-size: 0.9rem; background: #fff5f5; padding: 10px; border-radius: 5px; border: 1px solid #e74c3c;">
+                        <ul style="margin: 0; padding-left: 20px;">
+                        ${missingOrders.map(o => `<li style="margin-bottom: 3px;">${o}</li>`).join('')}
+                        </ul>
+                    </div>
+                </div>
+                ${completedOrders.length > 0 ? `
+                    <div style="margin-top: 20px;">
+                        <h4 style="color: #27ae60; margin-bottom: 10px;">✅ Orders with Suppliers (${completedOrders.length})</h4>
+                        <div style="max-height: 150px; overflow-y: auto; text-align: left; font-size: 0.85rem; background: #f8f9fa; padding: 10px; border-radius: 5px;">
+                            <ul style="margin: 0; padding-left: 20px;">
+                            ${completedOrders.map(o => `<li style="margin-bottom: 3px;">${o}</li>`).join('')}
+                            </ul>
+                        </div>
+                    </div>
+                ` : ''}
+                <p style="margin-top: 15px;">Please update the Google Sheet with supplier names. Or proceed anyway if intentional.</p>
+                <div class="modal-actions">
+                    <a href="${request.googleSheetURL}" target="_blank" class="btn btn-primary">📊 Open Sheet</a>
+                    <button class="btn btn-success" onclick="handleProceedAnyway(${index})">Proceed Anyway</button>
+                    <button class="btn" onclick="closeModal()" style="background: #90caf9; color: white;">Cancel</button>
+                </div>
+            `;
+            // Add this line to store filteredSpecsForEditor for when "Proceed Anyway" is clicked
+            // This makes it accessible to handleProceedAnyway
+            sessionStorage.setItem('filteredSpecsForEditor', JSON.stringify(filteredSpecsForEditor));
         } else {
-            console.error("Invalid specs result from backend:", specsResult);
-            showToast("Error loading specs: Invalid data format received from server.", "error");
+            closeModal();
+            // Pass the filtered data directly
+            openSpecEditorModal(currentRequestDataForSpecs, filteredSpecsForEditor);
         }
     } catch (error) {
-        console.error("Failed to fetch specifications:", error);
-        showToast("Error loading specifications: " + error.message, "error");
+        console.error('Error during supplier check:', error);
+        showToast(`Error checking suppliers: ${error.message}`, "error");
+        closeModal();
     }
 }
         function markAsCancel(index) {
@@ -1249,13 +1321,16 @@ function displayCurrentCategorySpecs() {
 
     const currentCategory = categoriesWithSpecs[currentCategoryIndex];
     document.getElementById('currentCategoryTitle').textContent = `Category: ${currentCategory.category}`;
+	
+	const temp = temporaryEditedSpecs[currentCategory.category];
+	
+	const specsToDisplay =
+	  Array.isArray(temp) ? temp.join('\n')
+	  : (typeof temp === 'string' ? temp : currentCategory.specifications.join('\n'));
+	
+	document.getElementById('specsTextarea').value = specsToDisplay;
 
-    // Use temporaryEditedSpecs if available, otherwise use original specs
-    const specsToDisplay = temporaryEditedSpecs[currentCategory.category] !== undefined
-        ? temporaryEditedSpecs[currentCategory.category]
-        : currentCategory.specifications.join('\n'); // Join array into a single string for textarea
 
-    document.getElementById('specsTextarea').value = specsToDisplay; // FIX: Changed from 'specEditorTextarea'
 
     document.getElementById('prevCategoryBtn').disabled = currentCategoryIndex === 0;
     document.getElementById('nextCategoryBtn').disabled = currentCategoryIndex === categoriesWithSpecs.length - 1;
@@ -1373,3 +1448,5 @@ document.getElementById('saveSpecsAndConfirmBtn').addEventListener('click', () =
     <script src="https://ntwoods.github.io/ordertodispatch/js/viewOnly.js"></script>	
 </body>
 </html>
+
+

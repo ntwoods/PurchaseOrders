@@ -292,7 +292,7 @@
         table {
             width: 100%;
             border-collapse: collapse;
-            min-width: 950px;
+            min-width: 1050px;
         }
 
         thead th {
@@ -352,6 +352,11 @@
             font-weight: 700;
             color: #0b3d67;
             white-space: nowrap;
+        }
+
+        .date-cell {
+            white-space: nowrap;
+            font-variant-numeric: tabular-nums;
         }
 
         .deadline-live {
@@ -482,6 +487,7 @@
                         <thead>
                             <tr>
                                 <th class="sortable" data-sort-key="serial">Sr. No. <span class="sort-arrow"></span></th>
+                                <th class="sortable" data-sort-key="requestDate">PO Date <span class="sort-arrow"></span></th>
                                 <th class="sortable" data-sort-key="purchaseOrderNumber">PO No. <span class="sort-arrow"></span></th>
                                 <th class="sortable" data-sort-key="supplierName">Supplier <span class="sort-arrow"></span></th>
                                 <th class="sortable" data-sort-key="requesterName">Requester <span class="sort-arrow"></span></th>
@@ -656,6 +662,45 @@
             if (className) td.className = className;
             return td;
         }
+
+        function parseDateValue(value) {
+            if (!value) return null;
+            if (value instanceof Date) return isNaN(value.getTime()) ? null : value;
+
+            const dateFromNumber = numericValue => {
+                if (numericValue > 100000000000) return new Date(numericValue);
+                if (numericValue > 1000000000) return new Date(numericValue * 1000);
+                return new Date(Math.round((numericValue - 25569) * 86400 * 1000));
+            };
+
+            if (typeof value === 'number') {
+                const date = dateFromNumber(value);
+                return isNaN(date.getTime()) ? null : date;
+            }
+
+            const rawValue = String(value).trim();
+            if (!rawValue) return null;
+
+            if (/^\d+$/.test(rawValue)) {
+                const date = dateFromNumber(Number(rawValue));
+                return isNaN(date.getTime()) ? null : date;
+            }
+
+            const parsed = new Date(rawValue);
+            return isNaN(parsed.getTime()) ? null : parsed;
+        }
+
+        function formatPoDate(value) {
+            const date = parseDateValue(value);
+            if (!date) return '-';
+
+            const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            const day = String(date.getDate()).padStart(2, '0');
+            const month = months[date.getMonth()];
+            const year = String(date.getFullYear()).slice(-2);
+            return `${day}-${month}-${year}`;
+        }
+
         function startDeadlineTimer(deadline, targetSpan, row) {
             const updateTimer = () => {
                 const now = new Date();
@@ -701,6 +746,15 @@
 
             const sorted = [...data];
             sorted.sort((a, b) => {
+                if (sortState.key === 'requestDate') {
+                    const dateA = parseDateValue(a.requestDate);
+                    const dateB = parseDateValue(b.requestDate);
+                    const timeA = dateA ? dateA.getTime() : 0;
+                    const timeB = dateB ? dateB.getTime() : 0;
+                    const compare = timeA - timeB;
+                    return sortState.direction === 'asc' ? compare : -compare;
+                }
+
                 const valA = String(a[sortState.key] || '').toLowerCase();
                 const valB = String(b[sortState.key] || '').toLowerCase();
                 const compare = valA.localeCompare(valB, undefined, { numeric: true, sensitivity: 'base' });
@@ -743,6 +797,7 @@
                 if (isCompleted) row.classList.add('completed');
 
                 row.appendChild(createCell(String(index + 1), 'cell-muted'));
+                row.appendChild(createCell(formatPoDate(order.requestDate), 'date-cell'));
                 row.appendChild(createCell(String(order.purchaseOrderNumber || '-'), 'po-cell'));
                 row.appendChild(createCell(String(order.supplierName || '-')));
                 row.appendChild(createCell(String(order.requesterName || '-'), 'cell-muted'));
@@ -925,7 +980,7 @@
             if (!key) return;
 
             if (sortState.key === key) {
-                sortState.direction = sortState.direction === 'asc' ? '^' : 'v';
+                sortState.direction = sortState.direction === 'asc' ? 'desc' : 'asc';
             } else {
                 sortState = { key, direction: 'asc' };
             }
